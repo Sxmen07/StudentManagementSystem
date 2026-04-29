@@ -10,6 +10,25 @@
     <form id="form1" runat="server">
         <h2>Student Information</h2>
 
+        <asp:Label ID="lblMessage" runat="server"
+    CssClass=""></asp:Label>
+
+        <div class="">
+            <asp:Button ID="btnEdit" runat="server"
+                Text="Edit"
+                CssClass=""
+                OnClick="btnEdit_Click" />
+            <asp:Button ID="btnSave" runat="server"
+                Text="Save"
+                CssClass=""
+                OnClick="btnSave_Click"
+                Visible="false" />
+            <asp:Button ID="btnReset" runat="server"
+                Text="Reset"
+                CssClass=""
+                OnClick="btnReset_Click"
+                Visible="false" />
+        </div>
         <div class="">
             <label>Student ID</label>
             <asp:TextBox ID="txtStudentID" runat="server"
