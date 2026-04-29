@@ -11,7 +11,7 @@ namespace StudentManagementSystem.Student
 {
 
 
-    public partial class StudentProfile
+    public partial class StudentCourseEnrolment
     {
 
         /// <summary>
