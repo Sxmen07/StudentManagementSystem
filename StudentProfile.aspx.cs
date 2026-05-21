@@ -46,7 +46,11 @@ namespace StudentManagementSystem.Student
                     txtStudentID.Text = dr["StudentID"].ToString();
                     txtStudentName.Text = dr["StudentName"].ToString();
                     txtStudentEmail.Text = dr["StudentEmail"].ToString();
-                    txtPassword.Text = dr["Password"].ToString();
+
+                    string password = dr["Password"].ToString();
+                    txtPassword.Text = password;            // will be masked (TextMode=Password)
+                    hdnPassword.Value = password;           // store real value for editing
+
                     txtPersonalEmail.Text = dr["PersonalEmail"].ToString();
                     txtContactNumber.Text = dr["ContactNo"].ToString();
                     txtProgrammeCode.Text = dr["ProgrammeCode"].ToString();
@@ -59,17 +63,16 @@ namespace StudentManagementSystem.Student
 
         protected void btnEdit_Click(object sender, EventArgs e)
         {
-            //Enable editing of profile fields
+            // Enable editing
             txtPersonalEmail.Enabled = true;
             txtPassword.Enabled = true;
+            txtPassword.TextMode = TextBoxMode.SingleLine;
+            txtPassword.Text = hdnPassword.Value;   // restore the real password
             txtContactNumber.Enabled = true;
 
-            // Show Save and Reset button and hide Edit button
             btnSave.Visible = true;
             btnCancel.Visible = true;
             btnEdit.Visible = false;
-
-            // Clear any previous message
             lblMessage.Text = "";
         }
 
@@ -97,6 +100,9 @@ namespace StudentManagementSystem.Student
                 {
                     lblMessage.Text = "Profile updated successfully.";
                     lblMessage.CssClass = "block mb-4 text-center p-2 rounded bg-green-100 text-green-700";
+
+                    // Update hidden field with new password
+                    hdnPassword.Value = txtPassword.Text.Trim();
 
                     // Auto-hide message after 3 seconds
                     string script = "setTimeout(function() { var msg = document.getElementById('" + lblMessage.ClientID + "'); if(msg) msg.style.display = 'none'; }, 3000);";
@@ -126,6 +132,9 @@ namespace StudentManagementSystem.Student
         protected void btnCancel_Click(object sender, EventArgs e)
         {
             LoadProfile();
+
+            // Reset password TextMode to masked
+            txtPassword.TextMode = TextBoxMode.Password;
 
             // Reset edit mode
             txtPersonalEmail.Enabled = false;
