@@ -1,0 +1,67 @@
+<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="StudentMaster.master.cs" Inherits="StudentManagementSystem.StudentMaster" %>
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>UniTrack</title>
+    <link href="/Styles/output.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.7.2/css/all.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap" rel="stylesheet" />
+    <asp:ContentPlaceHolder ID="NavigationBar" runat="server"></asp:ContentPlaceHolder>
+</head>
+<body class="bg-neutral-200 font-roboto">
+    <form id="form1" runat="server">
+        <div class="fixed top-0 left-0 flex flex-col w-70 h-screen bg-white shadow-lg">
+            <!-- TOP SECTION -->
+            <div class="mt-4">
+                <div class="flex items-center p-8 border-b border-gray-100">
+                    <i class="fa-regular fa-circle-user text-4xl text-main-color"></i>
+                    <div class="ml-4 flex-1">
+                        <asp:Label ID="lblStudentName" runat="server" CssClass="block text-lg font-semibold text-gray-800" Text="StudentName"></asp:Label>
+                        <asp:Label ID="lblStudentID" runat="server" CssClass="block text-sm text-gray-500" Text="StudentID"></asp:Label>
+                    </div>
+                    <a href="/Student/StudentProfile/StudentProfile.aspx">
+                        <i class="fa-solid fa-angle-down text-gray-500 cursor-pointer ml-4"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- MIDDLE SECTION -->
+            <div class="flex-1 overflow-y-auto mt-1 p-4 text-[18px]">
+                <a href="/Student/StudentDashboard/StudentDashboard.aspx" class="flex items-center gap-4 px-4 py-2 rounded-md text-black hover:bg-main-color hover:text-white transition">
+                    <i class="fa-solid fa-gauge-high"></i> <span>Dashboard</span>
+                </a>
+                <a href="/Student/StudentCourse/StudentCourse.aspx" class="flex items-center gap-4 px-4 py-2 rounded-md text-black hover:bg-main-color hover:text-white transition">
+                    <i class="fa-solid fa-book-open"></i> <span>Courses</span>
+                </a>
+                <a href="/Student/StudentGrade/StudentGrade.aspx" class="flex items-center gap-4 px-4 py-2 rounded-md text-black hover:bg-main-color hover:text-white transition">
+                    <i class="fa-solid fa-graduation-cap"></i> <span>Grades</span>
+                </a>
+                <a href="/Student/StudentAttendance/StudentAttendance.aspx" class="flex items-center gap-4 px-4 py-2 rounded-md text-black hover:bg-main-color hover:text-white transition">
+                    <i class="fa-solid fa-clipboard-list"></i> <span>Attendance</span>
+                </a>
+                <a href="/Student/StudentAnnoucement/StudentAnnoucement.aspx" class="flex items-center gap-4 px-4 py-2 rounded-md text-black hover:bg-main-color hover:text-white transition">
+                    <i class="fa-solid fa-bullhorn"></i> <span>Announcements</span>
+                </a>
+            </div>
+
+            <!-- BOTTOM SECTION -->
+            <div class="mt-auto p-4 mb-2 text-[18px]">
+                <a href="/Login.aspx" class="flex items-center gap-4 px-4 py-2 rounded-md text-black hover:bg-red hover:text-white transition">
+                    <i class="fa-solid fa-right-from-bracket"></i> <span>Log out</span>
+                </a>
+                <a href="/ContactAdmin.aspx" class="flex items-center gap-4 px-4 py-2 rounded-md text-black hover:bg-main-color hover:text-white transition">
+                    <i class="fa-solid fa-envelope"></i> <span>Contact Admin</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Main content area for child pages -->
+        <div class="ml-70 p-6">
+            <asp:ContentPlaceHolder ID="MainContent" runat="server"></asp:ContentPlaceHolder>
+        </div>
+    </form>
+</body>
+</html>
