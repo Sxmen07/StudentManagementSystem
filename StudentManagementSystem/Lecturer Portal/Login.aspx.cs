@@ -12,33 +12,41 @@ namespace LecturerPortal
         //Button click
         protected void btnLogin_Click(object sender, EventArgs e)
         {
-            //user input
-            string email = txtEmail.Text.Trim().ToLower();
-            string password = txtPassword.Text.Trim();
+            try
+            {
+                string email = txtEmail.Text.Trim();
+                string password = txtPassword.Text.Trim();
 
-            //Check password and email to the database
-            string query = @"SELECT LecturerID, Username FROM Lecturers 
-                             WHERE Email = @Email 
-                             AND PasswordHash = @Password";
+                string query = @"SELECT LecturerID, LecturerName, Department 
+                                 FROM Lecturer 
+                                 WHERE LecturerEmail = @Email 
+                                 AND Password = @Password";
 
-            SqlParameter[] parameters = {
-                new SqlParameter("@Email", email),
-                new SqlParameter("@Password", password)
-            };
+                SqlParameter[] parameters = {
+                    new SqlParameter("@Email", email),
+                    new SqlParameter("@Password", password)
+                };
 
             //Execute query
-            DataTable dt = DBHelper.ExecuteQuery(query, parameters);
+                DataTable dt = DBHelper.ExecuteQuery(query, parameters);
 
-            if (dt.Rows.Count > 0)
-            {
+                if (dt.Rows.Count > 0)
+                {
                 //Store lecturer info in session
-                Session["LecturerID"] = dt.Rows[0]["LecturerID"].ToString();
-                Session["Username"] = dt.Rows[0]["Username"].ToString();
-                Response.Redirect("Dashboard.aspx");
+                    Session["LecturerID"] = dt.Rows[0]["LecturerID"].ToString();
+                    Session["LecturerName"] = dt.Rows[0]["LecturerName"].ToString();
+                    Session["Department"] = dt.Rows[0]["Department"].ToString();
+                    Response.Redirect("LectProfile.aspx");
+                }
+                else
+                {
+                    lblError.Text = "Invalid email or password.";
+                    lblError.Visible = true;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                lblError.Text = "Invalid email or password.";
+                lblError.Text = "Error: " + ex.Message;
                 lblError.Visible = true;
             }
         }

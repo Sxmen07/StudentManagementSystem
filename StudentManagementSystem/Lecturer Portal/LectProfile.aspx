@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Dashboard.aspx.cs" Inherits="LecturerPortal.Dashboard" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="LectProfile.aspx.cs" Inherits="LecturerPortal.Dashboard" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,12 +12,11 @@
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .form-group { display: flex; flex-direction: column; }
         label { font-weight: 600; color: #555; margin-bottom: 5px; font-size: 13px; }
-        input[type=text], textarea { padding: 9px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        textarea { resize: vertical; height: 80px; }
+        input[type=text] { padding: 9px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
         .full-width { grid-column: span 2; }
         .btn { padding: 11px 28px; background: #3498db; color: white; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; margin-top: 20px; }
         .btn:hover { background: #2980b9; }
-        .success { color: green; font-weight: bold; margin-top: 10px; }
+        .success { color: green; font-weight: bold; margin-top: 10px; display: block; }
     </style>
 </head>
 <body>
@@ -34,8 +33,8 @@
     <form id="form1" runat="server">
     <div class="form-grid">
         <div class="form-group">
-            <label>Username</label>
-            <asp:TextBox ID="txtUsername" runat="server" />
+            <label>Full Name</label>
+            <asp:TextBox ID="txtName" runat="server" />
         </div>
         <div class="form-group">
             <label>Email</label>
@@ -46,32 +45,12 @@
             <asp:TextBox ID="txtPassword" runat="server" TextMode="Password" />
         </div>
         <div class="form-group">
-            <label>Staff ID</label>
-            <asp:TextBox ID="txtStaffID" runat="server" />
+            <label>Contact No</label>
+            <asp:TextBox ID="txtContact" runat="server" />
         </div>
-        <div class="form-group">
+        <div class="form-group full-width">
             <label>Department</label>
             <asp:TextBox ID="txtDepartment" runat="server" />
-        </div>
-        <div class="form-group">
-            <label>School</label>
-            <asp:TextBox ID="txtSchool" runat="server" />
-        </div>
-        <div class="form-group">
-            <label>Office Location</label>
-            <asp:TextBox ID="txtOfficeLocation" runat="server" />
-        </div>
-        <div class="form-group">
-            <label>Office Room</label>
-            <asp:TextBox ID="txtOfficeRoom" runat="server" />
-        </div>
-        <div class="form-group full-width">
-            <label>Consultation Hours</label>
-            <asp:TextBox ID="txtConsultHours" runat="server" />
-        </div>
-        <div class="form-group full-width">
-            <label>Bio</label>
-            <asp:TextBox ID="txtBio" runat="server" TextMode="MultiLine" />
         </div>
     </div>
     <asp:Button ID="btnSave" runat="server" Text="Save Changes" CssClass="btn" OnClick="btnSave_Click" />

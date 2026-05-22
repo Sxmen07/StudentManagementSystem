@@ -2,11 +2,13 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Configuration;
+using System.Security.Cryptography;
+using System.Text;
 
+//Change the database name here if your database different than mine
 public class DBHelper
 {
-    //Connect to which database
-    private static string connStr = ConfigurationManager.ConnectionStrings["Student_Management_SystemDB"].ConnectionString;
+    private static string connStr = ConfigurationManager.ConnectionStrings["StudentManagementSystem"].ConnectionString;
 
     //Get SQL connection
     public static SqlConnection GetConnection()
@@ -21,8 +23,7 @@ public class DBHelper
         using (SqlConnection conn = GetConnection())
         using (SqlCommand cmd = new SqlCommand(query, conn))
         {
-            if (parameters != null)
-                cmd.Parameters.AddRange(parameters);
+            if (parameters != null) cmd.Parameters.AddRange(parameters);
             conn.Open();
             SqlDataAdapter da = new SqlDataAdapter(cmd);
             da.Fill(dt);
@@ -36,8 +37,7 @@ public class DBHelper
         using (SqlConnection conn = GetConnection())
         using (SqlCommand cmd = new SqlCommand(query, conn))
         {
-            if (parameters != null)
-                cmd.Parameters.AddRange(parameters);
+            if (parameters != null) cmd.Parameters.AddRange(parameters);
             conn.Open();
             return cmd.ExecuteNonQuery();
         }
@@ -49,8 +49,7 @@ public class DBHelper
         using (SqlConnection conn = GetConnection())
         using (SqlCommand cmd = new SqlCommand(query, conn))
         {
-            if (parameters != null)
-                cmd.Parameters.AddRange(parameters);
+            if (parameters != null) cmd.Parameters.AddRange(parameters);
             conn.Open();
             return cmd.ExecuteScalar();
         }
