@@ -124,7 +124,8 @@
     <Content Include="favicon.ico" />
     <Content Include="Footer.css" />
     <Content Include="Global.asax" />
-    <Content Include="Lecturer\Lecturer.aspx" />
+    <Content Include="Lecturer Portal\Dashboard.aspx" />
+    <Content Include="Lecturer Portal\Login.aspx" />
     <Content Include="Login.aspx" />
     <Content Include="Login.css" />
     <Content Include="Register.aspx" />
@@ -201,6 +202,7 @@
     <Compile Include="Admin\Admin.aspx.designer.cs">
       <DependentUpon>Admin.aspx</DependentUpon>
     </Compile>
+    <Compile Include="App_Code_DatabaseManagement\Class1.cs" />
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="About.aspx.cs">
       <DependentUpon>About.aspx</DependentUpon>
@@ -227,12 +229,19 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Lecturer\Lecturer.aspx.cs">
-      <DependentUpon>Lecturer.aspx</DependentUpon>
+    <Compile Include="Lecturer Portal\Dashboard.aspx.cs">
+      <DependentUpon>Dashboard.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="Lecturer\Lecturer.aspx.designer.cs">
-      <DependentUpon>Lecturer.aspx</DependentUpon>
+    <Compile Include="Lecturer Portal\Dashboard.aspx.designer.cs">
+      <DependentUpon>Dashboard.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Lecturer Portal\Login.aspx.cs">
+      <DependentUpon>Login.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Lecturer Portal\Login.aspx.designer.cs">
+      <DependentUpon>Login.aspx</DependentUpon>
     </Compile>
     <Compile Include="Login.aspx.cs">
       <DependentUpon>Login.aspx</DependentUpon>

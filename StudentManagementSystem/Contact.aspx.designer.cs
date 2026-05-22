@@ -7,13 +7,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace StudentManagementSystem.Lecturer
-{
-
-
-    public partial class LectureProfile
-    {
-
+namespace StudentManagementSystem {
+    
+    
+    public partial class Contact {
+        
         /// <summary>
         /// form1 control.
         /// </summary>

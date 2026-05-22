@@ -7,11 +7,11 @@ using System.Web.UI.WebControls;
 
 namespace StudentManagementSystem
 {
-    public partial class Lecturer : System.Web.UI.Page
-    {
-        protected void Page_Load(object sender, EventArgs e)
-        {
+	public partial class Contact : System.Web.UI.Page
+	{
+		protected void Page_Load(object sender, EventArgs e)
+		{
 
-        }
-    }
+		}
+	}
 }
