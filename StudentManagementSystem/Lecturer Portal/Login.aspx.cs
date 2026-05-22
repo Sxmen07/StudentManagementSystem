@@ -9,12 +9,14 @@ namespace LecturerPortal
     {
         protected void Page_Load(object sender, EventArgs e) { }
 
+        //Button click
         protected void btnLogin_Click(object sender, EventArgs e)
         {
+            //user input
             string email = txtEmail.Text.Trim().ToLower();
             string password = txtPassword.Text.Trim();
 
-            // Hash the password the same way it was stored
+            //Check password and email to the database
             string query = @"SELECT LecturerID, Username FROM Lecturers 
                              WHERE Email = @Email 
                              AND PasswordHash = @Password";
@@ -24,11 +26,12 @@ namespace LecturerPortal
                 new SqlParameter("@Password", password)
             };
 
+            //Execute query
             DataTable dt = DBHelper.ExecuteQuery(query, parameters);
 
             if (dt.Rows.Count > 0)
             {
-                // Store lecturer info in session
+                //Store lecturer info in session
                 Session["LecturerID"] = dt.Rows[0]["LecturerID"].ToString();
                 Session["Username"] = dt.Rows[0]["Username"].ToString();
                 Response.Redirect("Dashboard.aspx");
