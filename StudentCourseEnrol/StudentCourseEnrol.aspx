@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Student Course Enrolment" Language="C#" MasterPageFile="~/Student/StudentNavigationBar/StudentMaster.master" AutoEventWireup="true" CodeBehind="StudentCourseEnrol.aspx.cs" Inherits="StudentManagementSystem.Student.StudentCourseEnrol" %>
+<%@ Page Title="Student Course Enrolment" Language="C#" MasterPageFile="~/Student/StudentNavigationBar/StudentMaster.master" AutoEventWireup="true" CodeBehind="StudentCourseEnrol.aspx.cs" Inherits="StudentManagementSystem.Student.StudentCourseEnrol" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="NavigationBar" runat="server">
     <!-- Any page-specific head content -->
@@ -6,44 +6,51 @@
 
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
 
-    <div class="bg-white">
-        <h1> Course Catalog</h1>
+    <div>
+        <div>
+            <h1>Course Catalog</h1>
+            <div class="p-4 mt-[24px]">
+                <asp:GridView ID="gvCourses" runat="server" AutoGenerateColumns="False" CssClass="table table-striped">
+                    <Columns>
+                        <asp:BoundField DataField="CourseCode" HeaderText="Course Code" />
+                        <asp:BoundField DataField="CourseName" HeaderText="Course Name" />
+                        <asp:BoundField DataField="CourseDescription" HeaderText="Description" />
+                        <asp:BoundField DataField="SemesterName" HeaderText="Semester" />
+                        <asp:BoundField DataField="LecturerName" HeaderText="Lecturer" />
+                        <asp:BoundField DataField="Credits" HeaderText="Credits" />
+                        <asp:TemplateField HeaderText="Enroll">
+                        <itemtemplate>
+                            <asp:CheckBox ID="chkEnroll" runat="server" />
+                        </itemtemplate>
+                    </asp:TemplateField>
+                    </Columns>
 
-        <div class="flex p-4">
-            <div>
-                <asp:TextBox ID="txtSearchCourse" runat="server" 
-                    CssClass="form-control" 
-                    Placeholder="Search courses..." 
-                    AutoPostBack="true" 
-                    OnTextChanged="txtSearchCourse_TextChanged" />
+                </asp:GridView>
             </div>
+            <div class="flex justify-end gap-4 mb-4">
 
-            <div>
-                <asp:Button ID="btnSearchCourse" runat="server" 
-                    CssClass="btn btn-primary" 
-                    Text="Search" 
-                    OnClick="btnSearchCourse_Click" />
-            </div>
+                <div>
+                    <asp:Button ID="btnEnrollCourse" runat="server"
+                        CssClass="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition cursor-pointer"
+                        Text="Enroll"
+                        OnClick="btnEnrollCourse_Click" />
+                </div>
 
-            <div>
-                <asp:Button ID="btnCancelSearch" runat="server" 
-                    CssClass="btn btn-secondary" 
-                    Text="Cancel" 
-                    OnClick="btnCancelSearch_Click" />
+                <div>
+                    <asp:Button ID="btnResetEnroll" runat="server"
+                        CssClass="bg-red hover:bg-red-600 text-white font-semibold py-2 px-6 rounded-lg transition cursor-pointer"
+                        Text="Reset"
+                        OnClick="btnResetEnroll_Click" />
+                </div>
             </div>
-            <!--
-            <asp:SearchBox ID="CourseSearchBox" runat="server" 
-                Placeholder="Search courses..." 
-                OnTextChanged="CourseSearchBox_TextChanged" 
-                AutoPostBack="true" />
-            <asp:FilterButton ID="FilterButton" runat="server" 
-                Text="Filter" 
-                OnClick="FilterButton_Click" />
-            -->
         </div>
 
+
+
+
         <div>
-            <asp:GridView ID="gvCourses" runat="server" AutoGenerateColumns="False" CssClass="table table-striped">
+            <h1>Currently Enrolled Courses</h1>
+            <asp:GridView ID="gvEnrolledCourses" runat="server" AutoGenerateColumns="False" CssClass="table table-striped">
                 <Columns>
                     <asp:BoundField DataField="CourseCode" HeaderText="Course Code" />
                     <asp:BoundField DataField="CourseName" HeaderText="Course Name" />
@@ -51,8 +58,23 @@
                     <asp:BoundField DataField="SemesterName" HeaderText="Semester" />
                     <asp:BoundField DataField="LecturerName" HeaderText="Lecturer" />
                     <asp:BoundField DataField="Credits" HeaderText="Credits" />
-                    <asp:ButtonField Text="Enroll" CommandName="Enroll" ButtonType="Button" CssClass="btn btn-success" />
                 </Columns>
+            </asp:GridView>
+        </div>
+
+        <div>
+            <h1>Course Enrolled History</h1>
+            <asp:GridView ID="gvCourseHistory" runat="server" AutoGenerateColumns="False" CssClass="table table-striped">
+                <Columns>
+                    <asp:BoundField DataField="CourseCode" HeaderText="Course Code" />
+                    <asp:BoundField DataField="CourseName" HeaderText="Course Name" />
+                    <asp:BoundField DataField="CourseDescription" HeaderText="Description" />
+                    <asp:BoundField DataField="SemesterName" HeaderText="Semester" />
+                    <asp:BoundField DataField="LecturerName" HeaderText="Lecturer" />
+                    <asp:BoundField DataField="Credits" HeaderText="Credits" />
+                    <asp:BoundField DataField="EnrollmentDate" HeaderText="Enrollment Date" DataFormatString="{0:yyyy-MM-dd}" />
+                </Columns>
+                </asp:GridView>
         </div>
     </div>
 
