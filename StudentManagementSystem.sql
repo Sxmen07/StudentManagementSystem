@@ -99,6 +99,22 @@ CREATE TABLE CourseOffer (
     CONSTRAINT FK_CourseOffer_Lecturer FOREIGN KEY (LecturerID) REFERENCES Lecturer(LecturerID)
 );
 
+CREATE TABLE CourseMaterial (
+    MaterialID         INT IDENTITY(1,1) PRIMARY KEY,
+    CourseOfferID      INT NOT NULL,
+    MaterialTitle      NVARCHAR(200) NOT NULL,
+    Description        NVARCHAR(500),
+    FileURL            NVARCHAR(500) NOT NULL,
+    ScheduleDate       DATETIME NOT NULL,
+    UploadDate         DATETIME NOT NULL DEFAULT GETDATE(),
+    UploadByLecturerID INT NULL,   -- NULL allowed if you ever have system uploads
+
+    CONSTRAINT FK_CourseMaterial_CourseOffer 
+        FOREIGN KEY (CourseOfferID) REFERENCES CourseOffer(CourseOfferID),
+    CONSTRAINT FK_CourseMaterial_Lecturer 
+        FOREIGN KEY (UploadByLecturerID) REFERENCES Lecturer(LecturerID)
+);
+
 -- ============================================
 -- Table: Enrolment
 -- ============================================
