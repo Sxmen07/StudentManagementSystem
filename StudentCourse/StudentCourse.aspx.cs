@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
@@ -7,12 +7,13 @@ using System.Web.UI.WebControls;
 
 namespace StudentManagementSystem.Student
 {
-    public partial class StudentCourse : System.Web.UI.Page   // ← changed from StudentCourses
+    public partial class StudentCourse : System.Web.UI.Page
     {
         string cs = ConfigurationManager.ConnectionStrings["StudentManagementSystemDB"].ConnectionString;
 
         public class CourseCard
         {
+            public int CourseOfferID { get; set; }
             public string CourseCode { get; set; }
             public string CourseName { get; set; }
             public int CreditHours { get; set; }
@@ -21,7 +22,6 @@ namespace StudentManagementSystem.Student
             public DateTime SemesterEndDate { get; set; }
         }
 
-        // Property to remember which tab is active (Current = true, Completed = false)
         private bool IsCurrentTabActive
         {
             get { return ViewState["IsCurrentTabActive"] == null ? true : (bool)ViewState["IsCurrentTabActive"]; }
@@ -50,6 +50,7 @@ namespace StudentManagementSystem.Student
 
             string query = @"
                 SELECT 
+                    co.CourseOfferID,
                     c.CourseCode,
                     c.CourseName,
                     c.CreditHours,
@@ -80,6 +81,7 @@ namespace StudentManagementSystem.Student
 
                         allCourses.Add(new CourseCard
                         {
+                            CourseOfferID = Convert.ToInt32(reader["CourseOfferID"]),
                             CourseCode = reader["CourseCode"].ToString(),
                             CourseName = reader["CourseName"].ToString(),
                             CreditHours = Convert.ToInt32(reader["CreditHours"]),
@@ -142,9 +144,8 @@ namespace StudentManagementSystem.Student
             string email = Session["UserEmail"]?.ToString();
             if (string.IsNullOrEmpty(email)) return 0;
 
-            string query = "SELECT StudentID FROM Student WHERE StudentEmail = @Email";
             using (SqlConnection conn = new SqlConnection(cs))
-            using (SqlCommand cmd = new SqlCommand(query, conn))
+            using (SqlCommand cmd = new SqlCommand("SELECT StudentID FROM Student WHERE StudentEmail = @Email", conn))
             {
                 cmd.Parameters.AddWithValue("@Email", email);
                 conn.Open();
