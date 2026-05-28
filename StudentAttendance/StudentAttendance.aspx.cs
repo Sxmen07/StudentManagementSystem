@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -25,6 +25,12 @@ namespace StudentManagementSystem.Student
             public DateTime SemesterEndDate { get; set; }
         }
 
+        private bool IsCurrentTabActive
+        {
+            get { return ViewState["IsCurrentTabActive"] == null ? true : (bool)ViewState["IsCurrentTabActive"]; }
+            set { ViewState["IsCurrentTabActive"] = value; }
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Session["UserEmail"] == null)
@@ -32,14 +38,42 @@ namespace StudentManagementSystem.Student
 
             if (!IsPostBack)
             {
-                LoadAttendanceData();
+                // First load – bind the default tab (Current)
+                LoadAndBindCurrent();
+                IsCurrentTabActive = true;
+                UpdateTabVisibility();
+            }
+            else
+            {
+                // On postback (tab click), reload data for the active tab
+                if (IsCurrentTabActive)
+                    LoadAndBindCurrent();
+                else
+                    LoadAndBindHistory();
+                UpdateTabVisibility();
             }
         }
 
-        private void LoadAttendanceData()
+        private void LoadAndBindCurrent()
+        {
+            List<CourseAttendance> currentCourses = LoadAttendanceData().FindAll(c => c.SemesterEndDate >= DateTime.Today);
+            rptCurrentCourses.DataSource = currentCourses;
+            rptCurrentCourses.DataBind();
+            lblNoCurrent.Visible = (currentCourses.Count == 0);
+        }
+
+        private void LoadAndBindHistory()
+        {
+            List<CourseAttendance> historyCourses = LoadAttendanceData().FindAll(c => c.SemesterEndDate < DateTime.Today);
+            rptHistoryCourses.DataSource = historyCourses;
+            rptHistoryCourses.DataBind();
+            lblNoHistory.Visible = (historyCourses.Count == 0);
+        }
+
+        private List<CourseAttendance> LoadAttendanceData()
         {
             int studentId = GetStudentIdFromSession();
-            if (studentId == 0) return;
+            if (studentId == 0) return new List<CourseAttendance>();
 
             List<CourseAttendance> allCourses = new List<CourseAttendance>();
 
@@ -112,46 +146,42 @@ namespace StudentManagementSystem.Student
                     allCourses = new List<CourseAttendance>(groups.Values);
                 }
             }
-
-            DateTime today = DateTime.Today;
-            List<CourseAttendance> currentCourses = allCourses.FindAll(c => c.SemesterEndDate >= today);
-            List<CourseAttendance> historyCourses = allCourses.FindAll(c => c.SemesterEndDate < today);
-
-            rptCurrentCourses.DataSource = currentCourses;
-            rptCurrentCourses.DataBind();
-            rptHistoryCourses.DataSource = historyCourses;
-            rptHistoryCourses.DataBind();
-
-            lblNoCurrent.Visible = (currentCourses.Count == 0);
-            lblNoHistory.Visible = (historyCourses.Count == 0);
+            return allCourses;
         }
 
-        private int GetStudentIdFromSession()
+        private void UpdateTabVisibility()
         {
-            if (Session["StudentID"] != null)
-                return Convert.ToInt32(Session["StudentID"]);
-
-            string email = Session["UserEmail"]?.ToString();
-            if (string.IsNullOrEmpty(email)) return 0;
-
-            string query = "SELECT StudentID FROM Student WHERE StudentEmail = @Email";
-            using (SqlConnection conn = new SqlConnection(cs))
-            using (SqlCommand cmd = new SqlCommand(query, conn))
+            if (IsCurrentTabActive)
             {
-                cmd.Parameters.AddWithValue("@Email", email);
-                conn.Open();
-                object result = cmd.ExecuteScalar();
-                if (result != null)
-                {
-                    int id = Convert.ToInt32(result);
-                    Session["StudentID"] = id;
-                    return id;
-                }
+                pnlCurrent.Visible = true;
+                pnlHistory.Visible = false;
+                btnCurrent.CssClass = "section-title active text-2xl font-bold";
+                btnHistory.CssClass = "section-title inactive text-2xl font-bold";
             }
-            return 0;
+            else
+            {
+                pnlCurrent.Visible = false;
+                pnlHistory.Visible = true;
+                btnCurrent.CssClass = "section-title inactive text-2xl font-bold";
+                btnHistory.CssClass = "section-title active text-2xl font-bold";
+            }
         }
 
-        // Current Courses Repeater - with chart
+        protected void btnCurrent_Click(object sender, EventArgs e)
+        {
+            IsCurrentTabActive = true;
+            LoadAndBindCurrent();   // reload fresh data
+            UpdateTabVisibility();
+        }
+
+        protected void btnHistory_Click(object sender, EventArgs e)
+        {
+            IsCurrentTabActive = false;
+            LoadAndBindHistory();   // reload fresh data
+            UpdateTabVisibility();
+        }
+
+        // ---------- Data binding event handlers ----------
         protected void rptCurrentCourses_ItemDataBound(object sender, RepeaterItemEventArgs e)
         {
             if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)
@@ -168,7 +198,6 @@ namespace StudentManagementSystem.Student
                 gv.DataSource = data.AttendanceTable;
                 gv.DataBind();
 
-                // Populate chart
                 if (chart != null)
                 {
                     Series series = chart.Series["Attendance"];
@@ -176,20 +205,17 @@ namespace StudentManagementSystem.Student
                     series.Points.AddXY("Present", data.PresentCount);
                     series.Points.AddXY("Late", data.LateCount);
                     series.Points.AddXY("Absent", data.AbsentCount);
-
                     series.Points[0].Color = System.Drawing.Color.FromArgb(40, 167, 69);
                     series.Points[1].Color = System.Drawing.Color.FromArgb(255, 193, 7);
                     series.Points[2].Color = System.Drawing.Color.FromArgb(220, 53, 69);
                 }
 
-                // Build summary text
                 int total = data.PresentCount + data.LateCount + data.AbsentCount;
                 double percent = total > 0 ? (double)(data.PresentCount + data.LateCount) / total * 100 : 0;
                 lblSummary.Text = $"Present: {data.PresentCount} | Late: {data.LateCount} | Absent: {data.AbsentCount} | Attendance Rate: {percent:F1}%";
             }
         }
 
-        // History Courses Repeater - with chart
         protected void rptHistoryCourses_ItemDataBound(object sender, RepeaterItemEventArgs e)
         {
             if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)
@@ -206,7 +232,6 @@ namespace StudentManagementSystem.Student
                 gv.DataSource = data.AttendanceTable;
                 gv.DataBind();
 
-                // Populate chart
                 if (chart != null)
                 {
                     Series series = chart.Series["Attendance"];
@@ -214,13 +239,11 @@ namespace StudentManagementSystem.Student
                     series.Points.AddXY("Present", data.PresentCount);
                     series.Points.AddXY("Late", data.LateCount);
                     series.Points.AddXY("Absent", data.AbsentCount);
-
                     series.Points[0].Color = System.Drawing.Color.FromArgb(40, 167, 69);
                     series.Points[1].Color = System.Drawing.Color.FromArgb(255, 193, 7);
                     series.Points[2].Color = System.Drawing.Color.FromArgb(220, 53, 69);
                 }
 
-                // Build summary text
                 int total = data.PresentCount + data.LateCount + data.AbsentCount;
                 double percent = total > 0 ? (double)(data.PresentCount + data.LateCount) / total * 100 : 0;
                 lblSummary.Text = $"Present: {data.PresentCount} | Late: {data.LateCount} | Absent: {data.AbsentCount} | Attendance Rate: {percent:F1}%";
@@ -231,11 +254,8 @@ namespace StudentManagementSystem.Student
         {
             if (e.Row.RowType == DataControlRowType.DataRow)
             {
-                // Status column is second column (index 1)
                 TableCell statusCell = e.Row.Cells[1];
                 string status = statusCell.Text.Trim();
-
-                // Clear the existing text and replace with a span
                 statusCell.Text = "";
 
                 switch (status)
@@ -254,6 +274,30 @@ namespace StudentManagementSystem.Student
                         break;
                 }
             }
+        }
+
+        private int GetStudentIdFromSession()
+        {
+            if (Session["StudentID"] != null)
+                return Convert.ToInt32(Session["StudentID"]);
+
+            string email = Session["UserEmail"]?.ToString();
+            if (string.IsNullOrEmpty(email)) return 0;
+
+            using (SqlConnection conn = new SqlConnection(cs))
+            using (SqlCommand cmd = new SqlCommand("SELECT StudentID FROM Student WHERE StudentEmail = @Email", conn))
+            {
+                cmd.Parameters.AddWithValue("@Email", email);
+                conn.Open();
+                object result = cmd.ExecuteScalar();
+                if (result != null)
+                {
+                    int id = Convert.ToInt32(result);
+                    Session["StudentID"] = id;
+                    return id;
+                }
+            }
+            return 0;
         }
     }
 }
