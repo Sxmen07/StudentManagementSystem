@@ -1,118 +1,69 @@
-<%@ Page Title="Student Profile" Language="C#" MasterPageFile="~/Student/StudentNavigationBar/StudentMaster.master" AutoEventWireup="true" CodeBehind="StudentProfile.aspx.cs" Inherits="StudentManagementSystem.Student.StudentProfile" %>
+<%@ Page Title="My Profile" Language="C#" MasterPageFile="~/Student/StudentNavigationBar/StudentMaster.master" AutoEventWireup="true" CodeBehind="StudentProfile.aspx.cs" Inherits="StudentManagementSystem.Student.StudentProfile" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="NavigationBar" runat="server">
-    <!-- Any page-specific head content -->
 </asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Student Profile</h2>
+    <div class="bg-topbar-gradient h-[189px] w-full">
+        <h2 class="text-[48px] font-bold text-white px-6 py-[90px] text-shadow">My Profile</h2>
+    </div>
 
-        <asp:Label ID="lblMessage" runat="server" CssClass="block mb-4 text-center p-2 rounded"></asp:Label>
-        <asp:HiddenField ID="hdnPassword" runat="server" />
-        <!-- Buttons -->
-        <div class="flex justify-end gap-4 mb-6">
-            <asp:Button ID="btnEdit" runat="server" Text="Edit" CssClass="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition cursor-pointer" OnClick="btnEdit_Click" />
-            <asp:Button ID="btnSave" runat="server" Text="Save" CssClass="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition cursor-pointer" OnClick="btnSave_Click" Visible="false" />
-            <asp:Button ID="btnCancel" runat="server" Text="Cancel" CssClass="bg-red hover:bg-red-600 text-white font-semibold py-2 px-6 rounded-lg transition cursor-pointer" OnClick="btnCancel_Click" Visible="false" />
-        </div>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-[40px]">
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="p-6 sm:p-8">
+                <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                    <div class="w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-200 flex-shrink-0">
+                        <asp:Image ID="ProfilePicture" runat="server" CssClass="w-full h-full object-cover" />
+                    </div>
 
+                    <div class="flex-1 text-center sm:text-left space-y-2 mt-2">
+                        <div class="flex flex-col sm:flex-row items-center gap-3">
+                            <asp:Label ID="StudentName" runat="server" CssClass="text-3xl font-bold text-gray-900"></asp:Label>
 
-        <!-- Rest of the profile form stays exactly the same -->
-        <!-- ... all your existing textboxes ... -->
+                            <a href="/Student/StudentSetting/StudentSetting.aspx" class="text-gray-400 hover:text-indigo-600 transition-colors duration-200" title="Edit Profile">
+                                <i class="fa-solid fa-pen-to-square text-xl"></i>
+                            </a>
+                        </div>
 
+                        <asp:Label ID="ProgramName" runat="server" CssClass="text-lg text-indigo-600 font-medium block"></asp:Label>
 
-        <!-- Student Information Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <h3 class="text-xl font-semibold text-gray-700 col-span-full mb-2">Student Information</h3>
-
-            <div>
-                <label class="block text-gray-600 font-medium">Student ID</label>
-                <asp:TextBox ID="txtStudentID" runat="server"
-                    CssClass="w-full border border-gray-300 rounded-lg px-3 py-2 bg-main-color-100"
-                    Placeholder="Student ID"
-                    ReadOnly="true"></asp:TextBox>
-            </div>
-
-            <div>
-                <label class="block text-gray-600 font-medium">Student Name</label>
-                <asp:TextBox ID="txtStudentName" runat="server"
-                    CssClass="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100"
-                    Placeholder="Student Name"
-                    ReadOnly="true"></asp:TextBox>
-            </div>
-
-            <div>
-                <label class="block text-gray-600 font-medium">Student Email</label>
-                <asp:TextBox ID="txtStudentEmail" runat="server"
-                    CssClass="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100"
-                    Placeholder="Student Email"
-                    ReadOnly="true"></asp:TextBox>
-            </div>
-
-            <div>
-                <label class="block text-gray-600 font-medium">Password</label>
-                <asp:TextBox ID="txtPassword" runat="server"
-                    CssClass="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    Placeholder="******"
-                    TextMode="Password"
-                    Enabled="false"></asp:TextBox>
-            </div>
-
-            <div>
-                <label class="block text-gray-600 font-medium">Personal Email</label>
-                <asp:TextBox ID="txtPersonalEmail" runat="server"
-                    CssClass="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    Placeholder="Personal Email"
-                    Enabled="false"></asp:TextBox>
-            </div>
-
-            <div>
-                <label class="block text-gray-600 font-medium">Contact Number</label>
-                <asp:TextBox ID="txtContactNumber" runat="server"
-                    CssClass="w-full border border-gray-300 rounded-lg px-3 py-2"
-                    Placeholder="Contact Number"
-                    Enabled="false"></asp:TextBox>
+                        <div class="flex items-center justify-center sm:justify-start gap-2 text-gray-500 pt-1 text-sm">
+                            <i class="fa-solid fa-envelope"></i>
+                            <asp:Label ID="StudentEmail" runat="server"></asp:Label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Programme Information Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <h3 class="text-xl font-semibold text-gray-700 col-span-full mb-2">Programme Information</h3>
-
-            <div>
-                <label class="block text-gray-600 font-medium">Programme Code</label>
-                <asp:TextBox ID="txtProgrammeCode" runat="server"
-                    CssClass="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100"
-                    Placeholder="Programme Code"
-                    Enabled="false"></asp:TextBox>
+        <div class="bg-white rounded-xl border border-gray-200 mt-8 overflow-hidden mb-16">
+            <div class="p-6 border-b border-gray-100">
+                <h2 class="text-xl font-semibold text-gray-800">My Enrolled Courses</h2>
+                <p class="text-sm text-gray-500">Courses you are currently enrolled in</p>
             </div>
 
-            <div>
-                <label class="block text-gray-600 font-medium">Programme Name</label>
-                <asp:TextBox ID="txtProgrammeName" runat="server"
-                    CssClass="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100"
-                    Placeholder="Programme Name"
-                    Enabled="false"></asp:TextBox>
-            </div>
+            <div class="divide-y divide-gray-200">
+                <asp:Repeater ID="CourseRepeater" runat="server">
+                    <ItemTemplate>
+                        <div class="p-4 hover:bg-gray-50 transition">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium text-gray-900"><%# Eval("CourseName") %></p>
+                                    <p class="text-sm text-gray-500">Course Code: <%# Eval("CourseCode") %></p>
+                                </div>
+                                <div class="text-sm text-gray-400 font-medium">
+                                    <%# Eval("Semester") %> <%# Eval("Year") %>
+                                </div>
+                            </div>
+                        </div>
+                    </ItemTemplate>
+                </asp:Repeater>
 
-            <div>
-                <label class="block text-gray-600 font-medium">Intake Semester</label>
-                <asp:TextBox ID="txtIntakeSemester" runat="server"
-                    CssClass="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100"
-                    Placeholder="Intake Semester"
-                    Enabled="false"></asp:TextBox>
-            </div>
-
-            <div>
-                <label class="block text-gray-600 font-medium">Intake Year</label>
-                <asp:TextBox ID="txtIntakeYear" runat="server"
-                    CssClass="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100"
-                    Placeholder="Intake Year"
-                    Enabled="false"></asp:TextBox>
+                <asp:Panel ID="pnlNoCourses" runat="server" Visible="false" CssClass="p-8 text-center text-gray-500">
+                    <i class="fa-solid fa-book-open block text-3xl text-gray-300 mb-2"></i>
+                    You are not enrolled in any courses yet.
+                </asp:Panel>
             </div>
         </div>
     </div>
-
 </asp:Content>
-
