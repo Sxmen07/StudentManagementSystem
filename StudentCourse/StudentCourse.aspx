@@ -22,12 +22,9 @@
                     <a href='<%# ResolveUrl("~/Student/StudentCourseMaterial/StudentCourseMaterial.aspx?courseOfferId=" + Eval("CourseOfferID")) %>'
                         class="block course-card bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col h-full hover:shadow-lg transition">
                         <div class="p-5 flex-1">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h4 class="text-xl font-bold text-gray-800"><%# Eval("CourseCode") %> - <%# Eval("CourseName") %></h4>
-                                    <p class="text-sm text-gray-500 mt-1"><%# Eval("CreditHours") %> Credits</p>
-                                </div>
-                                <span class="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">In progress</span>
+                            <div>
+                                <h4 class="text-xl font-bold text-gray-800"><%# Eval("CourseCode") %> - <%# Eval("CourseName") %></h4>
+                                <p class="text-sm text-gray-500 mt-1"><%# Eval("CreditHours") %> Credits</p>
                             </div>
                             <p class="text-gray-600 mt-3"><%# Eval("Description") %></p>
                         </div>
@@ -41,20 +38,17 @@
         <asp:Panel ID="pnlCompleted" runat="server" Visible="false" CssClass="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             <asp:Repeater ID="rptCompletedCourses" runat="server">
                 <ItemTemplate>
-    <a href='<%# ResolveUrl("~/Student/StudentCourseMaterial/StudentCourseMaterial.aspx?courseOfferId=" + Eval("CourseOfferID")) %>'
-       class="block course-card bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col h-full hover:shadow-lg transition">
-        <div class="p-5 flex-1">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h4 class="text-xl font-bold text-gray-800"><%# Eval("CourseCode") %> - <%# Eval("CourseName") %></h4>
-                    <p class="text-sm text-gray-500 mt-1"><%# Eval("CreditHours") %> Credits</p>
-                </div>
-                <span class="bg-gray-500 text-white text-xs font-semibold px-3 py-1 rounded-full">Completed</span>
-            </div>
-            <p class="text-gray-600 mt-3"><%# Eval("Description") %></p>
-        </div>
-    </a>
-</ItemTemplate>
+                    <a href='<%# ResolveUrl("~/Student/StudentCourseMaterial/StudentCourseMaterial.aspx?courseOfferId=" + Eval("CourseOfferID")) %>'
+                       class="block course-card bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col h-full hover:shadow-lg transition">
+                        <div class="p-5 flex-1">
+                            <div>
+                                <h4 class="text-xl font-bold text-gray-800"><%# Eval("CourseCode") %> - <%# Eval("CourseName") %></h4>
+                                <p class="text-sm text-gray-500 mt-1"><%# Eval("CreditHours") %> Credits</p>
+                            </div>
+                            <p class="text-gray-600 mt-3"><%# Eval("Description") %></p>
+                        </div>
+                    </a>
+                </ItemTemplate>
             </asp:Repeater>
             <asp:Label ID="lblNoCompleted" runat="server" CssClass="text-gray-500 italic col-span-full" Visible="false" Text="No completed courses yet." />
         </asp:Panel>
