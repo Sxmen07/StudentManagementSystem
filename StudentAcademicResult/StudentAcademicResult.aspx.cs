@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
@@ -77,7 +77,8 @@ namespace StudentManagementSystem.Student
                                 CourseCode = courseCode,
                                 CourseName = dr["CourseName"].ToString(),
                                 CreditHours = Convert.ToInt32(dr["CreditHours"]),
-                                Assessments = new List<AssessmentResult>()
+                                Assessments = new List<AssessmentResult>(),
+                                TotalWeightage = 0  // new property to track sum of weightages
                             };
                         }
 
@@ -85,13 +86,15 @@ namespace StudentManagementSystem.Student
 
                         if (dr["AssessmentID"] != DBNull.Value)
                         {
-                            courseRes.Assessments.Add(new AssessmentResult
+                            var assessment = new AssessmentResult
                             {
                                 AssessmentName = dr["AssessmentName"].ToString(),
                                 MaxMarks = Convert.ToDecimal(dr["MaxMarks"]),
                                 Weightage = Convert.ToDecimal(dr["Weightage"]),
                                 ObtainedMark = Convert.ToDecimal(dr["ObtainedMark"])
-                            });
+                            };
+                            courseRes.Assessments.Add(assessment);
+                            courseRes.TotalWeightage += assessment.Weightage;
                         }
                     }
                 }
@@ -117,33 +120,53 @@ namespace StudentManagementSystem.Student
                 foreach (var cKvp in tempSem.Courses)
                 {
                     var course = cKvp.Value;
-                    decimal totalPercentage = 0;
 
-                    foreach (var ass in course.Assessments)
+                    // Check if assessments are complete (total weightage >= 99.9% to avoid floating point issues)
+                    bool isComplete = course.Assessments.Count > 0 && course.TotalWeightage >= 99.9m;
+
+                    if (!isComplete)
                     {
-                        if (ass.MaxMarks > 0)
-                        {
-                            totalPercentage += (ass.ObtainedMark / ass.MaxMarks) * ass.Weightage;
-                        }
+                        // Incomplete assessment -> show "-" and "N/A"
+                        course.DisplayCreditHours = "-";
+                        course.TotalPercentage = 0;
+                        course.Grade = "N/A";
+                        course.GradePoint = 0;
+                        course.DisplayTotalPercentage = "-";
+                        course.DisplayGradePoint = "-";
+                        // Do NOT add to GPA calculations
                     }
-                    course.TotalPercentage = Math.Round(totalPercentage, 2);
+                    else
+                    {
+                        // Calculate weighted total percentage
+                        decimal totalPercentage = 0;
+                        foreach (var ass in course.Assessments)
+                        {
+                            if (ass.MaxMarks > 0)
+                            {
+                                totalPercentage += (ass.ObtainedMark / ass.MaxMarks) * ass.Weightage;
+                            }
+                        }
+                        course.TotalPercentage = Math.Round(totalPercentage, 2);
+                        course.DisplayTotalPercentage = course.TotalPercentage.ToString() + "%";
 
-                    // Grade mapping rules matrix
-                    Tuple<string, decimal> gradeMatrix = CalculateGradeAndPoint(course.TotalPercentage);
-                    course.Grade = gradeMatrix.Item1;
-                    course.GradePoint = gradeMatrix.Item2;
+                        // Get grade and grade point
+                        Tuple<string, decimal> gradeMatrix = CalculateGradeAndPoint(course.TotalPercentage);
+                        course.Grade = gradeMatrix.Item1;
+                        course.GradePoint = gradeMatrix.Item2;
+                        course.DisplayGradePoint = course.GradePoint.ToString("F2");
+                        course.DisplayCreditHours = course.CreditHours.ToString();
 
-                    semTotalGradePoints += course.GradePoint * course.CreditHours;
-                    semTotalCredits += course.CreditHours;
+                        // Add to GPA calculations
+                        semTotalGradePoints += course.GradePoint * course.CreditHours;
+                        semTotalCredits += course.CreditHours;
+                        totalWeightGpaPoints += course.GradePoint * course.CreditHours;
+                        totalCreditsCgpa += course.CreditHours;
+                    }
 
                     semResult.Courses.Add(course);
                 }
 
                 semResult.GPA = semTotalCredits > 0 ? Math.Round(semTotalGradePoints / semTotalCredits, 2) : 0;
-
-                totalWeightGpaPoints += semTotalGradePoints;
-                totalCreditsCgpa += semTotalCredits;
-
                 finalResults.Add(semResult);
             }
 
@@ -179,13 +202,8 @@ namespace StudentManagementSystem.Student
         {
             if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)
             {
-                // Get the current data item bound to this row
                 SemesterResult semester = (SemesterResult)e.Item.DataItem;
-
-                // Find the inner repeater control
                 Repeater rptCourses = (Repeater)e.Item.FindControl("rptCourses");
-
-                // 2. Safe check to ensure the control was successfully found
                 if (rptCourses != null && semester != null)
                 {
                     rptCourses.DataSource = semester.Courses;
@@ -210,6 +228,7 @@ namespace StudentManagementSystem.Student
 
         protected string GetGradeColor(string grade)
         {
+            if (grade == "N/A") return "text-gray-500";
             if (grade.StartsWith("A")) return "text-green-600";
             if (grade.StartsWith("B")) return "text-blue-600";
             if (grade.StartsWith("C")) return "text-yellow-600";
@@ -231,10 +250,14 @@ namespace StudentManagementSystem.Student
             public string CourseCode { get; set; }
             public string CourseName { get; set; }
             public int CreditHours { get; set; }
+            public string DisplayCreditHours { get; set; }  // For showing "-" when incomplete
             public List<AssessmentResult> Assessments { get; set; }
             public decimal TotalPercentage { get; set; }
+            public string DisplayTotalPercentage { get; set; }
             public string Grade { get; set; }
             public decimal GradePoint { get; set; }
+            public string DisplayGradePoint { get; set; }
+            public decimal TotalWeightage { get; set; }  // Sum of all assessment weightages for this course
         }
 
         public class SemesterResult
