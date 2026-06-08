@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Student Setting" Language="C#" MasterPageFile="~/Student/StudentNavigationBar/StudentMaster.master" AutoEventWireup="true" CodeBehind="StudentSetting.aspx.cs" Inherits="StudentManagementSystem.Student.StudentSetting" %>
+<%@ Page Title="Student Setting" Language="C#" MasterPageFile="~/Student/StudentNavigationBar/StudentMaster.master" AutoEventWireup="true" CodeBehind="StudentSetting.aspx.cs" Inherits="StudentManagementSystem.Student.StudentSetting" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="NavigationBar" runat="server">
 </asp:Content>
