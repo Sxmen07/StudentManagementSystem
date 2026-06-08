@@ -11,142 +11,142 @@ namespace StudentManagementSystem.Student
 {
 
 
-    public partial class StudentProfile
+    public partial class StudentCourseEnrol
     {
 
         /// <summary>
-        /// lblMessage control.
+        /// lblCurrentGPA control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblMessage;
+        protected global::System.Web.UI.WebControls.Label lblCurrentGPA;
 
         /// <summary>
-        /// hdnPassword control.
+        /// lblCreditsEarned control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hdnPassword;
+        protected global::System.Web.UI.WebControls.Label lblCreditsEarned;
 
         /// <summary>
-        /// btnEdit control.
+        /// lblTotalRequiredCredits control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnEdit;
+        protected global::System.Web.UI.WebControls.Label lblTotalRequiredCredits;
 
         /// <summary>
-        /// btnSave control.
+        /// btnPrintSchedule control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnSave;
+        protected global::System.Web.UI.WebControls.LinkButton btnPrintSchedule;
 
         /// <summary>
-        /// btnCancel control.
+        /// gvCurrentEnrolled control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnCancel;
+        protected global::System.Web.UI.WebControls.GridView gvCurrentEnrolled;
 
         /// <summary>
-        /// txtStudentID control.
+        /// lblNoCurrent control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtStudentID;
+        protected global::System.Web.UI.WebControls.Label lblNoCurrent;
 
         /// <summary>
-        /// txtStudentName control.
+        /// gvDropped control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtStudentName;
+        protected global::System.Web.UI.WebControls.GridView gvDropped;
 
         /// <summary>
-        /// txtStudentEmail control.
+        /// lblNoDropped control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtStudentEmail;
+        protected global::System.Web.UI.WebControls.Label lblNoDropped;
 
         /// <summary>
-        /// txtPassword control.
+        /// lblTargetSemester control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtPassword;
+        protected global::System.Web.UI.WebControls.Label lblTargetSemester;
 
         /// <summary>
-        /// txtPersonalEmail control.
+        /// gvAvailable control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtPersonalEmail;
+        protected global::System.Web.UI.WebControls.GridView gvAvailable;
 
         /// <summary>
-        /// txtContactNumber control.
+        /// lblNoAvailable control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtContactNumber;
+        protected global::System.Web.UI.WebControls.Label lblNoAvailable;
 
         /// <summary>
-        /// txtProgrammeCode control.
+        /// hlViewRequirements control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtProgrammeCode;
+        protected global::System.Web.UI.WebControls.HyperLink hlViewRequirements;
 
         /// <summary>
-        /// txtProgrammeName control.
+        /// gvHistory control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtProgrammeName;
+        protected global::System.Web.UI.WebControls.GridView gvHistory;
 
         /// <summary>
-        /// txtIntakeSemester control.
+        /// lblNoHistory control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtIntakeSemester;
+        protected global::System.Web.UI.WebControls.Label lblNoHistory;
 
         /// <summary>
-        /// txtIntakeYear control.
+        /// btnShowMoreHistory control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtIntakeYear;
+        protected global::System.Web.UI.WebControls.LinkButton btnShowMoreHistory;
     }
 }
