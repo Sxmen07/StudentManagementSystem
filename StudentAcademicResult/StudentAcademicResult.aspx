@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Academic Results" Language="C#" MasterPageFile="~/Student/StudentNavigationBar/StudentMaster.master" AutoEventWireup="true" CodeBehind="StudentAcademicResult.aspx.cs" Inherits="StudentManagementSystem.Student.StudentAcademicResult" %>
+<%@ Page Title="Academic Results" Language="C#" MasterPageFile="~/Student/StudentNavigationBar/StudentMaster.master" AutoEventWireup="true" CodeBehind="StudentAcademicResult.aspx.cs" Inherits="StudentManagementSystem.Student.StudentAcademicResult" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="NavigationBar" runat="server">
 </asp:Content>
@@ -41,7 +41,7 @@
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%# Eval("CourseCode") %></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><%# Eval("CourseName") %></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><%# Eval("CreditHours") %></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><%# Eval("DisplayCreditHours") %></td>
                                     <td class="px-6 py-4 text-sm text-gray-600">
                                         <div class="space-y-1">
                                             <asp:Repeater ID="rptAssessments" runat="server" DataSource='<%# Eval("Assessments") %>'>
@@ -51,10 +51,10 @@
                                             </asp:Repeater>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><%# Eval("TotalPercentage") %>%</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><%# Eval("DisplayTotalPercentage") %></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold <%# GetGradeColor(Eval("Grade").ToString()) %>"><%# Eval("Grade") %></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><%# Eval("GradePoint") %></td>
-                                </tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><%# Eval("DisplayGradePoint") %></td>
+                                 </tr>
                             </ItemTemplate>
                             <FooterTemplate>
                                     </tbody>
