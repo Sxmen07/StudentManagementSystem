@@ -11,7 +11,7 @@ namespace LecturerPortal
 {
 
 
-    public partial class Attendance
+    public partial class Assessment
     {
 
         /// <summary>
@@ -51,15 +51,6 @@ namespace LecturerPortal
         protected global::System.Web.UI.WebControls.DropDownList ddlCourseOffer;
 
         /// <summary>
-        /// txtDate control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtDate;
-
-        /// <summary>
         /// btnLoad control.
         /// </summary>
         /// <remarks>
@@ -67,15 +58,6 @@ namespace LecturerPortal
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnLoad;
-
-        /// <summary>
-        /// btnHistory control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnHistory;
 
         /// <summary>
         /// pnlTable control.
@@ -96,22 +78,31 @@ namespace LecturerPortal
         protected global::System.Web.UI.WebControls.HiddenField hfCourseOfferID;
 
         /// <summary>
-        /// btnSave control.
+        /// lblTotalWeightage control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnSave;
+        protected global::System.Web.UI.WebControls.Label lblTotalWeightage;
 
         /// <summary>
-        /// rptStudents control.
+        /// btnEditStructure control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater rptStudents;
+        protected global::System.Web.UI.WebControls.Button btnEditStructure;
+
+        /// <summary>
+        /// btnSaveScores control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnSaveScores;
 
         /// <summary>
         /// lblStatus control.
@@ -123,30 +114,75 @@ namespace LecturerPortal
         protected global::System.Web.UI.WebControls.Label lblStatus;
 
         /// <summary>
-        /// pnlHistory control.
+        /// litAssessmentTable control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlHistory;
+        protected global::System.Web.UI.WebControls.Literal litAssessmentTable;
 
         /// <summary>
-        /// lblHistoryStatus control.
+        /// pnlAssessmentModal control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblHistoryStatus;
+        protected global::System.Web.UI.WebControls.Panel pnlAssessmentModal;
 
         /// <summary>
-        /// litAttendanceHistory control.
+        /// txtAssessmentName control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Literal litAttendanceHistory;
+        protected global::System.Web.UI.WebControls.TextBox txtAssessmentName;
+
+        /// <summary>
+        /// txtMaxMarks control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtMaxMarks;
+
+        /// <summary>
+        /// txtWeightage control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtWeightage;
+
+        /// <summary>
+        /// btnAddAssessment control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnAddAssessment;
+
+        /// <summary>
+        /// gvAssessments control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.GridView gvAssessments;
+
+        /// <summary>
+        /// btnCloseAssessmentModal control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnCloseAssessmentModal;
     }
 }
