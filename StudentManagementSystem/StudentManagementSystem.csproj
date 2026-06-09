@@ -102,6 +102,7 @@
     <Content Include="About.aspx" />
     <Content Include="Admin\Admin.aspx" />
     <Content Include="Admin\Admin.css" />
+    <Content Include="Lecturer Portal\Assessment.aspx" />
     <Content Include="Lecturer Portal\Attendance.aspx" />
     <Content Include="Contact.aspx" />
     <Content Include="Content\bootstrap-grid.css" />
@@ -213,6 +214,13 @@
       <DependentUpon>About.aspx</DependentUpon>
     </Compile>
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Lecturer Portal\Assessment.aspx.cs">
+      <DependentUpon>Assessment.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Lecturer Portal\Assessment.aspx.designer.cs">
+      <DependentUpon>Assessment.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Lecturer Portal\Attendance.aspx.cs">
       <DependentUpon>Attendance.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
