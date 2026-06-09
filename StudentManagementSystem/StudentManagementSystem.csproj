@@ -127,6 +127,8 @@
     <Content Include="Global.asax" />
     <Content Include="Lecturer Portal\Assessment.aspx" />
     <Content Include="Lecturer Portal\LectProfile.aspx" />
+    <Content Include="Lecturer Portal\LecturerMonitorAcademicProgress.aspx" />
+    <Content Include="Lecturer Portal\LecturerPostAnnouncement.aspx" />
     <Content Include="Lecturer Portal\Login.aspx" />
     <Content Include="Login.aspx" />
     <Content Include="Login.css" />
@@ -251,6 +253,20 @@
     </Compile>
     <Compile Include="Lecturer Portal\LectProfile.aspx.designer.cs">
       <DependentUpon>LectProfile.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Lecturer Portal\LecturerMonitorAcademicProgress.aspx.cs">
+      <DependentUpon>LecturerMonitorAcademicProgress.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Lecturer Portal\LecturerMonitorAcademicProgress.aspx.designer.cs">
+      <DependentUpon>LecturerMonitorAcademicProgress.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Lecturer Portal\LecturerPostAnnouncement.aspx.cs">
+      <DependentUpon>LecturerPostAnnouncement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Lecturer Portal\LecturerPostAnnouncement.aspx.designer.cs">
+      <DependentUpon>LecturerPostAnnouncement.aspx</DependentUpon>
     </Compile>
     <Compile Include="Lecturer Portal\Login.aspx.cs">
       <DependentUpon>Login.aspx</DependentUpon>
