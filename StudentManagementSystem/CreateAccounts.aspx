@@ -61,7 +61,7 @@
                 <div class="bg-[#F7F7F5] p-6 rounded-lg border border-[#EBEBE9] h-fit">
                     <h3 class="text-sm font-semibold mb-6 text-[#1A1A1A]">Manage User Profile</h3>
                     
-                    <asp:Label ID="lblStatus" runat="server" CssClass="block text-xs font-medium mb-4" Visible="false"></asp:Label>
+                    <asp:Label ID="lblStatus" runat="server" CssClass="block text-xs font-medium mb-4 p-2.5 rounded-md" Visible="false"></asp:Label>
                     <asp:HiddenField ID="hfUserID" runat="server" />
 
                     <div class="space-y-4">
@@ -77,13 +77,21 @@
 
                         <div>
                             <label class="block text-xs font-bold text-[#7C7B77] uppercase tracking-wider mb-2">Assigned Institutional Role</label>
-                            <asp:DropDownList ID="ddlRole" runat="server" CssClass="w-full bg-white p-2.5 text-sm rounded border border-[#EBEBE9] focus:border-[#1A1A1A] outline-none text-[#2F2F2F] transition-colors cursor-pointer">
+                            <asp:DropDownList ID="ddlRole" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddlRole_SelectedIndexChanged"
+                                CssClass="w-full bg-white p-2.5 text-sm rounded border border-[#EBEBE9] focus:border-[#1A1A1A] outline-none text-[#2F2F2F] transition-colors cursor-pointer">
                                 <asp:ListItem Value="">-- Select Access Tier --</asp:ListItem>
                                 <asp:ListItem Value="Student">Student</asp:ListItem>
                                 <asp:ListItem Value="Lecturer">Lecturer</asp:ListItem>
                                 <asp:ListItem Value="Admin">Admin</asp:ListItem>
                             </asp:DropDownList>
                         </div>
+
+                        <asp:Panel ID="pnlSemesterSelection" runat="server" Visible="false">
+                            <label class="block text-xs font-bold text-[#7C7B77] uppercase tracking-wider mb-2">Assign Intake Semester</label>
+                            <asp:DropDownList ID="ddlStudentSemester" runat="server" 
+                                CssClass="w-full bg-white p-2.5 text-sm rounded border border-[#EBEBE9] focus:border-[#1A1A1A] outline-none text-[#2F2F2F] transition-colors cursor-pointer">
+                            </asp:DropDownList>
+                        </asp:Panel>
 
                         <div class="pt-2 space-y-2">
                             <asp:Button ID="btnCreateAccount" runat="server" Text="Register Account" ClientIDMode="Static"

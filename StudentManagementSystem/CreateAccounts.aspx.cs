@@ -8,41 +8,69 @@ namespace StudentManagementSystem
 {
     public partial class CreateAccounts : System.Web.UI.Page
     {
-        // Active database targeted connection string
         private string connString = @"Server=(localdb)\MSSQLLocalDB;Database=StudentManagementSystem;Trusted_Connection=True;";
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            // Lock down page so unauthenticated accounts can't view administrative modules
             if (Session["UserRole"] == null || Session["UserRole"].ToString() != "Admin")
             {
                 Response.Redirect("Login.aspx");
             }
 
-            // Bind data to layout only on initial boot sequence, preventing dropdown value resets
             if (!IsPostBack)
             {
                 BindUserGrid();
+                BindSemesterDropdown();
             }
         }
 
         // =========================================================================
-        // REFRESH & POPULATE THE REGISTRY LIST VIEW DIRECTORY
+        // DYNAMIC SEED: RECOVER SYSTEM SEMESTER ENTRIES FOR INTAKE SELECTION
         // =========================================================================
+        private void BindSemesterDropdown()
+        {
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                string query = "SELECT SemesterID, Semester FROM Semester ORDER BY SemesterID";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    try
+                    {
+                        conn.Open();
+                        ddlStudentSemester.DataSource = cmd.ExecuteReader();
+                        ddlStudentSemester.DataValueField = "SemesterID"; // Passes primary index key automatically (e.g. 2, 3, 4)
+                        ddlStudentSemester.DataTextField = "Semester";     // Displays text value gracefully (e.g. "Jan", "April")
+                        ddlStudentSemester.DataBind();
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowStatus("Could not query dynamic operational terms: " + ex.Message, false);
+                    }
+                }
+            }
+            ddlStudentSemester.Items.Insert(0, new ListItem("-- Select Active Semester --", ""));
+        }
+
+        protected void ddlRole_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Toggle semester options field configuration dynamically based on active selection tier
+            pnlSemesterSelection.Visible = (ddlRole.SelectedValue == "Student");
+        }
+
         private void BindUserGrid()
         {
             string selectedFilter = ddlFilterRole != null ? ddlFilterRole.SelectedValue : "All";
 
             string hopPart = "SELECT HopID AS UserID, HopEmail AS Username, UserRole AS Role FROM HeadofProgramme";
             string lecPart = "SELECT LecturerID AS UserID, LecturerEmail AS Username, UserRole AS Role FROM Lecturer";
-            string studPart = "SELECT StudentID AS UserID, StudentEmail AS Username, UserRole AS Role FROM Student";
+            string boldPart = "SELECT StudentID AS UserID, StudentEmail AS Username, UserRole AS Role FROM Student";
 
             string finalQuery = "";
 
             if (selectedFilter == "Admin") finalQuery = hopPart + " ORDER BY Username";
             else if (selectedFilter == "Lecturer") finalQuery = lecPart + " ORDER BY Username";
-            else if (selectedFilter == "Student") finalQuery = studPart + " ORDER BY Username";
-            else finalQuery = hopPart + " UNION " + lecPart + " UNION " + studPart + " ORDER BY Role, Username";
+            else if (selectedFilter == "Student") finalQuery = boldPart + " ORDER BY Username";
+            else finalQuery = hopPart + " UNION " + lecPart + " UNION " + boldPart + " ORDER BY Role, Username";
 
             using (SqlConnection conn = new SqlConnection(connString))
             {
@@ -87,6 +115,13 @@ namespace StudentManagementSystem
                 return;
             }
 
+            // Security Validation: If target role is Student, verify a valid semester index row has been chosen
+            if (role == "Student" && string.IsNullOrEmpty(ddlStudentSemester.SelectedValue))
+            {
+                ShowStatus("Operational constraint warning: Please specify a valid intake semester for student registration.", false);
+                return;
+            }
+
             using (SqlConnection conn = new SqlConnection(connString))
             {
                 try
@@ -102,7 +137,6 @@ namespace StudentManagementSystem
                         // OPTION A: Admin changed the account's structural role tier
                         if (originalRole != role)
                         {
-                            // 1. Wipe out profile trace row from the old table
                             string dropQuery = "";
                             if (originalRole == "Admin") dropQuery = "DELETE FROM HeadofProgramme WHERE HopID = @ID";
                             else if (originalRole == "Lecturer") dropQuery = "DELETE FROM Lecturer WHERE LecturerID = @ID";
@@ -114,16 +148,19 @@ namespace StudentManagementSystem
                                 dropCmd.ExecuteNonQuery();
                             }
 
-                            // 2. Insert fresh record into the new table
                             string insertQuery = "";
                             if (role == "Admin") insertQuery = "INSERT INTO HeadofProgramme (HopName, HopEmail, Password) VALUES ('Modified Admin', @Email, @Password)";
                             else if (role == "Lecturer") insertQuery = "INSERT INTO Lecturer (LecturerName, LecturerEmail, Password) VALUES ('Modified Faculty', @Email, @Password)";
-                            else if (role == "Student") insertQuery = "INSERT INTO Student (StudentName, StudentEmail, Password, SemesterID, IntakeYear) VALUES ('Modified Student', @Email, @Password, 1, 2026)";
+                            else if (role == "Student") insertQuery = "INSERT INTO Student (StudentName, StudentEmail, Password, SemesterID, IntakeYear) VALUES ('Modified Student', @Email, @Password, @SemesterID, 2026)";
 
                             using (SqlCommand insCmd = new SqlCommand(insertQuery, conn))
                             {
                                 insCmd.Parameters.AddWithValue("@Email", email);
                                 insCmd.Parameters.AddWithValue("@Password", password);
+                                if (role == "Student")
+                                {
+                                    insCmd.Parameters.AddWithValue("@SemesterID", Convert.ToInt32(ddlStudentSemester.SelectedValue));
+                                }
                                 insCmd.ExecuteNonQuery();
                             }
                         }
@@ -133,29 +170,36 @@ namespace StudentManagementSystem
                             string updateQuery = "";
                             if (role == "Admin") updateQuery = "UPDATE HeadofProgramme SET HopEmail = @Email, Password = @Password WHERE HopID = @ID";
                             else if (role == "Lecturer") updateQuery = "UPDATE Lecturer SET LecturerEmail = @Email, Password = @Password WHERE LecturerID = @ID";
-                            else if (role == "Student") updateQuery = "UPDATE Student SET StudentEmail = @Email, Password = @Password WHERE StudentID = @ID";
+                            else if (role == "Student") updateQuery = "UPDATE Student SET StudentEmail = @Email, Password = @Password, SemesterID = @SemesterID WHERE StudentID = @ID";
 
                             using (SqlCommand updCmd = new SqlCommand(updateQuery, conn))
                             {
                                 updCmd.Parameters.AddWithValue("@Email", email);
                                 updCmd.Parameters.AddWithValue("@Password", password);
                                 updCmd.Parameters.AddWithValue("@ID", targetId);
+                                if (role == "Student")
+                                {
+                                    updCmd.Parameters.AddWithValue("@SemesterID", Convert.ToInt32(ddlStudentSemester.SelectedValue));
+                                }
                                 updCmd.ExecuteNonQuery();
                             }
                         }
                     }
                     else
                     {
-                        // Core account creation logic paths
                         string insertQuery = "";
                         if (role == "Admin") insertQuery = "INSERT INTO HeadofProgramme (HopName, HopEmail, Password) VALUES ('New Admin', @Email, @Password)";
                         else if (role == "Lecturer") insertQuery = "INSERT INTO Lecturer (LecturerName, LecturerEmail, Password) VALUES ('Faculty Member', @Email, @Password)";
-                        else if (role == "Student") insertQuery = "INSERT INTO Student (StudentName, StudentEmail, Password, SemesterID, IntakeYear) VALUES ('Student Enrollee', @Email, @Password, 1, 2026)";
+                        else if (role == "Student") insertQuery = "INSERT INTO Student (StudentName, StudentEmail, Password, SemesterID, IntakeYear) VALUES ('Student Enrollee', @Email, @Password, @SemesterID, 2026)";
 
                         using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
                         {
                             cmd.Parameters.AddWithValue("@Email", email);
                             cmd.Parameters.AddWithValue("@Password", password);
+                            if (role == "Student")
+                            {
+                                cmd.Parameters.AddWithValue("@SemesterID", Convert.ToInt32(ddlStudentSemester.SelectedValue));
+                            }
                             cmd.ExecuteNonQuery();
                         }
                     }
@@ -164,9 +208,21 @@ namespace StudentManagementSystem
                     ShowStatus(isUpdate ? "Account profile changes synchronized cleanly!" : "Account created successfully!", true);
                     BindUserGrid();
                 }
+                catch (SqlException ex)
+                {
+                    // Catch block to capture structural index errors
+                    if (ex.Number == 547)
+                    {
+                        ShowStatus("Database integrity conflict: The selected semester does not exist in our active dictionary records.", false);
+                    }
+                    else
+                    {
+                        ShowStatus("Database transaction failed: " + ex.Message, false);
+                    }
+                }
                 catch (Exception ex)
                 {
-                    ShowStatus("Database transaction failed: " + ex.Message, false);
+                    ShowStatus("System engine failure: " + ex.Message, false);
                 }
             }
         }
@@ -186,9 +242,9 @@ namespace StudentManagementSystem
             if (e.CommandName == "EditUser")
             {
                 string query = "";
-                if (targetRole == "Admin") query = "SELECT HopEmail AS Email, Password FROM HeadofProgramme WHERE HopID = @ID";
-                else if (targetRole == "Lecturer") query = "SELECT LecturerEmail AS Email, Password FROM Lecturer WHERE LecturerID = @ID";
-                else if (targetRole == "Student") query = "SELECT StudentEmail AS Email, Password FROM Student WHERE StudentID = @ID";
+                if (targetRole == "Admin") query = "SELECT HopEmail AS Email, Password, NULL as SemesterID FROM HeadofProgramme WHERE HopID = @ID";
+                else if (targetRole == "Lecturer") query = "SELECT LecturerEmail AS Email, Password, NULL as SemesterID FROM Lecturer WHERE LecturerID = @ID";
+                else if (targetRole == "Student") query = "SELECT StudentEmail AS Email, Password, SemesterID FROM Student WHERE StudentID = @ID";
 
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
@@ -206,8 +262,23 @@ namespace StudentManagementSystem
                                     txtNewPassword.Text = reader["Password"].ToString();
                                     ddlRole.SelectedValue = targetRole;
 
+                                    // Display semester settings mapping options if loading a student profile record
+                                    if (targetRole == "Student")
+                                    {
+                                        pnlSemesterSelection.Visible = true;
+                                        string semId = reader["SemesterID"].ToString();
+                                        if (ddlStudentSemester.Items.FindByValue(semId) != null)
+                                        {
+                                            ddlStudentSemester.SelectedValue = semId;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        pnlSemesterSelection.Visible = false;
+                                    }
+
                                     hfUserID.Value = targetId;
-                                    Session["EditingRole"] = targetRole; // Keep tabs on where they came from
+                                    Session["EditingRole"] = targetRole;
 
                                     btnCreateAccount.Text = "Update Account";
                                     btnCancelAccount.Visible = true;
@@ -260,6 +331,8 @@ namespace StudentManagementSystem
             txtNewUsername.Text = "";
             txtNewPassword.Text = "";
             ddlRole.SelectedIndex = 0;
+            ddlStudentSemester.SelectedIndex = 0;
+            pnlSemesterSelection.Visible = false;
             btnCreateAccount.Text = "Register Account";
             btnCancelAccount.Visible = false;
             Session["EditingRole"] = null;
@@ -274,6 +347,7 @@ namespace StudentManagementSystem
         private void ShowStatus(string message, bool isSuccess)
         {
             lblStatus.Text = message;
+            lblStatus.BackColor = isSuccess ? System.Drawing.Color.FromArgb(240, 253, 244) : System.Drawing.Color.FromArgb(254, 242, 242);
             lblStatus.ForeColor = isSuccess ? System.Drawing.Color.MediumSeaGreen : System.Drawing.Color.OrangeRed;
             lblStatus.Visible = true;
         }
