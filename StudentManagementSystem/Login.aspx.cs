@@ -37,15 +37,18 @@ namespace StudentManagementSystem
                     conn.Open();
 
                     // 1. Check if the user is a Head of Programme (Admin)
-                    string hopQuery = "SELECT UserRole, HopName FROM HeadofProgramme WHERE HopEmail = @Email AND Password = @Password";
+                    // ADDED: HopID added to the SELECT query
+                    string hopQuery = "SELECT HopID, UserRole, HopName FROM HeadofProgramme WHERE HopEmail = @Email AND Password = @Password";
                     using (SqlCommand cmd = new SqlCommand(hopQuery, conn))
                     {
                         cmd.Parameters.AddWithValue("@Email", username);
-                        cmd.Parameters.AddWithValue("@Password", password); // Note: Hash this later if required
+                        cmd.Parameters.AddWithValue("@Password", password);
                         using (SqlDataReader reader = cmd.ExecuteReader())
                         {
                             if (reader.Read())
                             {
+                                // ADDED: Saving the ID into Session["UserID"]
+                                Session["UserID"] = reader["HopID"].ToString();
                                 Session["Username"] = reader["HopName"].ToString();
                                 Session["UserRole"] = reader["UserRole"].ToString(); // Will be 'Admin'
                                 Response.Redirect("AdminDashboard.aspx");
@@ -55,7 +58,8 @@ namespace StudentManagementSystem
                     }
 
                     // 2. Check if the user is a Lecturer
-                    string lecQuery = "SELECT UserRole, LecturerName FROM Lecturer WHERE LecturerEmail = @Email AND Password = @Password";
+                    // ADDED: LecturerID added to the SELECT query
+                    string lecQuery = "SELECT LecturerID, UserRole, LecturerName FROM Lecturer WHERE LecturerEmail = @Email AND Password = @Password";
                     using (SqlCommand cmd = new SqlCommand(lecQuery, conn))
                     {
                         cmd.Parameters.AddWithValue("@Email", username);
@@ -64,16 +68,19 @@ namespace StudentManagementSystem
                         {
                             if (reader.Read())
                             {
+                                // ADDED: Saving the ID into Session["UserID"]
+                                Session["UserID"] = reader["LecturerID"].ToString();
                                 Session["Username"] = reader["LecturerName"].ToString();
                                 Session["UserRole"] = reader["UserRole"].ToString();
-                                Response.Redirect("LecturerDashboard.aspx"); // Or wherever your team sends lecturers
+                                Response.Redirect("LecturerDashboard.aspx");
                                 return;
                             }
                         }
                     }
 
                     // 3. Check if the user is a Student
-                    string studQuery = "SELECT UserRole, StudentName FROM Student WHERE StudentEmail = @Email AND Password = @Password";
+                    // ADDED: StudentID added to the SELECT query
+                    string studQuery = "SELECT StudentID, UserRole, StudentName FROM Student WHERE StudentEmail = @Email AND Password = @Password";
                     using (SqlCommand cmd = new SqlCommand(studQuery, conn))
                     {
                         cmd.Parameters.AddWithValue("@Email", username);
@@ -82,6 +89,8 @@ namespace StudentManagementSystem
                         {
                             if (reader.Read())
                             {
+                                // ADDED: Saving the ID into Session["UserID"]
+                                Session["UserID"] = reader["StudentID"].ToString();
                                 Session["Username"] = reader["StudentName"].ToString();
                                 Session["UserRole"] = reader["UserRole"].ToString();
                                 Response.Redirect("StudentDashboard.aspx");
