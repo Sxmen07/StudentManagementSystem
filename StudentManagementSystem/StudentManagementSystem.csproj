@@ -128,6 +128,7 @@
     <Content Include="Lecturer\Lecturer.aspx" />
     <Content Include="Login.aspx" />
     <Content Include="Login.css" />
+    <Content Include="ManageAnnouncements.aspx" />
     <Content Include="ManageCourses.aspx" />
     <Content Include="ManageSchoolNPrograms.aspx" />
     <Content Include="Register.aspx" />
@@ -187,8 +188,10 @@
     <Content Include="Scripts\WebForms\WebForms.js" />
     <Content Include="Scripts\WebForms\WebParts.js" />
     <Content Include="Scripts\WebForms\WebUIValidation.js" />
+    <Content Include="Sidebar.ascx" />
     <Content Include="Topbar.css" />
     <Content Include="TrackStudentGrade.aspx" />
+    <Content Include="UserProfile.aspx" />
     <Content Include="ViewSwitcher.ascx" />
     <Content Include="Web.config" />
     <Content Include="Bundle.config" />
@@ -262,6 +265,13 @@
     <Compile Include="Login.aspx.designer.cs">
       <DependentUpon>Login.aspx</DependentUpon>
     </Compile>
+    <Compile Include="ManageAnnouncements.aspx.cs">
+      <DependentUpon>ManageAnnouncements.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ManageAnnouncements.aspx.designer.cs">
+      <DependentUpon>ManageAnnouncements.aspx</DependentUpon>
+    </Compile>
     <Compile Include="ManageCourses.aspx.cs">
       <DependentUpon>ManageCourses.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -284,12 +294,26 @@
     <Compile Include="Register.aspx.designer.cs">
       <DependentUpon>Register.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Sidebar.ascx.cs">
+      <DependentUpon>Sidebar.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Sidebar.ascx.designer.cs">
+      <DependentUpon>Sidebar.ascx</DependentUpon>
+    </Compile>
     <Compile Include="TrackStudentGrade.aspx.cs">
       <DependentUpon>TrackStudentGrade.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="TrackStudentGrade.aspx.designer.cs">
       <DependentUpon>TrackStudentGrade.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="UserProfile.aspx.cs">
+      <DependentUpon>UserProfile.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="UserProfile.aspx.designer.cs">
+      <DependentUpon>UserProfile.aspx</DependentUpon>
     </Compile>
     <Compile Include="ViewSwitcher.ascx.cs">
       <DependentUpon>ViewSwitcher.ascx</DependentUpon>
@@ -302,6 +326,7 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="images\" />
+    <Folder Include="profile_upload\" />
     <Folder Include="Student\" />
   </ItemGroup>
   <ItemGroup>
