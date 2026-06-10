@@ -90,6 +90,12 @@
                     <p class="text-[#5F5E5B] text-xs leading-relaxed">Allocate active curriculum courses to registered lecturers, set calendar terms, and track status indicators.</p>
                 </a>
 
+                <a href="TrackStudentGrade.aspx" class="block group bg-[#F7F7F5] p-6 rounded-lg border border-[#EBEBE9] hover:border-[#1A1A1A] transition-colors">
+                    <div class="text-[#7C7B77] group-hover:text-[#1A1A1A] transition-colors text-xs font-bold uppercase tracking-wider mb-2">Performance Oversight</div>
+                    <h3 class="text-lg font-semibold text-[#1A1A1A] mb-2">Track Student Standing &rarr;</h3>
+                    <p class="text-[#5F5E5B] text-xs leading-relaxed">Analyze student grade outcomes, trace risk parameters, and evaluate active alert thresholds.</p>
+                </a>
+
             </div>
         </div>
 

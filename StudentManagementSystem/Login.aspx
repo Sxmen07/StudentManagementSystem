@@ -56,7 +56,7 @@
                 </div>
 
                 <div class="mt-[25px]">
-                    <span class="text-xs text-black font-medium">Don't have an account? <a href="#" class="text-blue-700 underline">Contact Admin</a></span>
+                    <span class="text-xs text-black font-medium">Don't have an account? <a href="ContactAdmin.aspx" class="text-blue-700 underline">Contact Admin</a></span>
                 </div>
                 
                 <asp:Label ID="lblError" runat="server" ForeColor="Red" Font-Size="Small" Style="display:block; text-align:center; margin-top:10px; font-weight:500;"></asp:Label>
