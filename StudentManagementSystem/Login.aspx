@@ -46,7 +46,7 @@
                 </div>
 
                 <div class="text-right -mt-[10px] mb-[30px]">
-                    <span class="text-xs text-black font-medium">Forgot password? <a href="#" class="text-blue-700 underline">Click Here</a></span>
+                    <span class="text-xs text-black font-medium">Forgot password? <a href="ForgotPassword(Optional).aspx" class="text-blue-700 underline">Click Here</a></span>
                 </div>
 
                 <div class="mb-[35px]">

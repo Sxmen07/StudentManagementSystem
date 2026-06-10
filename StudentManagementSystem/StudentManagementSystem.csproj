@@ -123,6 +123,7 @@
     <Content Include="CreateAccounts.aspx" />
     <Content Include="favicon.ico" />
     <Content Include="Footer.css" />
+    <Content Include="ForgotPassword%28Optional%29.aspx" />
     <Content Include="Global.asax" />
     <Content Include="Lecturer\Lecturer.aspx" />
     <Content Include="Login.aspx" />
@@ -236,6 +237,13 @@
     </Compile>
     <Compile Include="CreateAccounts.aspx.designer.cs">
       <DependentUpon>CreateAccounts.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ForgotPassword%28Optional%29.aspx.cs">
+      <DependentUpon>ForgotPassword%28Optional%29.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ForgotPassword%28Optional%29.aspx.designer.cs">
+      <DependentUpon>ForgotPassword%28Optional%29.aspx</DependentUpon>
     </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
