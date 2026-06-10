@@ -8,8 +8,8 @@ namespace StudentManagementSystem
 {
     public partial class ManageCourses : System.Web.UI.Page
     {
-        // Keeps the local server instance completely synchronized across the system files
-        private string connString = @"Server=(localdb)\MSSQLLocalDB;Database=SE_Assignment;Trusted_Connection=True;";
+        // Re-aligned connection parameters directly pointing to your team's live database name
+        private string connString = @"Server=(localdb)\MSSQLLocalDB;Database=StudentManagementSystem;Trusted_Connection=True;";
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -21,7 +21,7 @@ namespace StudentManagementSystem
             if (!IsPostBack)
             {
                 PopulateProgrammeDropdowns();
-                BindCoursesGrid(); // Default state binds all data
+                BindCoursesGrid();
             }
         }
 
@@ -31,17 +31,20 @@ namespace StudentManagementSystem
             BindCoursesGrid();
         }
 
+        // =========================================================================
+        // REFRESH AND GRID-POPULATE ACTIVE SYLLABUS ENTRIES
+        // =========================================================================
         private void BindCoursesGrid()
         {
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                string query = "SELECT c.CourseID, c.CourseCode, c.CourseName, c.CreditHours, p.ProgrammeName FROM Courses c " +
-                               "INNER JOIN Programmes p ON c.ProgrammeID = p.ProgrammeID ";
+                // Refactored to reference team-confirmed tables 'Course' and 'Programme'
+                string query = "SELECT c.CourseCode, c.CourseName, c.CreditHours, p.ProgrammeName FROM Course c " +
+                               "INNER JOIN Programme p ON c.ProgrammeCode = p.ProgrammeCode ";
 
-                // If filter dropdown selection is active, add the programmatic conditional parameter mapping
                 if (!string.IsNullOrEmpty(ddlFilterProgramme.SelectedValue))
                 {
-                    query += "WHERE c.ProgrammeID = @FilterProgID ";
+                    query += "WHERE c.ProgrammeCode = @FilterProgCode ";
                 }
 
                 query += "ORDER BY c.CourseCode ASC";
@@ -50,53 +53,69 @@ namespace StudentManagementSystem
                 {
                     if (!string.IsNullOrEmpty(ddlFilterProgramme.SelectedValue))
                     {
-                        cmd.Parameters.AddWithValue("@FilterProgID", ddlFilterProgramme.SelectedValue);
+                        cmd.Parameters.AddWithValue("@FilterProgCode", ddlFilterProgramme.SelectedValue);
                     }
 
                     using (SqlDataAdapter da = new SqlDataAdapter(cmd))
                     {
                         DataTable dt = new DataTable();
-                        da.Fill(dt);
-                        gvCourses.DataSource = dt;
-                        gvCourses.DataBind();
+                        try
+                        {
+                            da.Fill(dt);
+                            gvCourses.DataSource = dt;
+                            gvCourses.DataBind();
+                        }
+                        catch (Exception ex)
+                        {
+                            ShowStatus("Error rendering curriculum directories: " + ex.Message, false);
+                        }
                     }
                 }
             }
         }
 
+        // =========================================================================
+        // SYNC DROPDOWNS FROM LIVE DATABASE CURRICULUM SELECTION STRINGS
+        // =========================================================================
         private void PopulateProgrammeDropdowns()
         {
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                string query = "SELECT ProgrammeID, ProgrammeName FROM Programmes ORDER BY ProgrammeName ASC";
+                // Pulling directly from team unified table layout parameters
+                string query = "SELECT ProgrammeCode, ProgrammeName FROM Programme ORDER BY ProgrammeName ASC";
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    conn.Open();
-                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    try
                     {
-                        // Sync Form Input Dropdown
-                        ddlProgrammes.Items.Clear();
-                        ddlProgrammes.Items.Add(new ListItem("-- Choose Associated Program --", ""));
-
-                        // Sync Filter Nav Dropdown
-                        string currentSelectedFilter = ddlFilterProgramme.SelectedValue;
-                        ddlFilterProgramme.Items.Clear();
-                        ddlFilterProgramme.Items.Add(new ListItem("All Programmes", ""));
-
-                        while (dr.Read())
+                        conn.Open();
+                        using (SqlDataReader dr = cmd.ExecuteReader())
                         {
-                            string id = dr["ProgrammeID"].ToString();
-                            string name = dr["ProgrammeName"].ToString();
+                            ddlProgrammes.Items.Clear();
+                            ddlProgrammes.Items.Add(new ListItem("-- Choose Associated Program --", ""));
 
-                            ddlProgrammes.Items.Add(new ListItem(name, id));
-                            ddlFilterProgramme.Items.Add(new ListItem(name, id));
-                        }
+                            string currentSelectedFilter = ddlFilterProgramme.SelectedValue;
+                            ddlFilterProgramme.Items.Clear();
+                            ddlFilterProgramme.Items.Add(new ListItem("All Programmes", ""));
 
-                        // Maintain previous view filter pointer selection state safely
-                        if (ddlFilterProgramme.Items.FindByValue(currentSelectedFilter) != null)
-                        {
-                            ddlFilterProgramme.SelectedValue = currentSelectedFilter;
+                            while (dr.Read())
+                            {
+                                string code = dr["ProgrammeCode"].ToString();
+                                string name = dr["ProgrammeName"].ToString();
+
+                                // Storing ProgrammeCode string as data values safely
+                                ddlProgrammes.Items.Add(new ListItem($"[{code}] {name}", code));
+                                ddlFilterProgramme.Items.Add(new ListItem(name, code));
+                            }
+
+                            if (ddlFilterProgramme.Items.FindByValue(currentSelectedFilter) != null)
+                            {
+                                ddlFilterProgramme.SelectedValue = currentSelectedFilter;
+                            }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowStatus("Failed to load active curriculum routes: " + ex.Message, false);
                     }
                 }
             }
@@ -107,62 +126,125 @@ namespace StudentManagementSystem
             BindCoursesGrid();
         }
 
+        // =========================================================================
+        // TRANSACTION WRITE ACTION CONTROLLER (INSERTION OR VALUE OVERWRITES)
+        // =========================================================================
         protected void btnSaveCourse_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtCourseCode.Text) || string.IsNullOrWhiteSpace(txtCourseName.Text) || string.IsNullOrEmpty(ddlProgrammes.SelectedValue)) return;
+            string code = txtCourseCode.Text.Trim().ToUpper();
+            string name = txtCourseName.Text.Trim();
+            string creditStr = txtCreditHours.Text.Trim();
+            string progCode = ddlProgrammes.SelectedValue;
+            string desc = txtDescription.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name) || string.IsNullOrEmpty(progCode) || string.IsNullOrWhiteSpace(creditStr))
+            {
+                ShowStatus("All basic core fields are required before logging records.", false);
+                return;
+            }
+
+            int.TryParse(creditStr, out int credits);
+            bool isUpdate = !string.IsNullOrEmpty(hfOriginalCourseCode.Value);
 
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                string query = string.IsNullOrEmpty(hfCourseID.Value)
-                    ? "INSERT INTO Courses (CourseCode, CourseName, CreditHours, ProgrammeID) VALUES (@CourseCode, @CourseName, @CreditHours, @ProgrammeID)"
-                    : "UPDATE Courses SET CourseCode = @CourseCode, CourseName = @CourseName, CreditHours = @CreditHours, ProgrammeID = @ProgrammeID WHERE CourseID = @CourseID";
+                string query = "";
+                if (isUpdate)
+                {
+                    // Update targeting original primary key string parameter fields
+                    query = "UPDATE Course SET CourseCode = @CourseCode, CourseName = @CourseName, CreditHours = @CreditHours, ProgrammeCode = @ProgrammeCode, Description = @Desc WHERE CourseCode = @OrigCode";
+                }
+                else
+                {
+                    // Check duplicate constraint values before running inserts
+                    string checkQuery = "SELECT COUNT(1) FROM Course WHERE CourseCode = @CourseCode";
+                    using (SqlCommand checkCmd = new SqlCommand(checkQuery, conn))
+                    {
+                        checkCmd.Parameters.AddWithValue("@CourseCode", code);
+                        try
+                        {
+                            conn.Open();
+                            if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
+                            {
+                                ShowStatus($"A module record with Course Code '{code}' already exists.", false);
+                                return;
+                            }
+                        }
+                        catch (Exception ex) { ShowStatus("Validation failure: " + ex.Message, false); return; }
+                        finally { conn.Close(); }
+                    }
+
+                    query = "INSERT INTO Course (CourseCode, CourseName, CreditHours, ProgrammeCode, Description) VALUES (@CourseCode, @CourseName, @CreditHours, @ProgrammeCode, @Desc)";
+                }
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@CourseCode", txtCourseCode.Text.Trim().ToUpper());
-                    cmd.Parameters.AddWithValue("@CourseName", txtCourseName.Text.Trim());
-                    cmd.Parameters.AddWithValue("@CreditHours", Convert.ToInt32(txtCreditHours.Text.Trim()));
-                    cmd.Parameters.AddWithValue("@ProgrammeID", ddlProgrammes.SelectedValue);
-                    if (!string.IsNullOrEmpty(hfCourseID.Value))
+                    cmd.Parameters.AddWithValue("@CourseCode", code);
+                    cmd.Parameters.AddWithValue("@CourseName", name);
+                    cmd.Parameters.AddWithValue("@CreditHours", credits);
+                    cmd.Parameters.AddWithValue("@ProgrammeCode", progCode);
+                    cmd.Parameters.AddWithValue("@Desc", string.IsNullOrEmpty(desc) ? (object)DBNull.Value : desc);
+                    if (isUpdate)
                     {
-                        cmd.Parameters.AddWithValue("@CourseID", hfCourseID.Value);
+                        cmd.Parameters.AddWithValue("@OrigCode", hfOriginalCourseCode.Value);
                     }
 
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
+                    try
+                    {
+                        conn.Open();
+                        cmd.ExecuteNonQuery();
+                        ShowStatus(isUpdate ? "Course specifics updated successfully!" : "New module registered into curriculum maps!", true);
+                        ClearCourseForm();
+                        BindCoursesGrid();
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowStatus("Database transaction update execution error: " + ex.Message, false);
+                    }
                 }
             }
-            ClearCourseForm();
-            BindCoursesGrid();
         }
 
+        // =========================================================================
+        // DATA ROW COMMAND LINK INTERCEPT ACTION ROUTER (EDIT MODES / PURGES)
+        // =========================================================================
         protected void gvCourses_RowCommand(object sender, GridViewCommandEventArgs e)
         {
             if (e.CommandArgument == null || string.IsNullOrEmpty(e.CommandArgument.ToString())) return;
-
-            int id = Convert.ToInt32(e.CommandArgument);
+            string targetCode = e.CommandArgument.ToString();
 
             if (e.CommandName == "EditCourse")
             {
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    string query = "SELECT CourseID, CourseCode, CourseName, CreditHours, ProgrammeID FROM Courses WHERE CourseID = @CourseID";
+                    string query = "SELECT CourseCode, CourseName, CreditHours, ProgrammeCode, Description FROM Course WHERE CourseCode = @CourseCode";
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@CourseID", id);
-                        conn.Open();
-                        using (SqlDataReader dr = cmd.ExecuteReader())
+                        cmd.Parameters.AddWithValue("@CourseCode", targetCode);
+                        try
                         {
-                            if (dr.Read())
+                            conn.Open();
+                            using (SqlDataReader dr = cmd.ExecuteReader())
                             {
-                                hfCourseID.Value = dr["CourseID"].ToString();
-                                txtCourseCode.Text = dr["CourseCode"].ToString();
-                                txtCourseName.Text = dr["CourseName"].ToString();
-                                txtCreditHours.Text = dr["CreditHours"].ToString();
-                                ddlProgrammes.SelectedValue = dr["ProgrammeID"].ToString();
-                                btnSaveCourse.Text = "Update Course";
-                                btnCancelCourse.Visible = true;
+                                if (dr.Read())
+                                {
+                                    hfOriginalCourseCode.Value = dr["CourseCode"].ToString();
+                                    txtCourseCode.Text = dr["CourseCode"].ToString();
+                                    txtCourseName.Text = dr["CourseName"].ToString();
+                                    txtCreditHours.Text = dr["CreditHours"].ToString();
+                                    txtDescription.Text = dr["Description"].ToString();
+                                    ddlProgrammes.SelectedValue = dr["ProgrammeCode"].ToString();
+
+                                    txtCourseCode.Enabled = true; // Primary Code fields open for structural re-mapping
+                                    btnSaveCourse.Text = "Update Course";
+                                    btnCancelCourse.Visible = true;
+                                    ShowStatus("Course variables staged. Make updates and save configurations.", true);
+                                }
                             }
+                        }
+                        catch (Exception ex)
+                        {
+                            ShowStatus("Failed to fetch requested course file: " + ex.Message, false);
                         }
                     }
                 }
@@ -171,16 +253,24 @@ namespace StudentManagementSystem
             {
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    string query = "DELETE FROM Courses WHERE CourseID = @CourseID";
+                    string query = "DELETE FROM Course WHERE CourseCode = @CourseCode";
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@CourseID", id);
-                        conn.Open();
-                        cmd.ExecuteNonQuery();
+                        cmd.Parameters.AddWithValue("@CourseCode", targetCode);
+                        try
+                        {
+                            conn.Open();
+                            cmd.ExecuteNonQuery();
+                            ShowStatus("Module row purged successfully from records.", true);
+                            ClearCourseForm();
+                            BindCoursesGrid();
+                        }
+                        catch (Exception ex)
+                        {
+                            ShowStatus("Wipe aborted. Active semester offers depend on this record: " + ex.Message, false);
+                        }
                     }
                 }
-                ClearCourseForm();
-                BindCoursesGrid();
             }
         }
 
@@ -191,9 +281,10 @@ namespace StudentManagementSystem
 
         private void ClearCourseForm()
         {
-            hfCourseID.Value = string.Empty;
+            hfOriginalCourseCode.Value = string.Empty;
             txtCourseCode.Text = string.Empty;
             txtCourseName.Text = string.Empty;
+            txtDescription.Text = string.Empty;
             txtCreditHours.Text = "3";
             ddlProgrammes.SelectedIndex = 0;
             btnSaveCourse.Text = "Register Course";
@@ -205,6 +296,13 @@ namespace StudentManagementSystem
             Session.Clear();
             Session.Abandon();
             Response.Redirect("Login.aspx");
+        }
+
+        private void ShowStatus(string message, bool isSuccess)
+        {
+            lblStatus.Text = message;
+            lblStatus.ForeColor = isSuccess ? System.Drawing.Color.MediumSeaGreen : System.Drawing.Color.OrangeRed;
+            lblStatus.Visible = true;
         }
     }
 }

@@ -7,7 +7,7 @@ namespace StudentManagementSystem
     public partial class Login : System.Web.UI.Page
     {
         // Replace this connection string with your local machine's SQL details
-        private string connString = @"Server=(localdb)\MSSQLLocalDB;Database=SE_Assignment;Trusted_Connection=True;";
+        private string connString = @"Server=(localdb)\MSSQLLocalDB;Database=StudentManagementSystem;Trusted_Connection=True;";
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -23,55 +23,81 @@ namespace StudentManagementSystem
             string username = txtUsername.Text.Trim();
             string password = txtPassword.Text.Trim();
 
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
-                lblError.Text = "Please fill in all fields.";
+                lblError.Text = "Please enter both credentials.";
+                lblError.Visible = true;
                 return;
             }
 
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                // Select both the password and the role assigned by the admin
-                string query = "SELECT Role FROM Users WHERE Username = @Username AND Password = @Password";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@Username", username);
-                cmd.Parameters.AddWithValue("@Password", password); // In production, hash this!
-
                 try
                 {
                     conn.Open();
-                    object result = cmd.ExecuteScalar(); // Gets the first column (Role) if found
 
-                    if (result != null)
+                    // 1. Check if the user is a Head of Programme (Admin)
+                    string hopQuery = "SELECT UserRole, HopName FROM HeadofProgramme WHERE HopEmail = @Email AND Password = @Password";
+                    using (SqlCommand cmd = new SqlCommand(hopQuery, conn))
                     {
-                        string userRole = result.ToString();
-
-                        // SECURITY: Store user details securely on the server
-                        Session["Username"] = username;
-                        Session["UserRole"] = userRole;
-
-                        // ROLE-BASED ROUTING: Direct to respective dashboards
-                        if (userRole == "Admin")
+                        cmd.Parameters.AddWithValue("@Email", username);
+                        cmd.Parameters.AddWithValue("@Password", password); // Note: Hash this later if required
+                        using (SqlDataReader reader = cmd.ExecuteReader())
                         {
-                            Response.Redirect("AdminDashboard.aspx");
-                        }
-                        else if (userRole == "Student")
-                        {
-                            Response.Redirect("StudentDashboard.aspx");
-                        }
-                        else if (userRole == "Lecturer")
-                        {
-                            Response.Redirect("LecturerDashboard.aspx");
+                            if (reader.Read())
+                            {
+                                Session["Username"] = reader["HopName"].ToString();
+                                Session["UserRole"] = reader["UserRole"].ToString(); // Will be 'Admin'
+                                Response.Redirect("AdminDashboard.aspx");
+                                return;
+                            }
                         }
                     }
-                    else
+
+                    // 2. Check if the user is a Lecturer
+                    string lecQuery = "SELECT UserRole, LecturerName FROM Lecturer WHERE LecturerEmail = @Email AND Password = @Password";
+                    using (SqlCommand cmd = new SqlCommand(lecQuery, conn))
                     {
-                        lblError.Text = "Invalid username or password.";
+                        cmd.Parameters.AddWithValue("@Email", username);
+                        cmd.Parameters.AddWithValue("@Password", password);
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                Session["Username"] = reader["LecturerName"].ToString();
+                                Session["UserRole"] = reader["UserRole"].ToString();
+                                Response.Redirect("LecturerDashboard.aspx"); // Or wherever your team sends lecturers
+                                return;
+                            }
+                        }
                     }
+
+                    // 3. Check if the user is a Student
+                    string studQuery = "SELECT UserRole, StudentName FROM Student WHERE StudentEmail = @Email AND Password = @Password";
+                    using (SqlCommand cmd = new SqlCommand(studQuery, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Email", username);
+                        cmd.Parameters.AddWithValue("@Password", password);
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                Session["Username"] = reader["StudentName"].ToString();
+                                Session["UserRole"] = reader["UserRole"].ToString();
+                                Response.Redirect("StudentDashboard.aspx");
+                                return;
+                            }
+                        }
+                    }
+
+                    // If it loops through all three and finds nothing:
+                    lblError.Text = "Invalid email or password.";
+                    lblError.Visible = true;
                 }
                 catch (Exception ex)
                 {
                     lblError.Text = "Database Error: " + ex.Message;
+                    lblError.Visible = true;
                 }
             }
         }

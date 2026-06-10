@@ -8,8 +8,8 @@ namespace StudentManagementSystem
 {
     public partial class ManageSchoolNPrograms : System.Web.UI.Page
     {
-        // Change this line to your exact working local string setup (e.g., from localdb)
-        private string connString = @"Server=(localdb)\MSSQLLocalDB;Database=SE_Assignment;Trusted_Connection=True;";
+        // Reusing verified team connection profile parameters
+        private string connString = @"Server=(localdb)\MSSQLLocalDB;Database=StudentManagementSystem;Trusted_Connection=True;";
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -20,86 +20,260 @@ namespace StudentManagementSystem
 
             if (!IsPostBack)
             {
-                BindSchoolsGrid();
-                PopulateSchoolDropdowns();
-                BindProgrammesGrid(); // Default pulls all records
+                RefreshAllDashboardModules();
             }
         }
 
-        private void RefreshAllData()
+        private void RefreshAllDashboardModules()
         {
-            BindSchoolsGrid();
-            PopulateSchoolDropdowns();
+            BindSemestersGrid();
+            BindFacultiesGrid();
+            PopulateFacultyDropdown();
             BindProgrammesGrid();
         }
 
-        // --- SCHOOL INFRASTRUCTURE FUNCTIONS ---
-        private void BindSchoolsGrid()
+        // =========================================================================
+        // 1. SEMESTER MANAGEMENT LIFE ENGINE CYCLES
+        // =========================================================================
+        private void BindSemestersGrid()
         {
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                string query = "SELECT SchoolID, SchoolName FROM Schools ORDER BY SchoolID DESC";
+                string query = "SELECT SemesterID, Semester, StartMonthDay, EndMonthDay FROM Semester ORDER BY SemesterID ASC";
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     using (SqlDataAdapter da = new SqlDataAdapter(cmd))
                     {
                         DataTable dt = new DataTable();
-                        da.Fill(dt);
-                        gvSchools.DataSource = dt;
-                        gvSchools.DataBind();
+                        try
+                        {
+                            conn.Open();
+                            da.Fill(dt);
+                            gvSemesters.DataSource = dt;
+                            gvSemesters.DataBind();
+                        }
+                        catch (Exception ex) { ShowSemStatus("Error displaying terms: " + ex.Message, false); }
                     }
+                }
+            }
+        }
+
+        protected void btnSaveSemester_Click(object sender, EventArgs e)
+        {
+            // Now reading manually typed input details from the user text field string directly
+            string term = txtSemesterTerm.Text.Trim();
+            string start = txtStartDay.Text.Trim();
+            string end = txtEndDay.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(term) || string.IsNullOrWhiteSpace(start) || string.IsNullOrWhiteSpace(end))
+            {
+                ShowSemStatus("All semester parameters and range fields are required.", false);
+                return;
+            }
+
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                string query = string.IsNullOrEmpty(hfSemesterID.Value)
+                    ? "INSERT INTO Semester (Semester, StartMonthDay, EndMonthDay) VALUES (@Semester, @Start, @End)"
+                    : "UPDATE Semester SET Semester = @Semester, StartMonthDay = @Start, EndMonthDay = @End WHERE SemesterID = @ID";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Semester", term);
+                    cmd.Parameters.AddWithValue("@Start", start);
+                    cmd.Parameters.AddWithValue("@End", end);
+                    if (!string.IsNullOrEmpty(hfSemesterID.Value)) cmd.Parameters.AddWithValue("@ID", hfSemesterID.Value);
+
+                    try
+                    {
+                        conn.Open();
+                        cmd.ExecuteNonQuery();
+                        ShowSemStatus("Semester configurations updated!", true);
+                        ClearSemesterForm();
+                        BindSemestersGrid();
+                    }
+                    catch (Exception ex) { ShowSemStatus("Save failure: " + ex.Message, false); }
+                }
+            }
+        }
+
+        protected void gvSemesters_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandArgument == null || string.IsNullOrEmpty(e.CommandArgument.ToString())) return;
+            int id = Convert.ToInt32(e.CommandArgument);
+
+            if (e.CommandName == "EditSemester")
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    string query = "SELECT SemesterID, Semester, StartMonthDay, EndMonthDay FROM Semester WHERE SemesterID = @ID";
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@ID", id);
+                        try
+                        {
+                            conn.Open();
+                            using (SqlDataReader dr = cmd.ExecuteReader())
+                            {
+                                if (dr.Read())
+                                {
+                                    hfSemesterID.Value = dr["SemesterID"].ToString();
+                                    txtSemesterTerm.Text = dr["Semester"].ToString(); // Populating string back into the manual textbox
+                                    txtStartDay.Text = dr["StartMonthDay"].ToString();
+                                    txtEndDay.Text = dr["EndMonthDay"].ToString();
+                                    btnSaveSemester.Text = "Update";
+                                    btnCancelSemester.Visible = true;
+                                }
+                            }
+                        }
+                        catch (Exception ex) { ShowSemStatus("Extraction error: " + ex.Message, false); }
+                    }
+                }
+            }
+            else if (e.CommandName == "DeleteSemester")
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    string query = "DELETE FROM Semester WHERE SemesterID = @ID";
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@ID", id);
+                        try
+                        {
+                            conn.Open();
+                            cmd.ExecuteNonQuery();
+                            ShowSemStatus("Term record removed.", true);
+                            ClearSemesterForm();
+                            BindSemestersGrid();
+                        }
+                        catch (Exception ex) { ShowSemStatus("Wipe failed due to foreign dependencies: " + ex.Message, false); }
+                    }
+                }
+            }
+        }
+
+        protected void btnCancelSemester_Click(object sender, EventArgs e) { ClearSemesterForm(); }
+        private void ClearSemesterForm()
+        {
+            hfSemesterID.Value = string.Empty;
+            txtSemesterTerm.Text = string.Empty;
+            txtStartDay.Text = string.Empty;
+            txtEndDay.Text = string.Empty;
+            btnSaveSemester.Text = "Save";
+            btnCancelSemester.Visible = false;
+        }
+
+        // =========================================================================
+        // 2. FACULTY DIRECTORY MANAGEMENT INTERFACES
+        // =========================================================================
+        private void BindFacultiesGrid()
+        {
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                string query = "SELECT FacultyID, FacultyName FROM Faculty ORDER BY FacultyID DESC";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                    {
+                        DataTable dt = new DataTable();
+                        try
+                        {
+                            da.Fill(dt);
+                            gvSchools.DataSource = dt;
+                            gvSchools.DataBind();
+                        }
+                        catch (Exception ex) { ShowSchoolStatus("Grid rendering error: " + ex.Message, false); }
+                    }
+                }
+            }
+        }
+
+        private void PopulateFacultyDropdown()
+        {
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                string query = "SELECT FacultyID, FacultyName FROM Faculty ORDER BY FacultyName ASC";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    try
+                    {
+                        conn.Open();
+                        using (SqlDataReader dr = cmd.ExecuteReader())
+                        {
+                            ddlSchools.Items.Clear();
+                            ddlSchools.Items.Add(new ListItem("-- Choose Faculty --", ""));
+                            while (dr.Read())
+                            {
+                                ddlSchools.Items.Add(new ListItem(dr["FacultyName"].ToString(), dr["FacultyID"].ToString()));
+                            }
+                        }
+                    }
+                    catch (Exception ex) { ShowSchoolStatus("Dropdown loading failure: " + ex.Message, false); }
                 }
             }
         }
 
         protected void btnSaveSchool_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtSchoolName.Text)) return;
+            string schoolName = txtSchoolName.Text.Trim();
+            if (string.IsNullOrWhiteSpace(schoolName))
+            {
+                ShowSchoolStatus("Faculty label text string required.", false);
+                return;
+            }
 
             using (SqlConnection conn = new SqlConnection(connString))
             {
                 string query = string.IsNullOrEmpty(hfSchoolID.Value)
-                    ? "INSERT INTO Schools (SchoolName) VALUES (@SchoolName)"
-                    : "UPDATE Schools SET SchoolName = @SchoolName WHERE SchoolID = @SchoolID";
+                    ? "INSERT INTO Faculty (FacultyName) VALUES (@Name)"
+                    : "UPDATE Faculty SET FacultyName = @Name WHERE FacultyID = @ID";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@SchoolName", txtSchoolName.Text.Trim());
-                    if (!string.IsNullOrEmpty(hfSchoolID.Value))
+                    cmd.Parameters.AddWithValue("@Name", schoolName);
+                    if (!string.IsNullOrEmpty(hfSchoolID.Value)) cmd.Parameters.AddWithValue("@ID", hfSchoolID.Value);
+
+                    try
                     {
-                        cmd.Parameters.AddWithValue("@SchoolID", hfSchoolID.Value);
+                        conn.Open();
+                        cmd.ExecuteNonQuery();
+                        ShowSchoolStatus("Faculty record saved successfully!", true);
+                        ClearSchoolForm();
+                        RefreshAllDashboardModules();
                     }
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
+                    catch (Exception ex) { ShowSchoolStatus("Operation write failed: " + ex.Message, false); }
                 }
             }
-            ClearSchoolForm();
-            RefreshAllData();
         }
 
         protected void gvSchools_RowCommand(object sender, GridViewCommandEventArgs e)
         {
+            if (e.CommandArgument == null || string.IsNullOrEmpty(e.CommandArgument.ToString())) return;
             int id = Convert.ToInt32(e.CommandArgument);
 
             if (e.CommandName == "EditSchool")
             {
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    string query = "SELECT SchoolID, SchoolName FROM Schools WHERE SchoolID = @SchoolID";
+                    string query = "SELECT FacultyID, FacultyName FROM Faculty WHERE FacultyID = @ID";
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@SchoolID", id);
-                        conn.Open();
-                        using (SqlDataReader dr = cmd.ExecuteReader())
+                        cmd.Parameters.AddWithValue("@ID", id);
+                        try
                         {
-                            if (dr.Read())
+                            conn.Open();
+                            using (SqlDataReader dr = cmd.ExecuteReader())
                             {
-                                hfSchoolID.Value = dr["SchoolID"].ToString();
-                                txtSchoolName.Text = dr["SchoolName"].ToString();
-                                btnSaveSchool.Text = "Update School";
-                                btnCancelSchool.Visible = true;
+                                if (dr.Read())
+                                {
+                                    hfSchoolID.Value = dr["FacultyID"].ToString();
+                                    txtSchoolName.Text = dr["FacultyName"].ToString();
+                                    btnSaveSchool.Text = "Update";
+                                    btnCancelSchool.Visible = true;
+                                }
                             }
                         }
+                        catch (Exception ex) { ShowSchoolStatus("Data extraction error: " + ex.Message, false); }
                     }
                 }
             }
@@ -107,165 +281,160 @@ namespace StudentManagementSystem
             {
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    // Cascading constraints handle related structural dependencies automatically 
-                    string query = "DELETE FROM Schools WHERE SchoolID = @SchoolID";
+                    string query = "DELETE FROM Faculty WHERE FacultyID = @ID";
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@SchoolID", id);
-                        conn.Open();
-                        cmd.ExecuteNonQuery();
+                        cmd.Parameters.AddWithValue("@ID", id);
+                        try
+                        {
+                            conn.Open();
+                            cmd.ExecuteNonQuery();
+                            ShowSchoolStatus("Faculty record deleted from indexes.", true);
+                            ClearSchoolForm();
+                            RefreshAllDashboardModules();
+                        }
+                        catch (Exception ex) { ShowSchoolStatus("Faculty is currently assigned to existing programs: " + ex.Message, false); }
                     }
                 }
-                ClearSchoolForm();
-                RefreshAllData();
             }
         }
 
-        protected void btnCancelSchool_Click(object sender, EventArgs e)
-        {
-            ClearSchoolForm();
-        }
-
+        protected void btnCancelSchool_Click(object sender, EventArgs e) { ClearSchoolForm(); }
         private void ClearSchoolForm()
         {
             hfSchoolID.Value = string.Empty;
             txtSchoolName.Text = string.Empty;
-            btnSaveSchool.Text = "Create School";
+            btnSaveSchool.Text = "Save Faculty";
             btnCancelSchool.Visible = false;
         }
 
-        // --- PROGRAMMES MANAGEMENT WITH DYNAMIC FILTER ROUTINES ---
+        // =========================================================================
+        // 3. EXPANDED ACADEMIC PROGRAMME CONTROLLER
+        // =========================================================================
         private void BindProgrammesGrid()
         {
+            string filterLevel = ddlFilterLevel != null ? ddlFilterLevel.SelectedValue : "All";
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                // Core Base Query String Joining Tables
-                string query = "SELECT p.ProgrammeID, p.ProgrammeName, s.SchoolName FROM Programmes p " +
-                               "INNER JOIN Schools s ON p.SchoolID = s.SchoolID ";
-
-                // If a specific school filter is chosen in the navigation controller, inject a WHERE filter clause
-                if (!string.IsNullOrEmpty(ddlFilterSchool.SelectedValue))
-                {
-                    query += "WHERE p.SchoolID = @FilterSchoolID ";
-                }
-
-                query += "ORDER BY p.ProgrammeID DESC";
+                string query = "SELECT p.ProgrammeCode, p.ProgrammeName, p.Level, p.TotalCreditHours, f.FacultyName " +
+                               "FROM Programme p LEFT JOIN Faculty f ON p.FacultyID = f.FacultyID ";
+                if (filterLevel != "All") query += "WHERE p.Level = @Level ";
+                query += "ORDER BY p.ProgrammeCode ASC";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    if (!string.IsNullOrEmpty(ddlFilterSchool.SelectedValue))
-                    {
-                        cmd.Parameters.AddWithValue("@FilterSchoolID", ddlFilterSchool.SelectedValue);
-                    }
-
+                    if (filterLevel != "All") cmd.Parameters.AddWithValue("@Level", filterLevel);
                     using (SqlDataAdapter da = new SqlDataAdapter(cmd))
                     {
                         DataTable dt = new DataTable();
-                        da.Fill(dt);
-                        gvProgrammes.DataSource = dt;
-                        gvProgrammes.DataBind();
+                        try
+                        {
+                            da.Fill(dt);
+                            gvProgrammes.DataSource = dt;
+                            gvProgrammes.DataBind();
+                        }
+                        catch (Exception ex) { ShowProgStatus("Grid load failure: " + ex.Message, false); }
                     }
                 }
             }
         }
 
-        private void PopulateSchoolDropdowns()
+        protected void gvProgrammes_PageIndexChanging(object sender, GridViewPageEventArgs e)
         {
-            using (SqlConnection conn = new SqlConnection(connString))
-            {
-                string query = "SELECT SchoolID, SchoolName FROM Schools ORDER BY SchoolName ASC";
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    conn.Open();
-                    using (SqlDataReader dr = cmd.ExecuteReader())
-                    {
-                        // Sync Form Dropdown
-                        ddlSchools.Items.Clear();
-                        ddlSchools.Items.Add(new ListItem("-- Choose Hosting Faculty --", ""));
-
-                        // Sync Filter Navigation Dropdown
-                        string selectedFilter = ddlFilterSchool.SelectedValue; // Maintain user selection position across lifecycle
-                        ddlFilterSchool.Items.Clear();
-                        ddlFilterSchool.Items.Add(new ListItem("All Schools", ""));
-
-                        while (dr.Read())
-                        {
-                            string id = dr["SchoolID"].ToString();
-                            string name = dr["SchoolName"].ToString();
-
-                            ddlSchools.Items.Add(new ListItem(name, id));
-                            ddlFilterSchool.Items.Add(new ListItem(name, id));
-                        }
-
-                        // Restore previous filter pointer position if active
-                        if (ddlFilterSchool.Items.FindByValue(selectedFilter) != null)
-                        {
-                            ddlFilterSchool.SelectedValue = selectedFilter;
-                        }
-                    }
-                }
-            }
+            gvProgrammes.PageIndex = e.NewPageIndex;
+            BindProgrammesGrid();
         }
 
-        // Intercept filter dropdown index changes to dynamically update data rows
-        protected void ddlFilterSchool_SelectedIndexChanged(object sender, EventArgs e)
+        protected void ddlFilterLevel_SelectedIndexChanged(object sender, EventArgs e)
         {
+            gvProgrammes.PageIndex = 0;
             BindProgrammesGrid();
         }
 
         protected void btnSaveProg_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtProgrammeName.Text) || string.IsNullOrEmpty(ddlSchools.SelectedValue)) return;
+            string code = txtProgCode.Text.Trim().ToUpper();
+            string name = txtProgrammeName.Text.Trim();
+            string level = ddlLevel.SelectedValue;
+            string creditStr = txtCreditHours.Text.Trim();
+            string facultyId = ddlSchools.SelectedValue;
+            string desc = txtDescription.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(creditStr) || string.IsNullOrEmpty(facultyId))
+            {
+                ShowProgStatus("All principal tracking parameters are required.", false);
+                return;
+            }
+
+            int.TryParse(creditStr, out int credits);
+            bool isUpdate = (hfIsUpdateProg.Value == "true");
 
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                string query = string.IsNullOrEmpty(hfProgrammeID.Value)
-                    ? "INSERT INTO Programmes (ProgrammeName, SchoolID) VALUES (@ProgName, @SchoolID)"
-                    : "UPDATE Programmes SET ProgrammeName = @ProgName, SchoolID = @SchoolID WHERE ProgrammeID = @ProgID";
+                string query = isUpdate
+                    ? "UPDATE Programme SET ProgrammeName = @Name, Level = @Level, TotalCreditHours = @Credits, FacultyID = @FacultyID, Description = @Desc WHERE ProgrammeCode = @Code"
+                    : "INSERT INTO Programme (ProgrammeCode, ProgrammeName, Level, TotalCreditHours, FacultyID, Description) VALUES (@Code, @Name, @Level, @Credits, @FacultyID, @Desc)";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@ProgName", txtProgrammeName.Text.Trim());
-                    cmd.Parameters.AddWithValue("@SchoolID", ddlSchools.SelectedValue);
-                    if (!string.IsNullOrEmpty(hfProgrammeID.Value))
+                    cmd.Parameters.AddWithValue("@Code", code);
+                    cmd.Parameters.AddWithValue("@Name", name);
+                    cmd.Parameters.AddWithValue("@Level", level);
+                    cmd.Parameters.AddWithValue("@Credits", credits);
+                    cmd.Parameters.AddWithValue("@FacultyID", Convert.ToInt32(facultyId));
+                    cmd.Parameters.AddWithValue("@Desc", string.IsNullOrEmpty(desc) ? (object)DBNull.Value : desc);
+
+                    try
                     {
-                        cmd.Parameters.AddWithValue("@ProgID", hfProgrammeID.Value);
+                        conn.Open();
+                        cmd.ExecuteNonQuery();
+                        ShowProgStatus("Program synchronized cleanly!", true);
+                        ClearProgrammeForm();
+                        BindProgrammesGrid();
                     }
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
+                    catch (Exception ex) { ShowProgStatus("Database update crash: " + ex.Message, false); }
                 }
             }
-            ClearProgrammeForm();
-            BindProgrammesGrid();
         }
 
         protected void gvProgrammes_RowCommand(object sender, GridViewCommandEventArgs e)
         {
-            // Prevent empty command arguments from breaking runtime actions
             if (e.CommandArgument == null || string.IsNullOrEmpty(e.CommandArgument.ToString())) return;
-
-            int id = Convert.ToInt32(e.CommandArgument);
+            string targetCode = e.CommandArgument.ToString();
 
             if (e.CommandName == "EditProg")
             {
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    string query = "SELECT ProgrammeID, ProgrammeName, SchoolID FROM Programmes WHERE ProgrammeID = @ProgID";
+                    string query = "SELECT ProgrammeCode, ProgrammeName, Level, TotalCreditHours, FacultyID, Description FROM Programme WHERE ProgrammeCode = @Code";
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@ProgID", id);
-                        conn.Open();
-                        using (SqlDataReader dr = cmd.ExecuteReader())
+                        cmd.Parameters.AddWithValue("@Code", targetCode);
+                        try
                         {
-                            if (dr.Read())
+                            conn.Open();
+                            using (SqlDataReader dr = cmd.ExecuteReader())
                             {
-                                hfProgrammeID.Value = dr["ProgrammeID"].ToString();
-                                txtProgrammeName.Text = dr["ProgrammeName"].ToString();
-                                ddlSchools.SelectedValue = dr["SchoolID"].ToString();
-                                btnSaveProg.Text = "Update Programme";
-                                btnCancelProg.Visible = true;
+                                if (dr.Read())
+                                {
+                                    txtProgCode.Text = dr["ProgrammeCode"].ToString();
+                                    txtProgrammeName.Text = dr["ProgrammeName"].ToString();
+                                    ddlLevel.SelectedValue = dr["Level"].ToString();
+                                    txtCreditHours.Text = dr["TotalCreditHours"].ToString();
+                                    txtDescription.Text = dr["Description"].ToString();
+
+                                    string savedFaculty = dr["FacultyID"].ToString();
+                                    if (ddlSchools.Items.FindByValue(savedFaculty) != null) ddlSchools.SelectedValue = savedFaculty;
+
+                                    txtProgCode.Enabled = false;
+                                    hfIsUpdateProg.Value = "true";
+                                    btnSaveProg.Text = "Update";
+                                    btnCancelProg.Visible = true;
+                                    ShowProgStatus("Staging programmatic configurations.", true);
+                                }
                             }
                         }
+                        catch (Exception ex) { ShowProgStatus("Extraction fail: " + ex.Message, false); }
                     }
                 }
             }
@@ -273,31 +442,35 @@ namespace StudentManagementSystem
             {
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    // Pure SQL deletion script using database relational cascading foreign keys [cite: 85, 206]
-                    string query = "DELETE FROM Programmes WHERE ProgrammeID = @ProgID";
+                    string query = "DELETE FROM Programme WHERE ProgrammeCode = @Code";
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@ProgID", id);
-                        conn.Open();
-                        cmd.ExecuteNonQuery();
+                        cmd.Parameters.AddWithValue("@Code", targetCode);
+                        try
+                        {
+                            conn.Open();
+                            cmd.ExecuteNonQuery();
+                            ShowProgStatus("Program dropped cleanly.", true);
+                            BindProgrammesGrid();
+                        }
+                        catch (Exception ex) { ShowProgStatus("Wipe aborted due to dependencies: " + ex.Message, false); }
                     }
                 }
-                ClearProgrammeForm();
-                BindProgrammesGrid();
             }
         }
 
-        protected void btnCancelProg_Click(object sender, EventArgs e)
-        {
-            ClearProgrammeForm();
-        }
-
+        protected void btnCancelProg_Click(object sender, EventArgs e) { ClearProgrammeForm(); }
         private void ClearProgrammeForm()
         {
-            hfProgrammeID.Value = string.Empty;
+            txtProgCode.Text = string.Empty;
             txtProgrammeName.Text = string.Empty;
+            ddlLevel.SelectedIndex = 0;
+            txtCreditHours.Text = string.Empty;
             ddlSchools.SelectedIndex = 0;
-            btnSaveProg.Text = "Create Programme";
+            txtDescription.Text = string.Empty;
+            txtProgCode.Enabled = true;
+            hfIsUpdateProg.Value = "false";
+            btnSaveProg.Text = "Save Programme";
             btnCancelProg.Visible = false;
         }
 
@@ -307,5 +480,9 @@ namespace StudentManagementSystem
             Session.Abandon();
             Response.Redirect("Login.aspx");
         }
+
+        private void ShowSemStatus(string msg, bool ok) { lblSemesterStatus.Text = msg; lblSemesterStatus.ForeColor = ok ? System.Drawing.Color.MediumSeaGreen : System.Drawing.Color.OrangeRed; lblSemesterStatus.Visible = true; }
+        private void ShowSchoolStatus(string msg, bool ok) { lblSchoolStatus.Text = msg; lblSchoolStatus.ForeColor = ok ? System.Drawing.Color.MediumSeaGreen : System.Drawing.Color.OrangeRed; lblSchoolStatus.Visible = true; }
+        private void ShowProgStatus(string msg, bool ok) { lblProgStatus.Text = msg; lblProgStatus.ForeColor = ok ? System.Drawing.Color.MediumSeaGreen : System.Drawing.Color.OrangeRed; lblProgStatus.Visible = true; }
     }
 }

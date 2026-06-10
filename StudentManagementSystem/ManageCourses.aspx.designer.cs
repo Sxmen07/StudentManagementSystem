@@ -42,13 +42,22 @@ namespace StudentManagementSystem
         protected global::System.Web.UI.WebControls.DropDownList ddlFilterProgramme;
 
         /// <summary>
-        /// hfCourseID control.
+        /// lblStatus control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfCourseID;
+        protected global::System.Web.UI.WebControls.Label lblStatus;
+
+        /// <summary>
+        /// hfOriginalCourseCode control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfOriginalCourseCode;
 
         /// <summary>
         /// txtCourseCode control.
@@ -94,6 +103,15 @@ namespace StudentManagementSystem
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.DropDownList ddlProgrammes;
+
+        /// <summary>
+        /// txtDescription control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtDescription;
 
         /// <summary>
         /// btnSaveCourse control.

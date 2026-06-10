@@ -11,7 +11,7 @@ namespace StudentManagementSystem
 {
 
 
-    public partial class CreateAccounts
+    public partial class AssignCourses2Lec
     {
 
         /// <summary>
@@ -42,75 +42,120 @@ namespace StudentManagementSystem
         protected global::System.Web.UI.WebControls.Label lblStatus;
 
         /// <summary>
-        /// hfUserID control.
+        /// hfCourseOfferID control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfUserID;
+        protected global::System.Web.UI.WebControls.HiddenField hfCourseOfferID;
 
         /// <summary>
-        /// txtNewUsername control.
+        /// ddlLecturers control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtNewUsername;
+        protected global::System.Web.UI.WebControls.DropDownList ddlLecturers;
 
         /// <summary>
-        /// txtNewPassword control.
+        /// ddlCourses control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtNewPassword;
+        protected global::System.Web.UI.WebControls.DropDownList ddlCourses;
 
         /// <summary>
-        /// ddlRole control.
+        /// ddlSemesters control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlRole;
+        protected global::System.Web.UI.WebControls.DropDownList ddlSemesters;
 
         /// <summary>
-        /// btnCreateAccount control.
+        /// txtYear control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnCreateAccount;
+        protected global::System.Web.UI.WebControls.TextBox txtYear;
 
         /// <summary>
-        /// btnCancelAccount control.
+        /// ddlStatus control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnCancelAccount;
+        protected global::System.Web.UI.WebControls.DropDownList ddlStatus;
 
         /// <summary>
-        /// ddlFilterRole control.
+        /// btnSaveAssignment control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlFilterRole;
+        protected global::System.Web.UI.WebControls.Button btnSaveAssignment;
 
         /// <summary>
-        /// gvUsers control.
+        /// btnCancelEdit control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.GridView gvUsers;
+        protected global::System.Web.UI.WebControls.Button btnCancelEdit;
+
+        /// <summary>
+        /// litTotalAllocations control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Literal litTotalAllocations;
+
+        /// <summary>
+        /// litActiveOffers control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Literal litActiveOffers;
+
+        /// <summary>
+        /// litInactiveOffers control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Literal litInactiveOffers;
+
+        /// <summary>
+        /// ddlFilterLecturer control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.DropDownList ddlFilterLecturer;
+
+        /// <summary>
+        /// gvAssignments control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.GridView gvAssignments;
     }
 }
