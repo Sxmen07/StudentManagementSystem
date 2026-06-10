@@ -98,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AdminDashboard.aspx" />
+    <Content Include="AdminInbox.aspx" />
     <Content Include="Admin\Admin.aspx" />
     <Content Include="Admin\Admin.css" />
     <Content Include="AssignCourses2Lec.aspx" />
@@ -198,6 +199,13 @@
     </Compile>
     <Compile Include="AdminDashboard.aspx.designer.cs">
       <DependentUpon>AdminDashboard.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="AdminInbox.aspx.cs">
+      <DependentUpon>AdminInbox.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="AdminInbox.aspx.designer.cs">
+      <DependentUpon>AdminInbox.aspx</DependentUpon>
     </Compile>
     <Compile Include="Admin\Admin.aspx.cs">
       <DependentUpon>Admin.aspx</DependentUpon>
