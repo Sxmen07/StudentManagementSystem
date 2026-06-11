@@ -131,6 +131,7 @@
     <Content Include="ManageAnnouncements.aspx" />
     <Content Include="ManageCourses.aspx" />
     <Content Include="ManageSchoolNPrograms.aspx" />
+    <Content Include="profile_upload\default-avatar.jpg" />
     <Content Include="Register.aspx" />
     <Content Include="Register.css" />
     <Content Include="Scripts\bootstrap.bundle.js" />
@@ -326,7 +327,6 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="images\" />
-    <Folder Include="profile_upload\" />
     <Folder Include="Student\" />
   </ItemGroup>
   <ItemGroup>

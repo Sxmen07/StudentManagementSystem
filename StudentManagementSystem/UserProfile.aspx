@@ -29,7 +29,7 @@
                 <div class="flex flex-col sm:flex-row gap-6 items-center border-b border-[#EBEBE9] pb-8 mb-6">
                     <!-- AVATAR RENDER FRAME -->
                     <div class="relative w-28 h-28 rounded-full border-2 border-zinc-200 overflow-hidden bg-zinc-200 shrink-0">
-                        <asp:Image ID="imgAvatar" runat="server" ImageUrl="~/Uploads/default-avatar.png" CssClass="w-full h-full object-cover" />
+                        <asp:Image ID="imgAvatar" runat="server" ImageUrl="~/profile_upload/default-avatar.jpg" CssClass="w-full h-full object-cover" />                   
                     </div>
                     
                     <div class="text-center sm:text-left space-y-1">

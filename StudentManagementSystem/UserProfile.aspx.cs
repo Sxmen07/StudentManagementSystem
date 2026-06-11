@@ -54,7 +54,7 @@ namespace StudentManagementSystem
 
                                 // Load uploaded avatar file tracker path, or fall back to default design asset icon
                                 string picUrl = reader["ProfilePictureUrl"].ToString();
-                                imgAvatar.ImageUrl = !string.IsNullOrEmpty(picUrl) ? picUrl : "~/Uploads/default-avatar.png";
+                                imgAvatar.ImageUrl = !string.IsNullOrEmpty(picUrl) ? picUrl : "~/profile_upload/default-avatar.jpg";
                             }
                         }
                     }
