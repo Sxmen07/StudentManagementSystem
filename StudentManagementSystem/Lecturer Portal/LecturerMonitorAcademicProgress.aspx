@@ -88,6 +88,7 @@
             <a href="Assessment.aspx" class="nav-item">Assessment</a>
             <a href="LecturerMonitorAcademicProgress.aspx" class="nav-item active">Academic Progress</a>
             <a href="LecturerPostAnnouncement.aspx" class="nav-item">Announcements</a>
+            <a href="LecturerCourseMaterials.aspx" class="nav-item">Course Materials</a>
             <a href="Login.aspx" class="nav-item" style="margin-top:auto;color:#e74c3c;">Logout</a>
         </div>
 

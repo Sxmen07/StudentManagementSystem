@@ -127,6 +127,7 @@
     <Content Include="Global.asax" />
     <Content Include="Lecturer Portal\Assessment.aspx" />
     <Content Include="Lecturer Portal\LectProfile.aspx" />
+    <Content Include="Lecturer Portal\LecturerCourseMaterials.aspx" />
     <Content Include="Lecturer Portal\LecturerMonitorAcademicProgress.aspx" />
     <Content Include="Lecturer Portal\LecturerPostAnnouncement.aspx" />
     <Content Include="Lecturer Portal\Login.aspx" />
@@ -253,6 +254,13 @@
     </Compile>
     <Compile Include="Lecturer Portal\LectProfile.aspx.designer.cs">
       <DependentUpon>LectProfile.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Lecturer Portal\LecturerCourseMaterials.aspx.cs">
+      <DependentUpon>LecturerCourseMaterials.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Lecturer Portal\LecturerCourseMaterials.aspx.designer.cs">
+      <DependentUpon>LecturerCourseMaterials.aspx</DependentUpon>
     </Compile>
     <Compile Include="Lecturer Portal\LecturerMonitorAcademicProgress.aspx.cs">
       <DependentUpon>LecturerMonitorAcademicProgress.aspx</DependentUpon>
