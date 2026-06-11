@@ -20,12 +20,15 @@ namespace StudentManagementSystem
         protected void btnResetRequest_Click(object sender, EventArgs e)
         {
             string email = txtRecoveryEmail.Text.Trim();
+            string identityNo = txtIdentityNumber.Text.Trim();
             lblStatus.Visible = false;
             pnlSuccessDetails.Visible = false;
+            pnlFormFields.Visible = true; // Retain input visibility by default on error/initial state
 
-            if (string.IsNullOrWhiteSpace(email))
+            // Validate that both inputs are filled out
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(identityNo))
             {
-                ShowStatus("Please enter your registered institutional email address.", false);
+                ShowStatus("Verification blocked: Please fill in both your email and IC/Passport number.", false);
                 return;
             }
 
@@ -39,12 +42,13 @@ namespace StudentManagementSystem
                     bool accountFound = false;
 
                     // =========================================================================
-                    // TIER 1: SCAN & UPDATE STUDENT TABLE
+                    // TIER 1: SCAN & UPDATE STUDENT TABLE (Matches Email AND Identity Number)
                     // =========================================================================
-                    string checkStudent = "SELECT COUNT(1) FROM Student WHERE StudentEmail = @Email";
+                    string checkStudent = "SELECT COUNT(1) FROM Student WHERE StudentEmail = @Email AND IdentityNumber = @IDNum";
                     using (SqlCommand cmd = new SqlCommand(checkStudent, conn))
                     {
                         cmd.Parameters.AddWithValue("@Email", email);
+                        cmd.Parameters.AddWithValue("@IDNum", identityNo);
                         int count = Convert.ToInt32(cmd.ExecuteScalar());
                         if (count > 0)
                         {
@@ -60,14 +64,15 @@ namespace StudentManagementSystem
                     }
 
                     // =========================================================================
-                    // TIER 2: SCAN & UPDATE LECTURER TABLE (IF NOT A STUDENT)
+                    // TIER 2: SCAN & UPDATE LECTURER TABLE (Matches Email AND Identity Number)
                     // =========================================================================
                     if (!accountFound)
                     {
-                        string checkLecturer = "SELECT COUNT(1) FROM Lecturer WHERE LecturerEmail = @Email";
+                        string checkLecturer = "SELECT COUNT(1) FROM Lecturer WHERE LecturerEmail = @Email AND IdentityNumber = @IDNum";
                         using (SqlCommand cmd = new SqlCommand(checkLecturer, conn))
                         {
                             cmd.Parameters.AddWithValue("@Email", email);
+                            cmd.Parameters.AddWithValue("@IDNum", identityNo);
                             int count = Convert.ToInt32(cmd.ExecuteScalar());
                             if (count > 0)
                             {
@@ -84,14 +89,15 @@ namespace StudentManagementSystem
                     }
 
                     // =========================================================================
-                    // TIER 3: SCAN & UPDATE HEAD OF PROGRAMME TABLE
+                    // TIER 3: SCAN & UPDATE HEAD OF PROGRAMME TABLE (Fixed Column Names)
                     // =========================================================================
                     if (!accountFound)
                     {
-                        string checkAdmin = "SELECT COUNT(1) FROM HeadofProgramme WHERE HopEmail = @Email";
+                        string checkAdmin = "SELECT COUNT(1) FROM HeadofProgramme WHERE HopEmail = @Email AND IdentityNumber = @IDNum";
                         using (SqlCommand cmd = new SqlCommand(checkAdmin, conn))
                         {
                             cmd.Parameters.AddWithValue("@Email", email);
+                            cmd.Parameters.AddWithValue("@IDNum", identityNo);
                             int count = Convert.ToInt32(cmd.ExecuteScalar());
                             if (count > 0)
                             {
@@ -107,17 +113,21 @@ namespace StudentManagementSystem
                         }
                     }
 
-                    // RENDER OUTPUT STATES
+                    // RENDER VISUAL OUTPUT RESULTS
                     if (accountFound)
                     {
                         litTempPassword.Text = tempPassword;
                         pnlSuccessDetails.Visible = true;
+                        pnlFormFields.Visible = false; // Hides the inputs so the screen stays compact!
+
                         txtRecoveryEmail.Text = string.Empty;
-                        ShowStatus("Success! Account verified.", true);
+                        txtIdentityNumber.Text = string.Empty;
+                        ShowStatus("Identity verified successfully!", true);
                     }
                     else
                     {
-                        ShowStatus("The email address provided does not match any records in our registration database.", false);
+                        // Secure protocol: Vague response to prevent database mining malicious scripts
+                        ShowStatus("The provided credentials do not match any records in our registration database.", false);
                     }
                 }
                 catch (Exception ex)
@@ -130,7 +140,8 @@ namespace StudentManagementSystem
         // Helper tracking generator engine
         private string CreateRandomString(int length)
         {
-            const string validChars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789☀️#$";
+            // Note: Removed the sun emoji to avoid character encoding bugs in SQL database fields
+            const string validChars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789#$";
             StringBuilder res = new StringBuilder();
             Random rnd = new Random();
             while (0 < length--)

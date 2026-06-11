@@ -31,7 +31,7 @@
                     <div class="relative w-full overflow-hidden rounded-t-md">
                         <asp:TextBox ID="txtUsername" runat="server" 
                             CssClass="peer w-full bg-[#F0F0F0] p-4 text-base text-black outline-none placeholder-gray-500" 
-                            Placeholder="userid@gmail.com"></asp:TextBox>
+                            Placeholder="Username"></asp:TextBox>
                         <span class="absolute bottom-0 left-0 w-full h-[3px] bg-black scale-x-0 transition-transform duration-300 ease-out origin-center peer-focus:scale-x-100"></span>
                     </div>
                 </div>

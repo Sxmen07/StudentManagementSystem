@@ -24,9 +24,6 @@ namespace StudentManagementSystem
             }
         }
 
-        // =========================================================================
-        // DYNAMIC SEED: RECOVER SYSTEM SEMESTER ENTRIES FOR INTAKE SELECTION
-        // =========================================================================
         private void BindSemesterDropdown()
         {
             using (SqlConnection conn = new SqlConnection(connString))
@@ -38,8 +35,8 @@ namespace StudentManagementSystem
                     {
                         conn.Open();
                         ddlStudentSemester.DataSource = cmd.ExecuteReader();
-                        ddlStudentSemester.DataValueField = "SemesterID"; // Passes primary index key automatically (e.g. 2, 3, 4)
-                        ddlStudentSemester.DataTextField = "Semester";     // Displays text value gracefully (e.g. "Jan", "April")
+                        ddlStudentSemester.DataValueField = "SemesterID";
+                        ddlStudentSemester.DataTextField = "Semester";
                         ddlStudentSemester.DataBind();
                     }
                     catch (Exception ex)
@@ -53,7 +50,6 @@ namespace StudentManagementSystem
 
         protected void ddlRole_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Toggle semester options field configuration dynamically based on active selection tier
             pnlSemesterSelection.Visible = (ddlRole.SelectedValue == "Student");
         }
 
@@ -100,22 +96,21 @@ namespace StudentManagementSystem
             BindUserGrid();
         }
 
-        // =========================================================================
-        // PRIMARY REGISTRATION / MODIFICATION INTERFACE CONTROLLER
-        // =========================================================================
         protected void btnCreateAccount_Click(object sender, EventArgs e)
         {
+            string fullName = txtFullName.Text.Trim();
+            string identityNumber = txtIdentityNumber.Text.Trim();
             string email = txtNewUsername.Text.Trim();
             string password = txtNewPassword.Text.Trim();
             string role = ddlRole.SelectedValue;
 
-            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(role))
+            if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(identityNumber) ||
+                string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(role))
             {
-                ShowStatus("Please complete all inputs before submitting.", false);
+                ShowStatus("Please complete all inputs, including Name and IC/Passport, before submitting.", false);
                 return;
             }
 
-            // Security Validation: If target role is Student, verify a valid semester index row has been chosen
             if (role == "Student" && string.IsNullOrEmpty(ddlStudentSemester.SelectedValue))
             {
                 ShowStatus("Operational constraint warning: Please specify a valid intake semester for student registration.", false);
@@ -134,9 +129,9 @@ namespace StudentManagementSystem
                         string originalRole = Session["EditingRole"].ToString();
                         string targetId = hfUserID.Value;
 
-                        // OPTION A: Admin changed the account's structural role tier
                         if (originalRole != role)
                         {
+                            // Drop old structural record tier
                             string dropQuery = "";
                             if (originalRole == "Admin") dropQuery = "DELETE FROM HeadofProgramme WHERE HopID = @ID";
                             else if (originalRole == "Lecturer") dropQuery = "DELETE FROM Lecturer WHERE LecturerID = @ID";
@@ -148,15 +143,18 @@ namespace StudentManagementSystem
                                 dropCmd.ExecuteNonQuery();
                             }
 
+                            // Write new structural details completely
                             string insertQuery = "";
-                            if (role == "Admin") insertQuery = "INSERT INTO HeadofProgramme (HopName, HopEmail, Password) VALUES ('Modified Admin', @Email, @Password)";
-                            else if (role == "Lecturer") insertQuery = "INSERT INTO Lecturer (LecturerName, LecturerEmail, Password) VALUES ('Modified Faculty', @Email, @Password)";
-                            else if (role == "Student") insertQuery = "INSERT INTO Student (StudentName, StudentEmail, Password, SemesterID, IntakeYear) VALUES ('Modified Student', @Email, @Password, @SemesterID, 2026)";
+                            if (role == "Admin") insertQuery = "INSERT INTO HeadofProgramme (HopName, HopEmail, Password, IdentityNumber) VALUES (@Name, @Email, @Password, @IDNum)";
+                            else if (role == "Lecturer") insertQuery = "INSERT INTO Lecturer (LecturerName, LecturerEmail, Password, IdentityNumber) VALUES (@Name, @Email, @Password, @IDNum)";
+                            else if (role == "Student") insertQuery = "INSERT INTO Student (StudentName, StudentEmail, Password, IdentityNumber, SemesterID, IntakeYear) VALUES (@Name, @Email, @Password, @IDNum, @SemesterID, 2026)";
 
                             using (SqlCommand insCmd = new SqlCommand(insertQuery, conn))
                             {
+                                insCmd.Parameters.AddWithValue("@Name", fullName);
                                 insCmd.Parameters.AddWithValue("@Email", email);
                                 insCmd.Parameters.AddWithValue("@Password", password);
+                                insCmd.Parameters.AddWithValue("@IDNum", identityNumber);
                                 if (role == "Student")
                                 {
                                     insCmd.Parameters.AddWithValue("@SemesterID", Convert.ToInt32(ddlStudentSemester.SelectedValue));
@@ -164,18 +162,20 @@ namespace StudentManagementSystem
                                 insCmd.ExecuteNonQuery();
                             }
                         }
-                        // OPTION B: Role didn't change, just update details normaly
                         else
                         {
+                            // Updating information rows inside the same role profile tier
                             string updateQuery = "";
-                            if (role == "Admin") updateQuery = "UPDATE HeadofProgramme SET HopEmail = @Email, Password = @Password WHERE HopID = @ID";
-                            else if (role == "Lecturer") updateQuery = "UPDATE Lecturer SET LecturerEmail = @Email, Password = @Password WHERE LecturerID = @ID";
-                            else if (role == "Student") updateQuery = "UPDATE Student SET StudentEmail = @Email, Password = @Password, SemesterID = @SemesterID WHERE StudentID = @ID";
+                            if (role == "Admin") updateQuery = "UPDATE HeadofProgramme SET HopName = @Name, HopEmail = @Email, Password = @Password, IdentityNumber = @IDNum WHERE HopID = @ID";
+                            else if (role == "Lecturer") updateQuery = "UPDATE Lecturer SET LecturerName = @Name, LecturerEmail = @Email, Password = @Password, IdentityNumber = @IDNum WHERE LecturerID = @ID";
+                            else if (role == "Student") updateQuery = "UPDATE Student SET StudentName = @Name, StudentEmail = @Email, Password = @Password, IdentityNumber = @IDNum, SemesterID = @SemesterID WHERE StudentID = @ID";
 
                             using (SqlCommand updCmd = new SqlCommand(updateQuery, conn))
                             {
+                                updCmd.Parameters.AddWithValue("@Name", fullName);
                                 updCmd.Parameters.AddWithValue("@Email", email);
                                 updCmd.Parameters.AddWithValue("@Password", password);
+                                updCmd.Parameters.AddWithValue("@IDNum", identityNumber);
                                 updCmd.Parameters.AddWithValue("@ID", targetId);
                                 if (role == "Student")
                                 {
@@ -187,15 +187,18 @@ namespace StudentManagementSystem
                     }
                     else
                     {
+                        // Clean insertion processing logic loop
                         string insertQuery = "";
-                        if (role == "Admin") insertQuery = "INSERT INTO HeadofProgramme (HopName, HopEmail, Password) VALUES ('New Admin', @Email, @Password)";
-                        else if (role == "Lecturer") insertQuery = "INSERT INTO Lecturer (LecturerName, LecturerEmail, Password) VALUES ('Faculty Member', @Email, @Password)";
-                        else if (role == "Student") insertQuery = "INSERT INTO Student (StudentName, StudentEmail, Password, SemesterID, IntakeYear) VALUES ('Student Enrollee', @Email, @Password, @SemesterID, 2026)";
+                        if (role == "Admin") insertQuery = "INSERT INTO HeadofProgramme (HopName, HopEmail, Password, IdentityNumber) VALUES (@Name, @Email, @Password, @IDNum)";
+                        else if (role == "Lecturer") insertQuery = "INSERT INTO Lecturer (LecturerName, LecturerEmail, Password, IdentityNumber) VALUES (@Name, @Email, @Password, @IDNum)";
+                        else if (role == "Student") insertQuery = "INSERT INTO Student (StudentName, StudentEmail, Password, IdentityNumber, SemesterID, IntakeYear) VALUES (@Name, @Email, @Password, @IDNum, @SemesterID, 2026)";
 
                         using (SqlCommand cmd = new SqlCommand(insertQuery, conn))
                         {
+                            cmd.Parameters.AddWithValue("@Name", fullName);
                             cmd.Parameters.AddWithValue("@Email", email);
                             cmd.Parameters.AddWithValue("@Password", password);
+                            cmd.Parameters.AddWithValue("@IDNum", identityNumber);
                             if (role == "Student")
                             {
                                 cmd.Parameters.AddWithValue("@SemesterID", Convert.ToInt32(ddlStudentSemester.SelectedValue));
@@ -210,7 +213,6 @@ namespace StudentManagementSystem
                 }
                 catch (SqlException ex)
                 {
-                    // Catch block to capture structural index errors
                     if (ex.Number == 547)
                     {
                         ShowStatus("Database integrity conflict: The selected semester does not exist in our active dictionary records.", false);
@@ -227,9 +229,6 @@ namespace StudentManagementSystem
             }
         }
 
-        // =========================================================================
-        // DATA ROW INTERACTION ENGINE HUB
-        // =========================================================================
         protected void gvUsers_RowCommand(object sender, GridViewCommandEventArgs e)
         {
             string args = e.CommandArgument.ToString();
@@ -242,9 +241,9 @@ namespace StudentManagementSystem
             if (e.CommandName == "EditUser")
             {
                 string query = "";
-                if (targetRole == "Admin") query = "SELECT HopEmail AS Email, Password, NULL as SemesterID FROM HeadofProgramme WHERE HopID = @ID";
-                else if (targetRole == "Lecturer") query = "SELECT LecturerEmail AS Email, Password, NULL as SemesterID FROM Lecturer WHERE LecturerID = @ID";
-                else if (targetRole == "Student") query = "SELECT StudentEmail AS Email, Password, SemesterID FROM Student WHERE StudentID = @ID";
+                if (targetRole == "Admin") query = "SELECT HopName AS Name, HopEmail AS Email, Password, IdentityNumber, NULL as SemesterID FROM HeadofProgramme WHERE HopID = @ID";
+                else if (targetRole == "Lecturer") query = "SELECT LecturerName AS Name, LecturerEmail AS Email, Password, IdentityNumber, NULL as SemesterID FROM Lecturer WHERE LecturerID = @ID";
+                else if (targetRole == "Student") query = "SELECT StudentName AS Name, StudentEmail AS Email, Password, IdentityNumber, SemesterID FROM Student WHERE StudentID = @ID";
 
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
@@ -258,11 +257,12 @@ namespace StudentManagementSystem
                             {
                                 if (reader.Read())
                                 {
+                                    txtFullName.Text = reader["Name"].ToString();
+                                    txtIdentityNumber.Text = reader["IdentityNumber"].ToString();
                                     txtNewUsername.Text = reader["Email"].ToString();
                                     txtNewPassword.Text = reader["Password"].ToString();
                                     ddlRole.SelectedValue = targetRole;
 
-                                    // Display semester settings mapping options if loading a student profile record
                                     if (targetRole == "Student")
                                     {
                                         pnlSemesterSelection.Visible = true;
@@ -328,6 +328,8 @@ namespace StudentManagementSystem
 
         private void ResetFormState()
         {
+            txtFullName.Text = "";
+            txtIdentityNumber.Text = "";
             txtNewUsername.Text = "";
             txtNewPassword.Text = "";
             ddlRole.SelectedIndex = 0;

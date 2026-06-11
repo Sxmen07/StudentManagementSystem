@@ -51,6 +51,15 @@ namespace StudentManagementSystem
         protected global::System.Web.UI.WebControls.Literal litTempPassword;
 
         /// <summary>
+        /// pnlFormFields control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Panel pnlFormFields;
+
+        /// <summary>
         /// txtRecoveryEmail control.
         /// </summary>
         /// <remarks>
@@ -58,6 +67,15 @@ namespace StudentManagementSystem
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtRecoveryEmail;
+
+        /// <summary>
+        /// txtIdentityNumber control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtIdentityNumber;
 
         /// <summary>
         /// btnResetRequest control.
