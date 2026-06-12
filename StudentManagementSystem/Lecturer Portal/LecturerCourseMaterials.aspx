@@ -101,14 +101,14 @@
         .btn {
             width: 100%;
             padding: 10px;
-            background: #1d4ed8;
+            background:  #00CBD4;
             color: white;
             border: none;
             border-radius: 7px;
             cursor: pointer;
         }
 
-        .btn:hover { background: #1e40af; }
+        .btn:hover { background: #115FB3; }
 
 
         .material-card {
@@ -175,7 +175,7 @@
         }
 
         .open-btn {
-            background: #1d4ed8;
+            background: #00CBD4;
             color: white;
             text-decoration: none;
             padding: 7px 12px;
@@ -184,7 +184,7 @@
             font-weight: 600;
         }
 
-        .open-btn:hover { background: #1e40af; }
+        .open-btn:hover { background: #115FB3; }
 
         .table-title {
             font-weight: 600;
@@ -210,7 +210,7 @@
         <a class="nav-item" href="Assessment.aspx">Assessment</a>
         <a class="nav-item" href="LecturerMonitorAcademicProgress.aspx">Academic Progress</a>
         <a class="nav-item" href="LecturerPostAnnouncement.aspx">Announcements</a>
-        <a class="nav-item active" href="LecturerCourseMaterials.aspx">Course Materialsss</a>
+        <a class="nav-item active" href="LecturerCourseMaterials.aspx">Course Materials</a>
         <a class="nav-item" style="margin-top:auto; color:red;" href="Login.aspx">Logout</a>
     </div>
 
