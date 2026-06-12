@@ -27,7 +27,6 @@ namespace LecturerPortal
             pnlMenu.Visible = true;
             pnlPostAnnouncement.Visible = false;
             pnlViewAnnouncement.Visible = false;
-
             lblStatus.Text = "";
         }
 
@@ -55,24 +54,24 @@ namespace LecturerPortal
         private void LoadCourses()
         {
             string query = @"
-                SELECT co.CourseOfferID,
-                       c.CourseName + ' (' + s.Semester + ' ' + CAST(co.Year AS NVARCHAR) + ')' AS DisplayName
-                FROM CourseOffer co
-                INNER JOIN Course c ON c.CourseCode = co.CourseCode
-                INNER JOIN Semester s ON s.SemesterID = co.SemesterID
-                WHERE co.LecturerID = @LID
-                AND co.OfferStatus = 'Available'
-                ORDER BY c.CourseName";
+        SELECT DISTINCT
+            c.CourseCode,
+            c.CourseCode + ' - ' + c.CourseName AS DisplayName
+        FROM Course c
+        INNER JOIN CourseOffer co ON co.CourseCode = c.CourseCode
+        WHERE co.LecturerID = @LID
+        AND co.OfferStatus = 'Available'
+        ORDER BY c.CourseCode";
 
             SqlParameter[] p = {
-                new SqlParameter("@LID", Session["LecturerID"])
-            };
+        new SqlParameter("@LID", Session["LecturerID"])
+    };
 
             DataTable dt = DBHelper.ExecuteQuery(query, p);
 
             ddlCourse.DataSource = dt;
             ddlCourse.DataTextField = "DisplayName";
-            ddlCourse.DataValueField = "CourseOfferID";
+            ddlCourse.DataValueField = "CourseCode";
             ddlCourse.DataBind();
 
             ddlCourse.Items.Insert(0, new ListItem("-- Select Course --", "0"));
@@ -80,13 +79,68 @@ namespace LecturerPortal
 
         protected void ddlCourse_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Keep this here because your ASPX still uses this event.
+            if (ddlSendOption.SelectedValue == "SelectedStudents")
+            {
+                LoadStudentsByCourse();
+            }
         }
 
         protected void ddlSendOption_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (pnlStudentSelect != null)
-                pnlStudentSelect.Visible = false;
+            pnlStudentSelect.Visible = ddlSendOption.SelectedValue == "SelectedStudents";
+
+            chkSelectAllStudents.Checked = false;
+            cblStudents.Items.Clear();
+
+            if (ddlSendOption.SelectedValue == "SelectedStudents")
+            {
+                if (ddlCourse.SelectedValue == "0")
+                {
+                    ShowError("Please select a course first.");
+                    return;
+                }
+
+                LoadStudentsByCourse();
+                lblStatus.Text = "";
+            }
+        }
+
+        protected void chkSelectAllStudents_CheckedChanged(object sender, EventArgs e)
+        {
+            foreach (ListItem item in cblStudents.Items)
+            {
+                item.Selected = chkSelectAllStudents.Checked;
+            }
+        }
+
+        private void LoadStudentsByCourse()
+        {
+            cblStudents.Items.Clear();
+
+            if (ddlCourse.SelectedValue == "0")
+                return;
+
+            string query = @"
+                SELECT DISTINCT
+                    s.StudentID,
+                    s.StudentName + ' (' + CAST(s.StudentID AS NVARCHAR(20)) + ')' AS DisplayName
+                FROM Student s
+                INNER JOIN Enrolment e ON e.StudentID = s.StudentID
+                INNER JOIN CourseOffer co ON co.CourseOfferID = e.CourseOfferID
+                WHERE co.CourseCode = @CourseCode
+                AND e.EnrolStatus = 'Enrolled'
+                ORDER BY DisplayName";
+
+            SqlParameter[] p = {
+                new SqlParameter("@CourseCode", ddlCourse.SelectedValue)
+            };
+
+            DataTable dt = DBHelper.ExecuteQuery(query, p);
+
+            cblStudents.DataSource = dt;
+            cblStudents.DataTextField = "DisplayName";
+            cblStudents.DataValueField = "StudentID";
+            cblStudents.DataBind();
         }
 
         protected void btnPost_Click(object sender, EventArgs e)
@@ -106,30 +160,108 @@ namespace LecturerPortal
                 return;
             }
 
-            if (ddlSendOption.SelectedValue == "CourseOfferID" && ddlCourse.SelectedValue == "0")
+            if (ddlCourse.SelectedValue == "0")
             {
                 ShowError("Please select a course.");
                 return;
             }
 
-            string targetType = ddlSendOption.SelectedValue;
+            if (ddlSendOption.SelectedValue == "SelectedStudents" && !HasSelectedStudent())
+            {
+                ShowError("Please select at least one student.");
+                return;
+            }
+
+            string targetType = "";
+            string targetValue = "";
+
+            if (ddlSendOption.SelectedValue == "ProgrammeCode")
+            {
+                targetType = "ProgrammeCode";
+                targetValue = GetProgrammeCodeByCourseCode(ddlCourse.SelectedValue);
+            }
+            else
+            {
+                targetType = "CourseCode";
+                targetValue = ddlCourse.SelectedValue;
+            }
 
             string query = @"
                 INSERT INTO Announcement
-                (Title, Description, TargetType, CreatedDate)
+                (Title, Description, TargetType, TargetValue, CreatedDate)
+                OUTPUT INSERTED.AnnouncementID
                 VALUES
-                (@Title, @Description, @TargetType, GETDATE())";
+                (@Title, @Description, @TargetType, @TargetValue, GETDATE())";
 
             SqlParameter[] p = {
                 new SqlParameter("@Title", title),
                 new SqlParameter("@Description", message),
-                new SqlParameter("@TargetType", targetType)
+                new SqlParameter("@TargetType", targetType),
+                new SqlParameter("@TargetValue", targetValue)
             };
 
-            DBHelper.ExecuteNonQuery(query, p);
+            DataTable result = DBHelper.ExecuteQuery(query, p);
+            int announcementID = Convert.ToInt32(result.Rows[0]["AnnouncementID"]);
+
+            if (ddlSendOption.SelectedValue == "SelectedStudents")
+            {
+                SaveSelectedStudents(announcementID);
+            }
 
             ClearForm();
             ShowSuccess("Announcement posted successfully.");
+        }
+
+        private string GetProgrammeCodeByCourseCode(string courseCode)
+        {
+            string query = @"
+        SELECT TOP 1 ProgrammeCode
+        FROM Course
+        WHERE CourseCode = @CourseCode";
+
+                SqlParameter[] p = {
+            new SqlParameter("@CourseCode", courseCode)
+        };
+
+            DataTable dt = DBHelper.ExecuteQuery(query, p);
+
+            if (dt.Rows.Count > 0)
+                return dt.Rows[0]["ProgrammeCode"].ToString();
+
+            return "";
+        }
+
+        private bool HasSelectedStudent()
+        {
+            foreach (ListItem item in cblStudents.Items)
+            {
+                if (item.Selected)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private void SaveSelectedStudents(int announcementID)
+        {
+            foreach (ListItem item in cblStudents.Items)
+            {
+                if (item.Selected)
+                {
+                    string query = @"
+                        INSERT INTO AnnouncementRecipient
+                        (AnnouncementID, StudentID)
+                        VALUES
+                        (@AnnouncementID, @StudentID)";
+
+                    SqlParameter[] p = {
+                        new SqlParameter("@AnnouncementID", announcementID),
+                        new SqlParameter("@StudentID", item.Value)
+                    };
+
+                    DBHelper.ExecuteNonQuery(query, p);
+                }
+            }
         }
 
         private void LoadRecentAnnouncements()
@@ -139,6 +271,7 @@ namespace LecturerPortal
                     Title,
                     Description,
                     TargetType,
+                    TargetValue,
                     CreatedDate
                 FROM Announcement
                 ORDER BY CreatedDate DESC";
@@ -160,8 +293,9 @@ namespace LecturerPortal
             if (ddlCourse.Items.Count > 0)
                 ddlCourse.SelectedIndex = 0;
 
-            if (pnlStudentSelect != null)
-                pnlStudentSelect.Visible = false;
+            pnlStudentSelect.Visible = false;
+            chkSelectAllStudents.Checked = false;
+            cblStudents.Items.Clear();
         }
 
         private void ShowSuccess(string message)
