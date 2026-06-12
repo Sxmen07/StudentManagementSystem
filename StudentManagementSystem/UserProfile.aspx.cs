@@ -2,6 +2,7 @@
 using System.Data.SqlClient;
 using System.IO;
 using System.Web.UI;
+using System.Web.UI.WebControls;
 
 namespace StudentManagementSystem
 {
@@ -11,7 +12,6 @@ namespace StudentManagementSystem
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            // Protect page against unauthenticated access attempts
             if (Session["UserRole"] == null || Session["UserID"] == null)
             {
                 Response.Redirect("Login.aspx");
@@ -29,9 +29,9 @@ namespace StudentManagementSystem
             string userId = Session["UserID"].ToString();
 
             string query = "";
-            if (role == "Admin") query = "SELECT HopID AS ID, HopName AS Name, HopEmail AS Email, ProfilePictureUrl FROM HeadofProgramme WHERE HopID = @ID";
-            else if (role == "Lecturer") query = "SELECT LecturerID AS ID, LecturerName AS Name, LecturerEmail AS Email, ProfilePictureUrl FROM Lecturer WHERE LecturerID = @ID";
-            else if (role == "Student") query = "SELECT StudentID AS ID, StudentName AS Name, StudentEmail AS Email, ProfilePictureUrl FROM Student WHERE StudentID = @ID";
+            if (role == "Admin") query = "SELECT HopID AS ID, HopName AS Name, HopEmail AS Email, ProfilePictureUrl, BannerPictureUrl FROM HeadofProgramme WHERE HopID = @ID";
+            else if (role == "Lecturer") query = "SELECT LecturerID AS ID, LecturerName AS Name, LecturerEmail AS Email, ProfilePictureUrl, BannerPictureUrl FROM Lecturer WHERE LecturerID = @ID";
+            else if (role == "Student") query = "SELECT StudentID AS ID, StudentName AS Name, StudentEmail AS Email, ProfilePictureUrl, BannerPictureUrl FROM Student WHERE StudentID = @ID";
 
             using (SqlConnection conn = new SqlConnection(connString))
             {
@@ -52,9 +52,25 @@ namespace StudentManagementSystem
                                 lblDisplayHeaderName.Text = reader["Name"].ToString();
                                 litBadgeRole.Text = role;
 
-                                // Load uploaded avatar file tracker path, or fall back to default design asset icon
+                                // Programmatic subheader description matching layout rules
+                                litSubHeaderTitle.Text = role == "Admin" ? "Institutional Platform Administrator" : "Bachelor of Science in Software Engineering (Hons)";
+
+                                // Bind Profile Image URL asset paths
                                 string picUrl = reader["ProfilePictureUrl"].ToString();
                                 imgAvatar.ImageUrl = !string.IsNullOrEmpty(picUrl) ? picUrl : "~/profile_upload/default-avatar.jpg";
+
+                                // Render background cover elements or stream custom CSS gradient matching layout specs
+                                string bannerUrl = reader["BannerPictureUrl"].ToString();
+                                if (!string.IsNullOrEmpty(bannerUrl))
+                                {
+                                    pnlBannerBackground.Style["background-image"] = ResolveUrl(bannerUrl);
+                                    pnlBannerBackground.CssClass = "w-full h-64 bg-cover bg-center relative";
+                                }
+                                else
+                                {
+                                    pnlBannerBackground.Style.Remove("background-image");
+                                    pnlBannerBackground.CssClass = "w-full h-64 bg-gradient-to-r from-[#CAD9FA] via-[#E2EDF7] to-[#FFF9D3] bg-cover bg-center relative";
+                                }
                             }
                         }
                     }
@@ -68,15 +84,14 @@ namespace StudentManagementSystem
 
         protected void btnEditToggle_Click(object sender, EventArgs e)
         {
-            // Enable text box entries for updating modifications
             txtFullName.ReadOnly = false;
-            txtFullName.CssClass = "w-full bg-white p-2.5 text-sm rounded border border-[#EBEBE9] focus:border-[#1A1A1A] outline-none text-[#2F2F2F] transition-colors";
+            txtFullName.CssClass = "w-full bg-white p-3 text-sm rounded-xl border border-gray-300 focus:border-[#0095FD] focus:ring-2 focus:ring-[#0095FD]/20 outline-none text-gray-700 transition-all font-medium";
 
             txtEmail.ReadOnly = false;
-            txtEmail.CssClass = "w-full bg-white p-2.5 text-sm rounded border border-[#EBEBE9] focus:border-[#1A1A1A] outline-none text-[#2F2F2F] transition-colors";
+            txtEmail.CssClass = "w-full bg-white p-3 text-sm rounded-xl border border-gray-300 focus:border-[#0095FD] focus:ring-2 focus:ring-[#0095FD]/20 outline-none text-gray-700 transition-all font-medium";
 
-            // Unveil file target upload panels
-            pnlPhotoUpload.Visible = true;
+            pnlUploadControls.Visible = true;
+            pnlAvatarOverlay.Visible = true;
             pnlPasswordBlock.Visible = true;
             btnSaveChanges.Visible = true;
             btnCancelEdit.Visible = true;
@@ -97,62 +112,70 @@ namespace StudentManagementSystem
                 return;
             }
 
+            // Retrieve old current configurations
             string avatarPath = imgAvatar.ImageUrl;
+            string bannerPath = pnlBannerBackground.Style["background-image"] != null ? pnlBannerBackground.Style["background-image"].Replace("url(", "").Replace(")", "").Replace("\"", "") : "";
 
-            // Handle file profile upload stream transactions
+            // Initialize folder upload checks
+            string folderPath = Server.MapPath("~/Uploads/");
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            // Stream File Transaction 1: Profiling Avatar Updates
             if (fuAvatar.HasFile)
             {
-                try
+                string ext = Path.GetExtension(fuAvatar.FileName).ToLower();
+                if (ext == ".jpg" || ext == ".jpeg" || ext == ".png")
                 {
-                    string ext = Path.GetExtension(fuAvatar.FileName).ToLower();
-                    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png")
-                    {
-                        // Ensure an upload storage folder directory exists safely in local system directory tracks
-                        string folderPath = Server.MapPath("~/Uploads/");
-                        if (!Directory.Exists(folderPath))
-                        {
-                            Directory.CreateDirectory(folderPath);
-                        }
-
-                        // Save file tracking name configuration uniquely using internal ID patterns to prevent asset collisions
-                        string fileName = role + "_" + userId + ext;
-                        string savePath = folderPath + fileName;
-                        fuAvatar.SaveAs(savePath);
-
-                        avatarPath = "~/Uploads/" + fileName;
-                    }
-                    else
-                    {
-                        ShowStatus("Validation block: Only image asset extension files (.jpg, .jpeg, .png) are supported.", false);
-                        return;
-                    }
+                    string fileName = "Avatar_" + role + "_" + userId + ext;
+                    fuAvatar.SaveAs(folderPath + fileName);
+                    avatarPath = "~/Uploads/" + fileName;
                 }
-                catch (Exception ex)
+                else
                 {
-                    ShowStatus("Asset deployment streaming engine failure: " + ex.Message, false);
+                    ShowStatus("Validation block: Profile photos must match .jpg, .jpeg, or .png patterns.", false);
                     return;
                 }
             }
 
-            // Route dynamic profile modifications save streams back to respective schemas
+            // Stream File Transaction 2: Cover Banner Graphic Updates
+            if (fuBackground.HasFile)
+            {
+                string ext = Path.GetExtension(fuBackground.FileName).ToLower();
+                if (ext == ".jpg" || ext == ".jpeg" || ext == ".png")
+                {
+                    string fileName = "Banner_" + role + "_" + userId + ext;
+                    fuBackground.SaveAs(folderPath + fileName);
+                    bannerPath = "~/Uploads/" + fileName;
+                }
+                else
+                {
+                    ShowStatus("Validation block: Background banners must match .jpg, .jpeg, or .png patterns.", false);
+                    return;
+                }
+            }
+
+            // Formulate dynamic SQL string mappings
             string query = "";
             if (role == "Admin")
             {
                 query = !string.IsNullOrEmpty(password)
-                    ? "UPDATE HeadofProgramme SET HopName = @Name, HopEmail = @Email, Password = @Password, ProfilePictureUrl = @Pic WHERE HopID = @ID"
-                    : "UPDATE HeadofProgramme SET HopName = @Name, HopEmail = @Email, ProfilePictureUrl = @Pic WHERE HopID = @ID";
+                    ? "UPDATE HeadofProgramme SET HopName = @Name, HopEmail = @Email, Password = @Password, ProfilePictureUrl = @Pic, BannerPictureUrl = @Banner WHERE HopID = @ID"
+                    : "UPDATE HeadofProgramme SET HopName = @Name, HopEmail = @Email, ProfilePictureUrl = @Pic, BannerPictureUrl = @Banner WHERE HopID = @ID";
             }
             else if (role == "Lecturer")
             {
                 query = !string.IsNullOrEmpty(password)
-                    ? "UPDATE Lecturer SET LecturerName = @Name, LecturerEmail = @Email, Password = @Password, ProfilePictureUrl = @Pic WHERE LecturerID = @ID"
-                    : "UPDATE Lecturer SET LecturerName = @Name, LecturerEmail = @Email, ProfilePictureUrl = @Pic WHERE LecturerID = @ID";
+                    ? "UPDATE Lecturer SET LecturerName = @Name, LecturerEmail = @Email, Password = @Password, ProfilePictureUrl = @Pic, BannerPictureUrl = @Banner WHERE LecturerID = @ID"
+                    : "UPDATE Lecturer SET LecturerName = @Name, LecturerEmail = @Email, ProfilePictureUrl = @Pic, BannerPictureUrl = @Banner WHERE LecturerID = @ID";
             }
             else if (role == "Student")
             {
                 query = !string.IsNullOrEmpty(password)
-                    ? "UPDATE Student SET StudentName = @Name, StudentEmail = @Email, Password = @Password, ProfilePictureUrl = @Pic WHERE StudentID = @ID"
-                    : "UPDATE Student SET StudentName = @Name, StudentEmail = @Email, ProfilePictureUrl = @Pic WHERE StudentID = @ID";
+                    ? "UPDATE Student SET StudentName = @Name, StudentEmail = @Email, Password = @Password, ProfilePictureUrl = @Pic, BannerPictureUrl = @Banner WHERE StudentID = @ID"
+                    : "UPDATE Student SET StudentName = @Name, StudentEmail = @Email, ProfilePictureUrl = @Pic, BannerPictureUrl = @Banner WHERE StudentID = @ID";
             }
 
             using (SqlConnection conn = new SqlConnection(connString))
@@ -162,19 +185,16 @@ namespace StudentManagementSystem
                     cmd.Parameters.AddWithValue("@Name", name);
                     cmd.Parameters.AddWithValue("@Email", email);
                     cmd.Parameters.AddWithValue("@Pic", avatarPath);
+                    cmd.Parameters.AddWithValue("@Banner", string.IsNullOrEmpty(bannerPath) ? (object)DBNull.Value : bannerPath);
                     cmd.Parameters.AddWithValue("@ID", userId);
-                    if (!string.IsNullOrEmpty(password))
-                    {
-                        cmd.Parameters.AddWithValue("@Password", password);
-                    }
+                    if (!string.IsNullOrEmpty(password)) cmd.Parameters.AddWithValue("@Password", password);
 
                     try
                     {
                         conn.Open();
                         cmd.ExecuteNonQuery();
 
-                        // Sync localized layout view vectors
-                        ShowStatus("Profile structural details synchronized safely!", true);
+                        ShowStatus("Profile details synchronized safely!", true);
                         LockFormState();
                         LoadUserProfileData();
                     }
@@ -195,25 +215,26 @@ namespace StudentManagementSystem
         private void LockFormState()
         {
             txtFullName.ReadOnly = true;
-            txtFullName.CssClass = "w-full bg-zinc-100 p-2.5 text-sm rounded border border-[#EBEBE9] outline-none text-[#2F2F2F]";
+            txtFullName.CssClass = "w-full bg-gray-50 p-3 text-sm rounded-xl border border-gray-200 outline-none text-gray-700 font-medium";
 
             txtEmail.ReadOnly = true;
-            txtEmail.CssClass = "w-full bg-zinc-100 p-2.5 text-sm rounded border border-[#EBEBE9] outline-none text-[#2F2F2F]";
+            txtEmail.CssClass = "w-full bg-gray-50 p-3 text-sm rounded-xl border border-gray-200 outline-none text-gray-700 font-medium";
 
-            pnlPhotoUpload.Visible = false;
+            pnlUploadControls.Visible = false;
+            pnlAvatarOverlay.Visible = false;
             pnlPasswordBlock.Visible = false;
             btnSaveChanges.Visible = false;
             btnCancelEdit.Visible = false;
             btnEditToggle.Visible = true;
-            lblStatus.Visible = false;
             txtPassword.Text = "";
         }
 
         private void ShowStatus(string message, bool isSuccess)
         {
             lblStatus.Text = message;
-            lblStatus.BackColor = isSuccess ? System.Drawing.Color.FromArgb(240, 253, 244) : System.Drawing.Color.FromArgb(254, 242, 242);
-            lblStatus.ForeColor = isSuccess ? System.Drawing.Color.MediumSeaGreen : System.Drawing.Color.OrangeRed;
+            lblStatus.CssClass = isSuccess
+                ? "block text-sm font-medium mb-6 p-4 rounded-xl shadow-sm bg-green-50 border border-green-200 text-green-700"
+                : "block text-sm font-medium mb-6 p-4 rounded-xl shadow-sm bg-red-50 border border-red-200 text-red-700";
             lblStatus.Visible = true;
         }
     }
