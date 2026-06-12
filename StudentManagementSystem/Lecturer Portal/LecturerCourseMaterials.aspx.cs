@@ -19,7 +19,7 @@ namespace LecturerPortal
             if (!IsPostBack)
             {
                 LoadCourses();
-                LoadRecentMaterials();
+                pnlCourseContent.Visible = false;
             }
         }
 
@@ -35,44 +35,77 @@ namespace LecturerPortal
                 AND co.OfferStatus = 'Available'
                 ORDER BY c.CourseName";
 
-            SqlParameter[] p = {
+            SqlParameter[] p =
+            {
                 new SqlParameter("@LID", Session["LecturerID"])
             };
 
             DataTable dt = DBHelper.ExecuteQuery(query, p);
 
-            ddlCourse.DataSource = dt;
-            ddlCourse.DataTextField = "DisplayName";
-            ddlCourse.DataValueField = "CourseOfferID";
-            ddlCourse.DataBind();
+            ddlCourseFilter.DataSource = dt;
+            ddlCourseFilter.DataTextField = "DisplayName";
+            ddlCourseFilter.DataValueField = "CourseOfferID";
+            ddlCourseFilter.DataBind();
 
-            ddlCourse.Items.Insert(0, new ListItem("-- Select Course --", "0"));
+            ddlCourseFilter.Items.Insert(0, new ListItem("-- Select Course --", "0"));
+        }
+
+        protected void ddlCourseFilter_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (ddlCourseFilter.SelectedValue == "0")
+            {
+                pnlCourseContent.Visible = false;
+                rptMaterials.DataSource = null;
+                rptMaterials.DataBind();
+                return;
+            }
+
+            pnlCourseContent.Visible = true;
+            LoadMaterials();
+        }
+
+        private void LoadMaterials()
+        {
+            string query = @"
+                SELECT MaterialTitle, Description, FileURL, ScheduleDate, UploadDate
+                FROM CourseMaterial
+                WHERE CourseOfferID = @COID
+                AND UploadByLecturerID = @LID
+                ORDER BY UploadDate DESC";
+
+            SqlParameter[] p =
+            {
+                new SqlParameter("@COID", ddlCourseFilter.SelectedValue),
+                new SqlParameter("@LID", Session["LecturerID"])
+            };
+
+            DataTable dt = DBHelper.ExecuteQuery(query, p);
+
+            rptMaterials.DataSource = dt;
+            rptMaterials.DataBind();
         }
 
         protected void btnPost_Click(object sender, EventArgs e)
         {
-            string title = txtTitle.Text.Trim();
-            string description = txtDescription.Text.Trim();
-
-            if (title == "")
-            {
-                ShowError("Please enter material title.");
-                return;
-            }
-
-            if (ddlCourse.SelectedValue == "0")
+            if (ddlCourseFilter.SelectedValue == "0")
             {
                 ShowError("Please select a course.");
                 return;
             }
 
-            if (!fileUpload.HasFile)
+            if (string.IsNullOrWhiteSpace(txtTitle.Text))
             {
-                ShowError("Please upload a file.");
+                ShowError("Enter title.");
                 return;
             }
 
-            string fileURL = SaveUploadedFile();
+            if (!fileUpload.HasFile)
+            {
+                ShowError("Upload a file.");
+                return;
+            }
+
+            string fileURL = SaveFile();
 
             DateTime scheduleDate;
             if (!DateTime.TryParse(txtDate.Text, out scheduleDate))
@@ -82,17 +115,14 @@ namespace LecturerPortal
                 INSERT INTO CourseMaterial
                 (CourseOfferID, MaterialTitle, Description, FileURL, ScheduleDate, UploadDate, UploadByLecturerID)
                 VALUES
-                (@COID, @Title, @Description, @FileURL, @ScheduleDate, GETDATE(), @LID)";
+                (@COID, @Title, @Desc, @FileURL, @ScheduleDate, GETDATE(), @LID)";
 
-            SqlParameter descriptionParam = new SqlParameter("@Description", SqlDbType.NVarChar, 500);
-            descriptionParam.Value = string.IsNullOrEmpty(description)
-                ? (object)DBNull.Value
-                : description;
-
-            SqlParameter[] p = {
-                new SqlParameter("@COID", ddlCourse.SelectedValue),
-                new SqlParameter("@Title", title),
-                descriptionParam,
+            SqlParameter[] p =
+            {
+                new SqlParameter("@COID", ddlCourseFilter.SelectedValue),
+                new SqlParameter("@Title", txtTitle.Text.Trim()),
+                new SqlParameter("@Desc",
+                    string.IsNullOrEmpty(txtDescription.Text) ? (object)DBNull.Value : txtDescription.Text),
                 new SqlParameter("@FileURL", fileURL),
                 new SqlParameter("@ScheduleDate", scheduleDate),
                 new SqlParameter("@LID", Session["LecturerID"])
@@ -101,51 +131,24 @@ namespace LecturerPortal
             DBHelper.ExecuteNonQuery(query, p);
 
             ClearForm();
-            ShowSuccess("Course material posted successfully.");
-            LoadRecentMaterials();
+            ShowSuccess("Material posted.");
+            LoadMaterials();
         }
 
-        private string SaveUploadedFile()
+        private string SaveFile()
         {
-            string uploadFolder = Server.MapPath("~/Uploads/CourseMaterials/");
+            string folder = Server.MapPath("~/Uploads/CourseMaterials/");
 
-            if (!Directory.Exists(uploadFolder))
-                Directory.CreateDirectory(uploadFolder);
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
 
-            string originalName = Path.GetFileName(fileUpload.FileName);
-            string extension = Path.GetExtension(originalName);
-            string savedName = "material_" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + extension;
-            string fullPath = Path.Combine(uploadFolder, savedName);
+            string fileName = "mat_" + DateTime.Now.Ticks + Path.GetExtension(fileUpload.FileName);
+            string path = Path.Combine(folder, fileName);
 
-            fileUpload.SaveAs(fullPath);
+            fileUpload.SaveAs(path);
 
-            return "~/Uploads/CourseMaterials/" + savedName;
-        }
-
-        private void LoadRecentMaterials()
-        {
-            string query = @"
-                SELECT TOP 20
-                    cm.MaterialTitle,
-                    cm.Description,
-                    cm.FileURL,
-                    cm.ScheduleDate,
-                    cm.UploadDate,
-                    c.CourseName
-                FROM CourseMaterial cm
-                INNER JOIN CourseOffer co ON co.CourseOfferID = cm.CourseOfferID
-                INNER JOIN Course c ON c.CourseCode = co.CourseCode
-                WHERE cm.UploadByLecturerID = @LID
-                ORDER BY cm.UploadDate DESC";
-
-            SqlParameter[] p = {
-                new SqlParameter("@LID", Session["LecturerID"])
-            };
-
-            DataTable dt = DBHelper.ExecuteQuery(query, p);
-
-            gvMaterials.DataSource = dt;
-            gvMaterials.DataBind();
+            string urlPath = "/Uploads/CourseMaterials/" + fileName;
+            return "~/Uploads/CourseMaterials/" + fileName;
         }
 
         private void ClearForm()
@@ -153,20 +156,17 @@ namespace LecturerPortal
             txtTitle.Text = "";
             txtDescription.Text = "";
             txtDate.Text = "";
-
-            if (ddlCourse.Items.Count > 0)
-                ddlCourse.SelectedIndex = 0;
         }
 
-        private void ShowSuccess(string message)
+        private void ShowSuccess(string msg)
         {
-            lblStatus.Text = message;
+            lblStatus.Text = msg;
             lblStatus.CssClass = "success-msg";
         }
 
-        private void ShowError(string message)
+        private void ShowError(string msg)
         {
-            lblStatus.Text = message;
+            lblStatus.Text = msg;
             lblStatus.CssClass = "error-msg";
         }
     }
