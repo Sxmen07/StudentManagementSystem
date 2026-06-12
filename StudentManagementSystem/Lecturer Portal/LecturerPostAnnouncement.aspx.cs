@@ -18,9 +18,38 @@ namespace LecturerPortal
             if (!IsPostBack)
             {
                 LoadCourses();
-                LoadRecentAnnouncements();
-                pnlStudentSelect.Visible = false;
+                ShowMenu();
             }
+        }
+
+        private void ShowMenu()
+        {
+            pnlMenu.Visible = true;
+            pnlPostAnnouncement.Visible = false;
+            pnlViewAnnouncement.Visible = false;
+
+            lblStatus.Text = "";
+        }
+
+        protected void btnShowPost_Click(object sender, EventArgs e)
+        {
+            pnlMenu.Visible = false;
+            pnlPostAnnouncement.Visible = true;
+            pnlViewAnnouncement.Visible = false;
+        }
+
+        protected void btnShowView_Click(object sender, EventArgs e)
+        {
+            pnlMenu.Visible = false;
+            pnlPostAnnouncement.Visible = false;
+            pnlViewAnnouncement.Visible = true;
+
+            LoadRecentAnnouncements();
+        }
+
+        protected void btnBack_Click(object sender, EventArgs e)
+        {
+            ShowMenu();
         }
 
         private void LoadCourses()
@@ -51,12 +80,13 @@ namespace LecturerPortal
 
         protected void ddlCourse_SelectedIndexChanged(object sender, EventArgs e)
         {
-            LoadRecentAnnouncements();
+            // Keep this here because your ASPX still uses this event.
         }
 
         protected void ddlSendOption_SelectedIndexChanged(object sender, EventArgs e)
         {
-            pnlStudentSelect.Visible = false;
+            if (pnlStudentSelect != null)
+                pnlStudentSelect.Visible = false;
         }
 
         protected void btnPost_Click(object sender, EventArgs e)
@@ -99,9 +129,7 @@ namespace LecturerPortal
             DBHelper.ExecuteNonQuery(query, p);
 
             ClearForm();
-
             ShowSuccess("Announcement posted successfully.");
-            LoadRecentAnnouncements();
         }
 
         private void LoadRecentAnnouncements()
@@ -128,7 +156,12 @@ namespace LecturerPortal
             txtDate.Text = "";
             ddlType.SelectedIndex = 0;
             ddlSendOption.SelectedIndex = 0;
-            pnlStudentSelect.Visible = false;
+
+            if (ddlCourse.Items.Count > 0)
+                ddlCourse.SelectedIndex = 0;
+
+            if (pnlStudentSelect != null)
+                pnlStudentSelect.Visible = false;
         }
 
         private void ShowSuccess(string message)
