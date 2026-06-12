@@ -1,5 +1,6 @@
 ﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="AdminDashboard.aspx.cs" Inherits="StudentManagementSystem.AdminDashboard" %>
 <%@ Register Src="~/Sidebar.ascx" TagPrefix="uc" TagName="Navbar" %>
+
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" class="h-full w-full overflow-hidden">
 <head runat="server">

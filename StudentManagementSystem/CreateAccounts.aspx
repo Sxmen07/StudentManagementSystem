@@ -1,5 +1,5 @@
 ﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="CreateAccounts.aspx.cs" Inherits="StudentManagementSystem.CreateAccounts" %>
-<%@ Register Src="~/Sidebar.ascx" TagPrefix="uc" TagName="Navbar" %>
+<%@ Register Src="~/Sidebar.ascx" TagPrefix="uc" TagName="Navbar" %> <!-- REGISTER SIDEBARR -->
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" class="h-full w-full bg-[#FBFBFA]">
@@ -14,6 +14,7 @@
 <body class="h-full w-full m-0 p-0 text-[#2F2F2F] bg-[#FBFBFA] overflow-hidden">
     <form id="form1" runat="server" class="h-full flex relative" onkeydown="if(event.keyCode==13) { document.getElementById('btnCreateAccount').click(); return false; }">
         
+        <!-- MY SIDEBARR -->
         <uc:Navbar runat="server" ID="AdminSidebar" />
 
         <div class="flex-1 pl-20 pr-10 py-10 lg:pl-10 overflow-y-auto bg-white h-full">
