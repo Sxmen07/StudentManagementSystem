@@ -150,13 +150,22 @@ namespace LecturerPortal
         protected global::System.Web.UI.WebControls.Panel pnlStudentSelect;
 
         /// <summary>
-        /// ddlStudents control.
+        /// chkSelectAllStudents control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlStudents;
+        protected global::System.Web.UI.WebControls.CheckBox chkSelectAllStudents;
+
+        /// <summary>
+        /// cblStudents control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBoxList cblStudents;
 
         /// <summary>
         /// btnPost control.
