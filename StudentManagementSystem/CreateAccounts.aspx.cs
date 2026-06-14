@@ -51,15 +51,25 @@ namespace StudentManagementSystem
         protected void ddlRole_SelectedIndexChanged(object sender, EventArgs e)
         {
             pnlSemesterSelection.Visible = (ddlRole.SelectedValue == "Student");
+            pnlModalContainer.Visible = true;
+        }
+
+        protected void lnkOpenRegistration_Click(object sender, EventArgs e)
+        {
+            ResetFormState();
+            litModalHeader.Text = "Register New Profile Instance";
+            btnCreateAccount.Text = "Register Account";
+            pnlModalContainer.Visible = true;
         }
 
         private void BindUserGrid()
         {
             string selectedFilter = ddlFilterRole != null ? ddlFilterRole.SelectedValue : "All";
 
-            string hopPart = "SELECT HopID AS UserID, HopEmail AS Username, UserRole AS Role FROM HeadofProgramme";
-            string lecPart = "SELECT LecturerID AS UserID, LecturerEmail AS Username, UserRole AS Role FROM Lecturer";
-            string boldPart = "SELECT StudentID AS UserID, StudentEmail AS Username, UserRole AS Role FROM Student";
+            // Updated parts to select ProfilePictureUrl fields from individual tables
+            string hopPart = "SELECT HopID AS UserID, HopEmail AS Username, UserRole AS Role, ProfilePictureUrl FROM HeadofProgramme";
+            string lecPart = "SELECT LecturerID AS UserID, LecturerEmail AS Username, UserRole AS Role, ProfilePictureUrl FROM Lecturer";
+            string boldPart = "SELECT StudentID AS UserID, StudentEmail AS Username, UserRole AS Role, ProfilePictureUrl FROM Student";
 
             string finalQuery = "";
 
@@ -108,12 +118,14 @@ namespace StudentManagementSystem
                 string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(role))
             {
                 ShowStatus("Please complete all inputs, including Name and IC/Passport, before submitting.", false);
+                pnlModalContainer.Visible = true;
                 return;
             }
 
             if (role == "Student" && string.IsNullOrEmpty(ddlStudentSemester.SelectedValue))
             {
                 ShowStatus("Operational constraint warning: Please specify a valid intake semester for student registration.", false);
+                pnlModalContainer.Visible = true;
                 return;
             }
 
@@ -131,7 +143,6 @@ namespace StudentManagementSystem
 
                         if (originalRole != role)
                         {
-                            // Drop old structural record tier
                             string dropQuery = "";
                             if (originalRole == "Admin") dropQuery = "DELETE FROM HeadofProgramme WHERE HopID = @ID";
                             else if (originalRole == "Lecturer") dropQuery = "DELETE FROM Lecturer WHERE LecturerID = @ID";
@@ -143,7 +154,6 @@ namespace StudentManagementSystem
                                 dropCmd.ExecuteNonQuery();
                             }
 
-                            // Write new structural details completely
                             string insertQuery = "";
                             if (role == "Admin") insertQuery = "INSERT INTO HeadofProgramme (HopName, HopEmail, Password, IdentityNumber) VALUES (@Name, @Email, @Password, @IDNum)";
                             else if (role == "Lecturer") insertQuery = "INSERT INTO Lecturer (LecturerName, LecturerEmail, Password, IdentityNumber) VALUES (@Name, @Email, @Password, @IDNum)";
@@ -164,7 +174,6 @@ namespace StudentManagementSystem
                         }
                         else
                         {
-                            // Updating information rows inside the same role profile tier
                             string updateQuery = "";
                             if (role == "Admin") updateQuery = "UPDATE HeadofProgramme SET HopName = @Name, HopEmail = @Email, Password = @Password, IdentityNumber = @IDNum WHERE HopID = @ID";
                             else if (role == "Lecturer") updateQuery = "UPDATE Lecturer SET LecturerName = @Name, LecturerEmail = @Email, Password = @Password, IdentityNumber = @IDNum WHERE LecturerID = @ID";
@@ -187,7 +196,6 @@ namespace StudentManagementSystem
                     }
                     else
                     {
-                        // Clean insertion processing logic loop
                         string insertQuery = "";
                         if (role == "Admin") insertQuery = "INSERT INTO HeadofProgramme (HopName, HopEmail, Password, IdentityNumber) VALUES (@Name, @Email, @Password, @IDNum)";
                         else if (role == "Lecturer") insertQuery = "INSERT INTO Lecturer (LecturerName, LecturerEmail, Password, IdentityNumber) VALUES (@Name, @Email, @Password, @IDNum)";
@@ -213,6 +221,7 @@ namespace StudentManagementSystem
                 }
                 catch (SqlException ex)
                 {
+                    pnlModalContainer.Visible = true;
                     if (ex.Number == 547)
                     {
                         ShowStatus("Database integrity conflict: The selected semester does not exist in our active dictionary records.", false);
@@ -224,6 +233,7 @@ namespace StudentManagementSystem
                 }
                 catch (Exception ex)
                 {
+                    pnlModalContainer.Visible = true;
                     ShowStatus("System engine failure: " + ex.Message, false);
                 }
             }
@@ -280,9 +290,10 @@ namespace StudentManagementSystem
                                     hfUserID.Value = targetId;
                                     Session["EditingRole"] = targetRole;
 
+                                    litModalHeader.Text = "Modify Identity Access Parameters";
                                     btnCreateAccount.Text = "Update Account";
-                                    btnCancelAccount.Visible = true;
-                                    ShowStatus("Profile data loaded. Modify details and save changes.", true);
+                                    pnlModalContainer.Visible = true;
+                                    lblStatus.Visible = false;
                                 }
                             }
                         }
@@ -336,14 +347,8 @@ namespace StudentManagementSystem
             ddlStudentSemester.SelectedIndex = 0;
             pnlSemesterSelection.Visible = false;
             btnCreateAccount.Text = "Register Account";
-            btnCancelAccount.Visible = false;
+            pnlModalContainer.Visible = false;
             Session["EditingRole"] = null;
-        }
-
-        protected void btnLogout_Click(object sender, EventArgs e)
-        {
-            Session.Clear();
-            Response.Redirect("Login.aspx");
         }
 
         private void ShowStatus(string message, bool isSuccess)
