@@ -129,6 +129,7 @@
     <Content Include="Login.aspx" />
     <Content Include="Login.css" />
     <Content Include="ManageAnnouncements.aspx" />
+    <Content Include="ManageCalendar.aspx" />
     <Content Include="ManageCourses.aspx" />
     <Content Include="ManageSchoolNPrograms.aspx" />
     <Content Include="profile_upload\default-avatar.jpg" />
@@ -272,6 +273,12 @@
     </Compile>
     <Compile Include="ManageAnnouncements.aspx.designer.cs">
       <DependentUpon>ManageAnnouncements.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ManageCalendar.aspx.cs">
+      <DependentUpon>ManageCalendar.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ManageCalendar.aspx.designer.cs">
+      <DependentUpon>ManageCalendar.aspx</DependentUpon>
     </Compile>
     <Compile Include="ManageCourses.aspx.cs">
       <DependentUpon>ManageCourses.aspx</DependentUpon>
