@@ -141,6 +141,15 @@ namespace StudentManagementSystem
         protected global::System.Web.UI.WebControls.FileUpload fuAvatar;
 
         /// <summary>
+        /// lnkDeleteAvatar control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.LinkButton lnkDeleteAvatar;
+
+        /// <summary>
         /// fuBackground control.
         /// </summary>
         /// <remarks>
@@ -148,6 +157,15 @@ namespace StudentManagementSystem
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.FileUpload fuBackground;
+
+        /// <summary>
+        /// lnkDeleteBanner control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.LinkButton lnkDeleteBanner;
 
         /// <summary>
         /// txtUserID control.
