@@ -87,17 +87,11 @@
                                             <div class="w-full mt-1.5 space-y-1 overflow-hidden">
                                                 <asp:Repeater ID="rptCellEvents" runat="server" DataSource='<%# Eval("CellEventsList") %>'>
                                                     <ItemTemplate>
-                                                        <div style='background-color: <%# Eval("HexColor").ToString() == "#3B82F6" ? "#EFF6FF" : 
-                                                                                      Eval("HexColor").ToString() == "#EAB308" ? "#FEF9C3" : 
-                                                                                      Eval("HexColor").ToString() == "#EF4444" ? "#FEE2E2" : "#ECFDF5" %>; 
-                                                                     color: <%# Eval("HexColor").ToString() == "#3B82F6" ? "#1E40AF" : 
-                                                                            Eval("HexColor").ToString() == "#EAB308" ? "#854D0E" : 
-                                                                            Eval("HexColor").ToString() == "#EF4444" ? "#991B1B" : "#065F46" %>; 
-                                                                     border: 1px solid <%# Eval("HexColor").ToString() == "#3B82F6" ? "#BFDBFE" : 
-                                                                                             Eval("HexColor").ToString() == "#EAB308" ? "#FEF08A" : 
-                                                                                             Eval("HexColor").ToString() == "#EF4444" ? "#FCA5A5" : "#A7F3D0" %>;'
-                                                             class="text-[9px] font-bold px-1.5 py-0.5 rounded truncate max-w-full block shadow-sm select-none">
-                                                            <%# Eval("EventName") %>
+                                                        <div class='<%# "text-[9px] font-bold px-1.5 py-0.5 rounded truncate max-w-full block shadow-sm select-none border " + 
+                                                                        (Eval("HexColor").ToString() == "#3B82F6" ? "bg-blue-50 text-blue-800 border-blue-200" : 
+                                                                         Eval("HexColor").ToString() == "#EAB308" ? "bg-yellow-50 text-yellow-800 border-yellow-200" : 
+                                                                         Eval("HexColor").ToString() == "#EF4444" ? "bg-red-50 text-red-800 border-red-200" : "bg-emerald-50 text-emerald-800 border-emerald-200") %>'>
+                                                            <%# (!string.IsNullOrEmpty(Convert.ToString(Eval("TargetRole"))) && Convert.ToString(Eval("TargetRole")) != "All") ? "[" + Eval("TargetRole") + "] " : "" %><%# Eval("EventName") %>
                                                         </div>
                                                     </ItemTemplate>
                                                 </asp:Repeater>
@@ -135,6 +129,17 @@
                                 </div>
 
                                 <div>
+                                    <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Target Programme Stream Scope</label>
+                                    <asp:DropDownList ID="ddlTargetRole" runat="server" CssClass="w-full bg-white p-2.5 rounded-xl border border-zinc-200 font-semibold cursor-pointer outline-none text-zinc-700">
+                                        <asp:ListItem Value="All">All Cohort Levels (General)</asp:ListItem>
+                                        <asp:ListItem Value="Foundation">Foundation Tier Only</asp:ListItem>
+                                        <asp:ListItem Value="Certificate">Certificate Tier Only</asp:ListItem>
+                                        <asp:ListItem Value="Diploma">Diploma Level Only</asp:ListItem>
+                                        <asp:ListItem Value="Degree">Undergraduate Degree Level Only</asp:ListItem>
+                                    </asp:DropDownList>
+                                </div>
+
+                                <div>
                                     <label class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Event Classification Mapping Type</label>
                                     <asp:DropDownList ID="ddlColorType" runat="server" CssClass="w-full bg-white p-2.5 rounded-xl border border-zinc-200 font-semibold cursor-pointer outline-none text-zinc-700">
                                         <asp:ListItem Value="#3B82F6">Standard Academic Milestone (Blue)</asp:ListItem>
@@ -167,7 +172,9 @@
                                             <div class="p-2.5 bg-zinc-50 border border-zinc-100 rounded-xl flex items-center justify-between text-xs gap-3">
                                                 <div class="flex items-center gap-2 truncate">
                                                     <span style='background-color: <%# Eval("HexColor") %>;' class="w-2 h-2 rounded-full shrink-0"></span>
-                                                    <span class="font-bold text-zinc-800 truncate"><%# Eval("EventName") %></span>
+                                                    <span class="font-bold text-zinc-800 truncate">
+                                                        <%# (Convert.ToString(Eval("TargetRole")) != "All") ? "[" + Eval("TargetRole") + "] " : "" %><%# Eval("EventName") %>
+                                                    </span>
                                                 </div>
                                                 <asp:LinkButton ID="lnkSelectAgenda" runat="server" CommandName="SelectEvent" CommandArgument='<%# Eval("EventID") %>'
                                                     CssClass="text-blue-600 hover:text-blue-800 font-bold text-[11px] shrink-0">Edit</asp:LinkButton>

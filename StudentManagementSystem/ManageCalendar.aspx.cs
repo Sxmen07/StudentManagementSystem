@@ -16,6 +16,7 @@ namespace StudentManagementSystem
         public int EventID { get; set; }
         public string EventName { get; set; }
         public string HexColor { get; set; }
+        public string TargetRole { get; set; }
     }
 
     public partial class ManageCalendar : System.Web.UI.Page
@@ -28,6 +29,7 @@ namespace StudentManagementSystem
             set { ViewState["BrowsingMonthYear"] = value; }
         }
 
+        // FIXED: Restored 'object sender' types to fix compilation faults
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Session["UserRole"] == null || Session["UserRole"].ToString() != "Admin")
@@ -39,9 +41,11 @@ namespace StudentManagementSystem
             if (!IsPostBack)
             {
                 BindSemesterDropdown();
-                if (ddlSemesterFilter.Items.Count > 1) ddlSemesterFilter.SelectedIndex = 1;
-
-                BrowsingMonthYear = new DateTime(2026, 4, 1);
+                if (ddlSemesterFilter.Items.Count > 1)
+                {
+                    ddlSemesterFilter.SelectedIndex = 1;
+                    AutoAlignCalendarToSemesterStart();
+                }
                 RenderCalendarGridStructure();
             }
         }
@@ -65,6 +69,32 @@ namespace StudentManagementSystem
                 }
             }
             ddlSemesterFilter.Items.Insert(0, new ListItem("-- Filter Global Term Framework --", ""));
+        }
+
+        private void AutoAlignCalendarToSemesterStart()
+        {
+            if (ddlSemesterFilter.SelectedIndex == 0) return;
+
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                string query = "SELECT StartMonthDay FROM Semester WHERE SemesterID = @SemID";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@SemID", ddlSemesterFilter.SelectedValue);
+                    try
+                    {
+                        conn.Open();
+                        string startMD = Convert.ToString(cmd.ExecuteScalar());
+                        if (!string.IsNullOrEmpty(startMD) && startMD.Contains("-"))
+                        {
+                            string[] elements = startMD.Split('-');
+                            int month = Convert.ToInt32(elements[0]);
+                            BrowsingMonthYear = new DateTime(2026, month, 1);
+                        }
+                    }
+                    catch { }
+                }
+            }
         }
 
         private void RenderCalendarGridStructure()
@@ -118,7 +148,8 @@ namespace StudentManagementSystem
                     {
                         EventID = Convert.ToInt32(r["EventID"]),
                         EventName = r["EventName"].ToString(),
-                        HexColor = r["HexColor"].ToString()
+                        HexColor = r["HexColor"].ToString(),
+                        TargetRole = r["TargetRole"].ToString()
                     });
                 }
                 cellRow["CellEventsList"] = matchEvents;
@@ -134,7 +165,7 @@ namespace StudentManagementSystem
             DataTable dt = new DataTable();
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                string query = "SELECT EventID, EventName, HexColor, CONVERT(VARCHAR(10), EventDate, 120) AS EventDate FROM AcademicCalendar";
+                string query = "SELECT EventID, EventName, HexColor, TargetRole, CONVERT(VARCHAR(10), EventDate, 120) AS EventDate FROM AcademicCalendar";
                 if (ddlSemesterFilter.SelectedIndex > 0) query += " WHERE SemesterID = @SemID";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
@@ -146,9 +177,16 @@ namespace StudentManagementSystem
             return dt;
         }
 
+        // FIXED: Restored 'object sender' signatures
         protected void btnPrevMonth_Click(object sender, EventArgs e) { BrowsingMonthYear = BrowsingMonthYear.AddMonths(-1); RenderCalendarGridStructure(); }
         protected void btnNextMonth_Click(object sender, EventArgs e) { BrowsingMonthYear = BrowsingMonthYear.AddMonths(1); RenderCalendarGridStructure(); }
-        protected void ddlSemesterFilter_SelectedIndexChanged(object sender, EventArgs e) { RenderCalendarGridStructure(); ResetPlanningFormState(); }
+
+        protected void ddlSemesterFilter_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            AutoAlignCalendarToSemesterStart();
+            RenderCalendarGridStructure();
+            ResetPlanningFormState();
+        }
 
         protected void rptCalendarCells_ItemCommand(object source, RepeaterCommandEventArgs e)
         {
@@ -164,10 +202,11 @@ namespace StudentManagementSystem
                 txtEventName.Text = "";
                 txtDescription.Text = "";
                 ddlColorType.SelectedIndex = 0;
+                ddlTargetRole.SelectedIndex = 0;
 
                 btnSaveEvent.Text = "Commit Schedule";
                 btnDeleteEvent.Text = "Delete Day Event";
-                btnDeleteEvent.Visible = true; // Delete appears immediately on valid cell click streams
+                btnDeleteEvent.Visible = true;
                 litFormActionTitle.Text = "Schedule Planning Console";
 
                 BindDayAgendaFeed(targetDate);
@@ -179,7 +218,7 @@ namespace StudentManagementSystem
             DataTable dt = new DataTable();
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                string query = "SELECT EventID, EventName, HexColor FROM AcademicCalendar WHERE EventDate = @EvDate ORDER BY EventID";
+                string query = "SELECT EventID, EventName, HexColor, TargetRole FROM AcademicCalendar WHERE EventDate = @EvDate ORDER BY EventID";
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@EvDate", dateString);
@@ -197,7 +236,7 @@ namespace StudentManagementSystem
                 int eventId = Convert.ToInt32(e.CommandArgument);
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    string query = "SELECT EventID, EventName, EventDescription, HexColor, CONVERT(VARCHAR(10), EventDate, 120) AS EventDate FROM AcademicCalendar WHERE EventID = @ID";
+                    string query = "SELECT EventID, EventName, EventDescription, HexColor, TargetRole, CONVERT(VARCHAR(10), EventDate, 120) AS EventDate FROM AcademicCalendar WHERE EventID = @ID";
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
                         cmd.Parameters.AddWithValue("@ID", eventId);
@@ -212,6 +251,9 @@ namespace StudentManagementSystem
                                     txtEventName.Text = reader["EventName"].ToString();
                                     txtDescription.Text = reader["EventDescription"].ToString();
                                     ddlColorType.SelectedValue = reader["HexColor"].ToString();
+
+                                    string tRole = reader["TargetRole"].ToString();
+                                    if (ddlTargetRole.Items.FindByValue(tRole) != null) ddlTargetRole.SelectedValue = tRole;
 
                                     string dateString = reader["EventDate"].ToString();
                                     txtStartDate.Text = dateString;
@@ -252,8 +294,6 @@ namespace StudentManagementSystem
             }
 
             int targetSemesterID = Convert.ToInt32(ddlSemesterFilter.SelectedValue);
-            bool isUpdate = !string.IsNullOrEmpty(hfActiveEventID.Value);
-
             DateTime startDate = DateTime.Parse(txtStartDate.Text);
             DateTime endDate = string.IsNullOrEmpty(txtEndDate.Text) ? startDate : DateTime.Parse(txtEndDate.Text);
 
@@ -265,26 +305,58 @@ namespace StudentManagementSystem
 
             using (SqlConnection conn = new SqlConnection(connString))
             {
+                string boundsQuery = "SELECT StartMonthDay, EndMonthDay FROM Semester WHERE SemesterID = @SemID";
+                using (SqlCommand cmd = new SqlCommand(boundsQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@SemID", targetSemesterID);
+                    try
+                    {
+                        conn.Open();
+                        using (SqlDataReader r = cmd.ExecuteReader())
+                        {
+                            if (r.Read())
+                            {
+                                string startMD = r["StartMonthDay"].ToString();
+                                string endMD = r["EndMonthDay"].ToString();
+
+                                DateTime permittedStart = new DateTime(2026, Convert.ToInt32(startMD.Split('-')[0]), Convert.ToInt32(startMD.Split('-')[1]));
+                                DateTime permittedEnd = new DateTime(2026, Convert.ToInt32(endMD.Split('-')[0]), Convert.ToInt32(endMD.Split('-')[1]));
+
+                                if (startDate < permittedStart || endDate > permittedEnd)
+                                {
+                                    ShowStatus($"Scheduling Restriction Violation: Selected dates fall outside active term boundaries ({permittedStart:yyyy-MM-dd} to {permittedEnd:yyyy-MM-dd}).", false);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex) { ShowStatus("Boundary check exception: " + ex.Message, false); return; }
+                }
+            }
+
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
                 try
                 {
                     conn.Open();
+                    bool isUpdate = !string.IsNullOrEmpty(hfActiveEventID.Value);
 
                     if (isUpdate)
                     {
-                        string query = "UPDATE AcademicCalendar SET EventName = @Name, EventDescription = @Desc, HexColor = @Color, EventDate = @EvDate WHERE EventID = @ID";
+                        string query = "UPDATE AcademicCalendar SET EventName = @Name, EventDescription = @Desc, HexColor = @Color, TargetRole = @TRole WHERE EventID = @ID";
                         using (SqlCommand cmd = new SqlCommand(query, conn))
                         {
                             cmd.Parameters.AddWithValue("@Name", name);
                             cmd.Parameters.AddWithValue("@Desc", txtDescription.Text.Trim());
                             cmd.Parameters.AddWithValue("@Color", ddlColorType.SelectedValue);
-                            cmd.Parameters.AddWithValue("@EvDate", startDate);
+                            cmd.Parameters.AddWithValue("@TRole", ddlTargetRole.SelectedValue);
                             cmd.Parameters.AddWithValue("@ID", Convert.ToInt32(hfActiveEventID.Value));
                             cmd.ExecuteNonQuery();
                         }
                     }
                     else
                     {
-                        string query = "INSERT INTO AcademicCalendar (EventName, EventDescription, EventDate, SemesterID, HexColor) VALUES (@Name, @Desc, @EvDate, @SemID, @Color)";
+                        string query = "INSERT INTO AcademicCalendar (EventName, EventDescription, EventDate, SemesterID, HexColor, TargetRole) VALUES (@Name, @Desc, @EvDate, @SemID, @Color, @TRole)";
                         for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
                         {
                             using (SqlCommand cmd = new SqlCommand(query, conn))
@@ -294,6 +366,7 @@ namespace StudentManagementSystem
                                 cmd.Parameters.AddWithValue("@EvDate", date.ToString("yyyy-MM-dd"));
                                 cmd.Parameters.AddWithValue("@SemID", targetSemesterID);
                                 cmd.Parameters.AddWithValue("@Color", ddlColorType.SelectedValue);
+                                cmd.Parameters.AddWithValue("@TRole", ddlTargetRole.SelectedValue);
                                 cmd.ExecuteNonQuery();
                             }
                         }
@@ -307,7 +380,7 @@ namespace StudentManagementSystem
             }
         }
 
-        // UPGRADED MULTI-DAY DATE RANGE DROPPING ENGINE
+        // FIXED: Restored 'object sender' signatures
         protected void btnDeleteEvent_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(txtStartDate.Text)) return;
@@ -317,7 +390,6 @@ namespace StudentManagementSystem
 
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                // Deletes anything matching the date range, or uses specific index targeting if single editing
                 string query = !string.IsNullOrEmpty(hfActiveEventID.Value)
                     ? "DELETE FROM AcademicCalendar WHERE EventID = @ID"
                     : "DELETE FROM AcademicCalendar WHERE EventDate BETWEEN @Start AND @End";
@@ -342,8 +414,7 @@ namespace StudentManagementSystem
                     {
                         conn.Open();
                         cmd.ExecuteNonQuery();
-                        ShowStatus("Scheduled event parameters wiped successfully for the selected date spectrum!", true);
-
+                        ShowStatus("Scheduled event parameters wiped successfully!", true);
                         ResetPlanningFormState();
                         RenderCalendarGridStructure();
                     }
@@ -360,6 +431,7 @@ namespace StudentManagementSystem
             txtEventName.Text = "";
             txtDescription.Text = "";
             ddlColorType.SelectedIndex = 0;
+            ddlTargetRole.SelectedIndex = 0;
             btnSaveEvent.Text = "Commit Schedule";
             btnDeleteEvent.Visible = false;
             rptDayAgenda.DataSource = null;
@@ -374,15 +446,16 @@ namespace StudentManagementSystem
             lblStatus.Visible = true;
         }
 
+        // FIXED: Restored 'object sender' signatures
         protected void btnExportCSV_Click(object sender, EventArgs e)
         {
             DataTable dt = PullExportData();
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Event Date,Event Title,Description");
+            sb.AppendLine("Event Date,Target Level,Event Title,Description");
 
             foreach (DataRow row in dt.Rows)
             {
-                sb.AppendLine($"{Convert.ToDateTime(row["Event Date"]):yyyy-MM-dd},\"{row["Event Title"]}\",\"{row["Description"]}\"");
+                sb.AppendLine($"{Convert.ToDateTime(row["Event Date"]):yyyy-MM-dd},[{row["Target Level"]}],\"{row["Event Title"]}\",\"{row["Description"]}\"");
             }
 
             Response.Clear();
@@ -436,7 +509,8 @@ namespace StudentManagementSystem
             sb.Append("th { border-bottom: 2px solid #111; padding: 8px 10px; text-align: left; font-size: 11px; font-weight: bold; } ");
             sb.Append("td { border-bottom: 1px solid #e5e5e5; padding: 8px 10px; font-size: 11px; vertical-align: top; color: #222; } ");
             sb.Append(".date-col { width: 95px; font-weight: bold; color: #555; } ");
-            sb.Append(".title-col { width: 220px; font-weight: bold; } ");
+            sb.Append(".level-col { width: 100px; font-weight: bold; color: #3B82F6; } ");
+            sb.Append(".title-col { width: 180px; font-weight: bold; } ");
             sb.Append("</style></head><body>");
 
             sb.Append("<h2>Academic Calendar Schedule Run</h2>");
@@ -444,6 +518,7 @@ namespace StudentManagementSystem
 
             sb.Append("<table><thead><tr>");
             sb.Append("<th class='date-col'>Date</th>");
+            sb.Append("<th class='level-col'>Target Level</th>");
             sb.Append("<th class='title-col'>Event Title</th>");
             sb.Append("<th>Description Guidelines</th>");
             sb.Append("</tr></thead><tbody>");
@@ -452,6 +527,7 @@ namespace StudentManagementSystem
             {
                 sb.Append("<tr>");
                 sb.Append($"<td class='date-col'>{Convert.ToDateTime(row["Event Date"]):yyyy-MM-dd}</td>");
+                sb.Append($"<td class='level-col'>{row["Target Level"]}</td>");
                 sb.Append($"<td class='title-col'>{row["Event Title"]}</td>");
                 sb.Append($"<td>{row["Description"]}</td>");
                 sb.Append("</tr>");
@@ -469,7 +545,7 @@ namespace StudentManagementSystem
             DataTable dt = new DataTable();
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                string query = "SELECT EventDate, EventName, EventDescription FROM AcademicCalendar";
+                string query = "SELECT EventDate, TargetRole, EventName, EventDescription FROM AcademicCalendar";
                 if (ddlSemesterFilter.SelectedIndex > 0)
                 {
                     query += " WHERE SemesterID = @SemID";
@@ -487,6 +563,7 @@ namespace StudentManagementSystem
             }
 
             dt.Columns["EventDate"].ColumnName = "Event Date";
+            dt.Columns["TargetRole"].ColumnName = "Target Level";
             dt.Columns["EventName"].ColumnName = "Event Title";
             dt.Columns["EventDescription"].ColumnName = "Description";
 

@@ -57,7 +57,7 @@
             </a>
 
             <a href="ManageCalendar.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-colors text-white/90 hover:text-white whitespace-nowrap overflow-hidden pl-2">
-                <i class="fa-solid fa-circle-user text-base shrink-0 w-5 text-center"></i>
+                <i class="fa fa-calendar" aria-hidden="true"></i>
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Academic Calendar</span>
             </a>
 
