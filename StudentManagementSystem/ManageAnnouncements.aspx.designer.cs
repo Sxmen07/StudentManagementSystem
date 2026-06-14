@@ -33,6 +33,15 @@ namespace StudentManagementSystem
         protected global::StudentManagementSystem.Sidebar AdminSidebar;
 
         /// <summary>
+        /// lnkOpenModal control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.LinkButton lnkOpenModal;
+
+        /// <summary>
         /// lblStatus control.
         /// </summary>
         /// <remarks>
@@ -40,6 +49,42 @@ namespace StudentManagementSystem
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblStatus;
+
+        /// <summary>
+        /// rptAnnouncements control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Repeater rptAnnouncements;
+
+        /// <summary>
+        /// pnlModalContainer control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Panel pnlModalContainer;
+
+        /// <summary>
+        /// litModalHeader control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Literal litModalHeader;
+
+        /// <summary>
+        /// lnkCloseTop control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.LinkButton lnkCloseTop;
 
         /// <summary>
         /// hfAnnouncementID control.
@@ -96,15 +141,6 @@ namespace StudentManagementSystem
         protected global::System.Web.UI.WebControls.CheckBox chkStudent;
 
         /// <summary>
-        /// btnPublish control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnPublish;
-
-        /// <summary>
         /// btnCancelEdit control.
         /// </summary>
         /// <remarks>
@@ -114,12 +150,12 @@ namespace StudentManagementSystem
         protected global::System.Web.UI.WebControls.Button btnCancelEdit;
 
         /// <summary>
-        /// gvAnnouncements control.
+        /// btnPublish control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.GridView gvAnnouncements;
+        protected global::System.Web.UI.WebControls.Button btnPublish;
     }
 }
