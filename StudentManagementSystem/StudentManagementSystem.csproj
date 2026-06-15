@@ -102,6 +102,7 @@
     <Content Include="Admin\Admin.aspx" />
     <Content Include="Admin\Admin.css" />
     <Content Include="AssignCourses2Lec.aspx" />
+    <Content Include="AuditAttendance.aspx" />
     <Content Include="ContactAdmin.aspx" />
     <Content Include="Content\bootstrap-grid.css" />
     <Content Include="Content\bootstrap-grid.min.css" />
@@ -131,6 +132,7 @@
     <Content Include="ManageAnnouncements.aspx" />
     <Content Include="ManageCalendar.aspx" />
     <Content Include="ManageCourses.aspx" />
+    <Content Include="ManageEnrollment.aspx" />
     <Content Include="ManageSchoolNPrograms.aspx" />
     <Content Include="profile_upload\default-avatar.jpg" />
     <Content Include="Register.aspx" />
@@ -229,6 +231,13 @@
     <Compile Include="AssignCourses2Lec.aspx.designer.cs">
       <DependentUpon>AssignCourses2Lec.aspx</DependentUpon>
     </Compile>
+    <Compile Include="AuditAttendance.aspx.cs">
+      <DependentUpon>AuditAttendance.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="AuditAttendance.aspx.designer.cs">
+      <DependentUpon>AuditAttendance.aspx</DependentUpon>
+    </Compile>
     <Compile Include="ContactAdmin.aspx.cs">
       <DependentUpon>ContactAdmin.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -286,6 +295,13 @@
     </Compile>
     <Compile Include="ManageCourses.aspx.designer.cs">
       <DependentUpon>ManageCourses.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ManageEnrollment.aspx.cs">
+      <DependentUpon>ManageEnrollment.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ManageEnrollment.aspx.designer.cs">
+      <DependentUpon>ManageEnrollment.aspx</DependentUpon>
     </Compile>
     <Compile Include="ManageSchoolNPrograms.aspx.cs">
       <DependentUpon>ManageSchoolNPrograms.aspx</DependentUpon>

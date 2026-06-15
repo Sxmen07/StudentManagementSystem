@@ -35,6 +35,11 @@
                 <i class="fa-solid fa-chalkboard-user text-base shrink-0 w-5 text-center"></i>
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Assign Courses</span>
             </a>
+
+            <a href="ManageEnrollment.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-colors text-white/90 hover:text-white whitespace-nowrap overflow-hidden pl-2">
+    <i class="fa-solid fa-door-open text-base shrink-0 w-5 text-center"></i>
+    <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Open Enrollments</span>
+</a>
             
             <a href="TrackStudentGrade.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-colors text-white/90 hover:text-white whitespace-nowrap overflow-hidden pl-2">
                 <i class="fa-solid fa-chart-simple text-base shrink-0 w-5 text-center"></i>
@@ -60,6 +65,11 @@
                 <i class="fa fa-calendar" aria-hidden="true"></i>
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Academic Calendar</span>
             </a>
+
+            <a href="AuditAttendance.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-colors text-white/90 hover:text-white whitespace-nowrap overflow-hidden pl-2">
+    <i class="fa-solid fa-clipboard-user text-base shrink-0 w-5 text-center"></i>
+    <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Audit Attendance</span>
+</a>
 
         </nav>
     </div>
