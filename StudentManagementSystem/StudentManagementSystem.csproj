@@ -101,7 +101,6 @@
     <Content Include="AdminInbox.aspx" />
     <Content Include="Admin\Admin.aspx" />
     <Content Include="Admin\Admin.css" />
-    <Content Include="AssignCourses2Lec.aspx" />
     <Content Include="AuditAttendance.aspx" />
     <Content Include="ContactAdmin.aspx" />
     <Content Include="Content\bootstrap-grid.css" />
@@ -224,13 +223,6 @@
     </Compile>
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
-    <Compile Include="AssignCourses2Lec.aspx.cs">
-      <DependentUpon>AssignCourses2Lec.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="AssignCourses2Lec.aspx.designer.cs">
-      <DependentUpon>AssignCourses2Lec.aspx</DependentUpon>
-    </Compile>
     <Compile Include="AuditAttendance.aspx.cs">
       <DependentUpon>AuditAttendance.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
