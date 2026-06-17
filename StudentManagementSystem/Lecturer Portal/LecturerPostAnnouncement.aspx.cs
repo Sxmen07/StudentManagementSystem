@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
@@ -14,6 +15,7 @@ namespace LecturerPortal
                 Response.Redirect("Login.aspx");
 
             lblSidebarName.Text = Session["LecturerName"]?.ToString();
+            lblWelcomeName.Text = Session["LecturerName"]?.ToString();
 
             if (!IsPostBack)
             {
@@ -54,18 +56,18 @@ namespace LecturerPortal
         private void LoadCourses()
         {
             string query = @"
-        SELECT DISTINCT
-            c.CourseCode,
-            c.CourseCode + ' - ' + c.CourseName AS DisplayName
-        FROM Course c
-        INNER JOIN CourseOffer co ON co.CourseCode = c.CourseCode
-        WHERE co.LecturerID = @LID
-        AND co.OfferStatus = 'Available'
-        ORDER BY c.CourseCode";
+                SELECT DISTINCT
+                    c.CourseCode,
+                    c.CourseCode + ' - ' + c.CourseName AS DisplayName
+                FROM Course c
+                INNER JOIN CourseOffer co ON co.CourseCode = c.CourseCode
+                WHERE co.LecturerID = @LID
+                AND co.OfferStatus = 'Available'
+                ORDER BY c.CourseCode";
 
             SqlParameter[] p = {
-        new SqlParameter("@LID", Session["LecturerID"])
-    };
+                new SqlParameter("@LID", Session["LecturerID"])
+            };
 
             DataTable dt = DBHelper.ExecuteQuery(query, p);
 
@@ -82,6 +84,7 @@ namespace LecturerPortal
             if (ddlSendOption.SelectedValue == "SelectedStudents")
             {
                 LoadStudentsByCourse();
+                lblStatus.Text = "";
             }
         }
 
@@ -172,8 +175,16 @@ namespace LecturerPortal
                 return;
             }
 
-            string targetType = "";
-            string targetValue = "";
+            if (!fileUpload.HasFile)
+            {
+                ShowError("No file detected. Please choose a file before posting.");
+                return;
+            }
+
+            string attachmentPath = SaveUploadedFile();
+
+            string targetType;
+            string targetValue;
 
             if (ddlSendOption.SelectedValue == "ProgrammeCode")
             {
@@ -186,49 +197,113 @@ namespace LecturerPortal
                 targetValue = ddlCourse.SelectedValue;
             }
 
-            string query = @"
+            string insertQuery = @"
                 INSERT INTO Announcement
-                (Title, Description, TargetType, TargetValue, CreatedDate)
+                (Title, Description, TargetType, TargetValue, CreatedDate, AttachmentPath)
                 OUTPUT INSERTED.AnnouncementID
                 VALUES
-                (@Title, @Description, @TargetType, @TargetValue, GETDATE())";
+                (@Title, @Description, @TargetType, @TargetValue, GETDATE(), @AttachmentPath)";
 
-            SqlParameter[] p = {
+            SqlParameter[] insertParams = {
                 new SqlParameter("@Title", title),
                 new SqlParameter("@Description", message),
                 new SqlParameter("@TargetType", targetType),
-                new SqlParameter("@TargetValue", targetValue)
+                new SqlParameter("@TargetValue", targetValue),
+                new SqlParameter("@AttachmentPath",
+                    string.IsNullOrEmpty(attachmentPath) ? (object)DBNull.Value : attachmentPath)
             };
 
-            DataTable result = DBHelper.ExecuteQuery(query, p);
+            DataTable result = DBHelper.ExecuteQuery(insertQuery, insertParams);
+
+            if (result.Rows.Count == 0)
+            {
+                ShowError("Announcement could not be posted.");
+                return;
+            }
+
             int announcementID = Convert.ToInt32(result.Rows[0]["AnnouncementID"]);
 
             if (ddlSendOption.SelectedValue == "SelectedStudents")
             {
-                SaveSelectedStudents(announcementID);
+                int sentCount = 0;
+                int failedCount = 0;
+
+                SendEmailToSelectedStudents(announcementID, title, message, ref sentCount, ref failedCount);
+
+                ClearForm();
+
+                if (failedCount > 0)
+                {
+                    ShowError("Announcement posted, but only " + sentCount + " email(s) were sent. " + failedCount + " failed.");
+                }
+                else
+                {
+                    ShowSuccess("Announcement posted and email sent to " + sentCount + " selected student(s).");
+                }
+
+                return;
             }
 
             ClearForm();
             ShowSuccess("Announcement posted successfully.");
         }
 
-        private string GetProgrammeCodeByCourseCode(string courseCode)
+        private string SaveUploadedFile()
         {
-            string query = @"
-        SELECT TOP 1 ProgrammeCode
-        FROM Course
-        WHERE CourseCode = @CourseCode";
+            if (!fileUpload.HasFile)
+                return null;
 
-                SqlParameter[] p = {
-            new SqlParameter("@CourseCode", courseCode)
-        };
+            string extension = Path.GetExtension(fileUpload.FileName).ToLower();
 
-            DataTable dt = DBHelper.ExecuteQuery(query, p);
+            string[] allowedExtensions = { ".pdf", ".doc", ".docx", ".ppt", ".pptx", ".jpg", ".jpeg", ".png" };
 
-            if (dt.Rows.Count > 0)
-                return dt.Rows[0]["ProgrammeCode"].ToString();
+            bool allowed = false;
 
-            return "";
+            foreach (string ext in allowedExtensions)
+            {
+                if (extension == ext)
+                {
+                    allowed = true;
+                    break;
+                }
+            }
+
+            if (!allowed)
+            {
+                ShowError("Only PDF, Word, PowerPoint, JPG and PNG files are allowed.");
+                return null;
+            }
+
+            string folderPath = Server.MapPath("~/Uploads/Announcements/");
+
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            string cleanFileName = Path.GetFileName(fileUpload.FileName);
+            string newFileName = DateTime.Now.ToString("yyyyMMddHHmmss") + "_" + cleanFileName;
+
+            string savePath = Path.Combine(folderPath, newFileName);
+
+            fileUpload.SaveAs(savePath);
+
+            return "~/Uploads/Announcements/" + newFileName;
+        }
+
+        public bool HasAttachment(object attachmentPath)
+        {
+            return attachmentPath != null &&
+                   attachmentPath != DBNull.Value &&
+                   !string.IsNullOrWhiteSpace(attachmentPath.ToString());
+        }
+
+        public string GetAttachmentUrl(object attachmentPath)
+        {
+            if (!HasAttachment(attachmentPath))
+                return "#";
+
+            return ResolveUrl(attachmentPath.ToString());
         }
 
         private bool HasSelectedStudent()
@@ -242,44 +317,126 @@ namespace LecturerPortal
             return false;
         }
 
-        private void SaveSelectedStudents(int announcementID)
+        private void SendEmailToSelectedStudents(int announcementID, string title, string message, ref int sentCount, ref int failedCount)
         {
             foreach (ListItem item in cblStudents.Items)
             {
                 if (item.Selected)
                 {
-                    string query = @"
-                        INSERT INTO AnnouncementRecipient
-                        (AnnouncementID, StudentID)
-                        VALUES
-                        (@AnnouncementID, @StudentID)";
+                    string studentEmail = GetStudentEmail(item.Value);
 
-                    SqlParameter[] p = {
-                        new SqlParameter("@AnnouncementID", announcementID),
-                        new SqlParameter("@StudentID", item.Value)
-                    };
+                    if (string.IsNullOrWhiteSpace(studentEmail))
+                    {
+                        failedCount++;
+                        continue;
+                    }
 
-                    DBHelper.ExecuteNonQuery(query, p);
+                    try
+                    {
+                        SendAnnouncementEmail(announcementID, studentEmail, title, message);
+                        sentCount++;
+                    }
+                    catch
+                    {
+                        failedCount++;
+                    }
                 }
             }
+        }
+
+        private string GetStudentEmail(string studentID)
+        {
+            string query = @"
+                SELECT StudentEmail, PersonalEmail
+                FROM Student
+                WHERE StudentID = @StudentID";
+
+            SqlParameter[] p = {
+                new SqlParameter("@StudentID", studentID)
+            };
+
+            DataTable dt = DBHelper.ExecuteQuery(query, p);
+
+            if (dt.Rows.Count == 0)
+                return "";
+
+            string studentEmail = dt.Rows[0]["StudentEmail"].ToString().Trim();
+            string personalEmail = dt.Rows[0]["PersonalEmail"].ToString().Trim();
+
+            if (!string.IsNullOrWhiteSpace(studentEmail) && !studentEmail.Contains("@unitrack.edu.my"))
+                return studentEmail;
+
+            if (!string.IsNullOrWhiteSpace(personalEmail))
+                return personalEmail;
+
+            return studentEmail;
+        }
+
+        private void SendAnnouncementEmail(int announcementID, string toEmail, string title, string message)
+        {
+            string query = @"
+                INSERT INTO EmailLog
+                (AnnouncementID, ToEmail, Subject, Body, Status)
+                VALUES
+                (@AnnouncementID, @ToEmail, @Subject, @Body, @Status)";
+
+            SqlParameter[] p = {
+                new SqlParameter("@AnnouncementID", announcementID),
+                new SqlParameter("@ToEmail", toEmail),
+                new SqlParameter("@Subject", "New Announcement: " + title),
+                new SqlParameter("@Body", message),
+                new SqlParameter("@Status", "Sent")
+            };
+
+            DBHelper.ExecuteNonQuery(query, p);
+        }
+
+        private string GetProgrammeCodeByCourseCode(string courseCode)
+        {
+            string query = @"
+                SELECT TOP 1 ProgrammeCode
+                FROM Course
+                WHERE CourseCode = @CourseCode";
+
+            SqlParameter[] p = {
+                new SqlParameter("@CourseCode", courseCode)
+            };
+
+            DataTable dt = DBHelper.ExecuteQuery(query, p);
+
+            if (dt.Rows.Count > 0)
+                return dt.Rows[0]["ProgrammeCode"].ToString();
+
+            return "";
         }
 
         private void LoadRecentAnnouncements()
         {
             string query = @"
                 SELECT TOP 20
-                    Title,
-                    Description,
-                    TargetType,
-                    TargetValue,
-                    CreatedDate
-                FROM Announcement
-                ORDER BY CreatedDate DESC";
+                    a.AnnouncementID,
+                    a.Title,
+                    a.Description,
+                    a.TargetType,
+                    a.TargetValue,
+                    a.CreatedDate,
+                    a.AttachmentPath,
+                    ISNULL(
+                        STUFF((
+                            SELECT ', ' + el.ToEmail
+                            FROM EmailLog el
+                            WHERE el.AnnouncementID = a.AnnouncementID
+                            FOR XML PATH(''), TYPE
+                        ).value('.', 'NVARCHAR(MAX)'), 1, 2, ''),
+                        ''
+                    ) AS SentTo
+                FROM Announcement a
+                ORDER BY a.CreatedDate DESC";
 
             DataTable dt = DBHelper.ExecuteQuery(query);
 
-            gvAnnouncements.DataSource = dt;
-            gvAnnouncements.DataBind();
+            rptAnnouncements.DataSource = dt;
+            rptAnnouncements.DataBind();
         }
 
         private void ClearForm()
