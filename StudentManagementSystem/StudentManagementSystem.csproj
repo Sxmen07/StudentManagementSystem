@@ -126,6 +126,7 @@
     <Content Include="Footer.css" />
     <Content Include="Global.asax" />
     <Content Include="Lecturer Portal\Assessment.aspx" />
+    <Content Include="Lecturer Portal\LectDashboard.aspx" />
     <Content Include="Lecturer Portal\LectProfile.aspx" />
     <Content Include="Lecturer Portal\LecturerCourseMaterials.aspx" />
     <Content Include="Lecturer Portal\LecturerMonitorAcademicProgress.aspx" />
@@ -208,6 +209,7 @@
       <DependentUpon>Admin.aspx</DependentUpon>
     </Compile>
     <Compile Include="App_Code_DatabaseManagement\Class1.cs" />
+    <Compile Include="App_Code_DatabaseManagement\ReportExporter.cs" />
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="About.aspx.cs">
       <DependentUpon>About.aspx</DependentUpon>
@@ -247,6 +249,13 @@
     </Compile>
     <Compile Include="Lecturer Portal\Assessment.aspx.designer.cs">
       <DependentUpon>Assessment.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Lecturer Portal\LectDashboard.aspx.cs">
+      <DependentUpon>LectDashboard.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Lecturer Portal\LectDashboard.aspx.designer.cs">
+      <DependentUpon>LectDashboard.aspx</DependentUpon>
     </Compile>
     <Compile Include="Lecturer Portal\LectProfile.aspx.cs">
       <DependentUpon>LectProfile.aspx</DependentUpon>

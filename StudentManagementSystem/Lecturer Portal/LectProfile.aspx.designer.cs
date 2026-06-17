@@ -24,6 +24,24 @@ namespace LecturerPortal
         protected global::System.Web.UI.HtmlControls.HtmlForm form1;
 
         /// <summary>
+        /// imgProfile control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Image imgProfile;
+
+        /// <summary>
+        /// litInitials control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Literal litInitials;
+
+        /// <summary>
         /// lblSidebarName control.
         /// </summary>
         /// <remarks>
@@ -60,13 +78,31 @@ namespace LecturerPortal
         protected global::System.Web.UI.WebControls.Button btnCancel;
 
         /// <summary>
-        /// lblEditNotice control.
+        /// imgMainProfile control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblEditNotice;
+        protected global::System.Web.UI.WebControls.Image imgMainProfile;
+
+        /// <summary>
+        /// lblMainInitials control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Literal lblMainInitials;
+
+        /// <summary>
+        /// btnDeletePhoto control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnDeletePhoto;
 
         /// <summary>
         /// txtName control.
@@ -103,6 +139,24 @@ namespace LecturerPortal
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtDepartment;
+
+        /// <summary>
+        /// pnlPhotoUpload control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Panel pnlPhotoUpload;
+
+        /// <summary>
+        /// fuProfilePic control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.FileUpload fuProfilePic;
 
         /// <summary>
         /// txtPassword control.
