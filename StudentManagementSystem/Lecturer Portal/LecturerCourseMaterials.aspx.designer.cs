@@ -33,13 +33,31 @@ namespace LecturerPortal
         protected global::System.Web.UI.WebControls.Label lblSidebarName;
 
         /// <summary>
-        /// ddlCourseFilter control.
+        /// lblWelcomeName control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlCourseFilter;
+        protected global::System.Web.UI.WebControls.Label lblWelcomeName;
+
+        /// <summary>
+        /// hfSelectedCourseOfferID control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfSelectedCourseOfferID;
+
+        /// <summary>
+        /// rptCourseCards control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Repeater rptCourseCards;
 
         /// <summary>
         /// pnlCourseContent control.

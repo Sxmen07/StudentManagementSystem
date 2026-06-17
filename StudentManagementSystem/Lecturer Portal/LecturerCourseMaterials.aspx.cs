@@ -15,6 +15,7 @@ namespace LecturerPortal
                 Response.Redirect("Login.aspx");
 
             lblSidebarName.Text = Session["LecturerName"]?.ToString();
+            lblWelcomeName.Text = Session["LecturerName"]?.ToString();
 
             if (!IsPostBack)
             {
@@ -23,46 +24,41 @@ namespace LecturerPortal
             }
         }
 
-        private void LoadCourses()
-        {
+        private void LoadCourses(){
             string query = @"
-                SELECT co.CourseOfferID,
-                       c.CourseName + ' (' + s.Semester + ' ' + CAST(co.Year AS NVARCHAR) + ')' AS DisplayName
-                FROM CourseOffer co
-                INNER JOIN Course c ON c.CourseCode = co.CourseCode
-                INNER JOIN Semester s ON s.SemesterID = co.SemesterID
-                WHERE co.LecturerID = @LID
-                AND co.OfferStatus = 'Available'
-                ORDER BY c.CourseName";
+            SELECT co.CourseOfferID,
+                   c.CourseName + ' (' + s.Semester + ' ' + CAST(co.Year AS NVARCHAR) + ')' AS DisplayName
+            FROM CourseOffer co
+            INNER JOIN Course c ON c.CourseCode = co.CourseCode
+            INNER JOIN Semester s ON s.SemesterID = co.SemesterID
+            WHERE co.LecturerID = @LID
+            AND co.OfferStatus = 'Available'
+            ORDER BY c.CourseName";
 
-            SqlParameter[] p =
-            {
-                new SqlParameter("@LID", Session["LecturerID"])
-            };
+                SqlParameter[] p =
+                {
+            new SqlParameter("@LID", Session["LecturerID"])
+        };
 
-            DataTable dt = DBHelper.ExecuteQuery(query, p);
+                DataTable dt = DBHelper.ExecuteQuery(query, p);
 
-            ddlCourseFilter.DataSource = dt;
-            ddlCourseFilter.DataTextField = "DisplayName";
-            ddlCourseFilter.DataValueField = "CourseOfferID";
-            ddlCourseFilter.DataBind();
-
-            ddlCourseFilter.Items.Insert(0, new ListItem("-- Select Course --", "0"));
-        }
-
-        protected void ddlCourseFilter_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (ddlCourseFilter.SelectedValue == "0")
-            {
-                pnlCourseContent.Visible = false;
-                rptMaterials.DataSource = null;
-                rptMaterials.DataBind();
-                return;
+                rptCourseCards.DataSource = dt;
+                rptCourseCards.DataBind();
             }
 
-            pnlCourseContent.Visible = true;
-            LoadMaterials();
+        protected void rptCourseCards_ItemCommand(object source, RepeaterCommandEventArgs e)
+        {
+            if (e.CommandName == "SelectCourse")
+            {
+                hfSelectedCourseOfferID.Value = e.CommandArgument.ToString();
+
+                pnlCourseContent.Visible = true;
+                lblStatus.Text = "";
+
+                LoadMaterials();
+            }
         }
+
 
         private void LoadMaterials()
         {
@@ -75,7 +71,7 @@ namespace LecturerPortal
 
             SqlParameter[] p =
             {
-                new SqlParameter("@COID", ddlCourseFilter.SelectedValue),
+                new SqlParameter("@COID", hfSelectedCourseOfferID.Value),
                 new SqlParameter("@LID", Session["LecturerID"])
             };
 
@@ -87,7 +83,7 @@ namespace LecturerPortal
 
         protected void btnPost_Click(object sender, EventArgs e)
         {
-            if (ddlCourseFilter.SelectedValue == "0")
+            if (hfSelectedCourseOfferID.Value == "0")
             {
                 ShowError("Please select a course.");
                 return;
@@ -119,7 +115,7 @@ namespace LecturerPortal
 
             SqlParameter[] p =
             {
-                new SqlParameter("@COID", ddlCourseFilter.SelectedValue),
+                new SqlParameter("@COID", hfSelectedCourseOfferID.Value),
                 new SqlParameter("@Title", txtTitle.Text.Trim()),
                 new SqlParameter("@Desc",
                     string.IsNullOrEmpty(txtDescription.Text) ? (object)DBNull.Value : txtDescription.Text),

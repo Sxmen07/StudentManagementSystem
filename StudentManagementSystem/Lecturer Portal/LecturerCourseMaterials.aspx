@@ -8,315 +8,605 @@
 
     <style>
         * { box-sizing: border-box; }
-        body { font-family: Segoe UI, sans-serif; background: #f0f2f5; margin: 0; }
 
-        .layout { display: flex; min-height: 100vh; }
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #eef7ff, #f8fbff);
+            margin: 0;
+            color: #1f2937;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
 
         .sidebar {
-            width: 200px;
-            background: #fff;
-            border-right: 1px solid #e8e8e8;
-            padding: 20px 14px;
+            width: 220px;
+            background: rgba(255,255,255,0.92);
+            border-right: 1px solid #e5e7eb;
+            padding: 22px 16px;
             display: flex;
             flex-direction: column;
+            gap: 4px;
+            box-shadow: 4px 0 18px rgba(0,0,0,0.03);
+            position: sticky;
+            top: 0;
+            height: 100vh;
         }
 
         .sidebar-avatar {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #f0f0f0;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .avatar-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00CBD4, #1d4ed8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weigh6t: 800;
+            color: white;
+            box-shadow: 0 8px 18px rgba(14,165,233,0.28);
         }
 
         .sidebar-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: #1a1a1a;
+            font-size: 14px;
+            font-weight: 700;
+            color: #111827;
         }
 
         .sidebar-role {
             font-size: 11px;
-            color: #888;
-        }
-
-        .avatar-circle { 
-            width: 40px;
-            height: 40px; 
-            border-radius: 50%; 
-            background: #dbeafe; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 13px; 
-            font-weight: 600; 
-            color: #1d4ed8; 
-
+            color: #9ca3af;
         }
 
         .nav-item {
-            padding: 9px 10px;
-            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 11px 12px;
+            border-radius: 12px;
             font-size: 13px;
-            color: #555;
+            color: #4b5563;
             text-decoration: none;
-            margin-top: 4px;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: 0.2s ease;
         }
 
-        .nav-item:hover { background: #f5f5f5; }
-        .nav-item.active { background: #f0f7ff; color: #1d4ed8; font-weight: 600; }
+        .nav-item:hover {
+            background: #f3f8ff;
+            color: #1d4ed8;
+            transform: translateX(3px);
+        }
 
-        .main { flex: 1; padding: 32px 36px; }
+        .nav-item.active {
+            background: linear-gradient(135deg, #eaf8ff, #f0fbff);
+            color: #0284c7;
+            font-weight: 700;
+            box-shadow: inset 3px 0 0 #00CBD4;
+        }
 
-        .page-title { font-size: 22px; font-weight: 600; }
-        .page-sub { font-size: 13px; color: #888; margin-bottom: 18px; }
+        .main {
+            flex: 1;
+            padding: 36px 44px;
+            animation: fadeUp 0.35s ease;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .welcome-card {
+            background: linear-gradient(135deg, #00CBD4, #0ea5e9);
+            color: white;
+            padding: 22px 24px;
+            border-radius: 22px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 14px 35px rgba(14,165,233,0.25);
+        }
+
+        .welcome-small {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 3px;
+        }
+
+        .welcome-name {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .welcome-pill {
+            background: rgba(255,255,255,0.22);
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 5px;
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 22px;
+        }
 
         .form-card, .table-card {
-            background: #fff;
-            border: 1px solid #e8e8e8;
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 16px;
+            background: rgba(255,255,255,0.96);
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
         }
 
-        .field-group { margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px; }
+        .form-card:hover, .table-card:hover {
+            box-shadow: 0 18px 40px rgba(0,0,0,0.07);
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            color: #111827;
+        }
+
+        .field-group {
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
 
         .field-label {
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
-            color: #666;
+            color: #6b7280;
+            letter-spacing: 0.4px;
         }
 
         select, input, textarea {
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 7px;
+            padding: 10px 13px;
+            border: 1px solid #dbe1ea;
+            border-radius: 11px;
             font-size: 13px;
+            background: #fbfdff;
+            outline: none;
+            transition: 0.2s ease;
+            width: 100%;
         }
 
-        textarea { min-height: 100px; }
+        select:focus, input:focus, textarea:focus {
+            border-color: #00CBD4;
+            box-shadow: 0 0 0 3px rgba(0,203,212,0.15);
+            background: white;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        .upload-area {
+            border: 1px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 16px;
+            background: #f8fbff;
+            margin-bottom: 14px;
+        }
+
+        .upload-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+
+        .upload-sub {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
 
         .btn {
             width: 100%;
-            padding: 10px;
-            background:  #00CBD4;
+            padding: 12px;
+            background: linear-gradient(135deg, #00CBD4, #0ea5e9);
             color: white;
             border: none;
-            border-radius: 7px;
+            border-radius: 12px;
             cursor: pointer;
+            font-size: 14px;
+            font-weight: 800;
+            transition: 0.2s ease;
+            box-shadow: 0 8px 18px rgba(14,165,233,0.20);
         }
 
-        .btn:hover { background: #115FB3; }
-
+        .btn:hover {
+            background: linear-gradient(135deg, #0ea5e9, #115FB3);
+            transform: translateY(-1px);
+        }
 
         .material-card {
             display: flex;
             align-items: center;
             justify-content: space-between;
-
-            padding: 14px 16px;
-            margin-bottom: 10px;
-
-            border: 1px solid #e8e8e8;
-            border-radius: 12px;
-            background: #fff;
-
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            background: #ffffff;
             transition: 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .material-card::after {
+            content: "";
+            position: absolute;
+            right: -30px;
+            top: -30px;
+            width: 85px;
+            height: 85px;
+            background: rgba(0,203,212,0.08);
+            border-radius: 50%;
         }
 
         .material-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(0,0,0,0.06);
-            border-color: #dbeafe;
+            transform: translateY(-3px);
+            box-shadow: 0 14px 32px rgba(0,0,0,0.07);
+            border-color: #bfdbfe;
         }
 
         .file-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            background: #eef2ff;
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background: #ecfeff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 22px;
+            z-index: 1;
         }
 
-        .material-body { flex: 1; margin-left: 12px; }
+        .material-body {
+            flex: 1;
+            margin-left: 14px;
+            z-index: 1;
+        }
 
         .material-title {
             font-size: 14px;
-            font-weight: 600;
-            color: #111;
+            font-weight: 800;
+            color: #111827;
         }
 
         .material-desc {
             font-size: 12px;
-            color: #666;
-            margin-top: 3px;
+            color: #6b7280;
+            margin-top: 4px;
         }
 
         .material-meta {
-            margin-top: 6px;
+            margin-top: 8px;
             font-size: 11px;
-            color: #888;
+            color: #8a94a6;
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .badge {
-            background: #eef2ff;
-            color: #3730a3;
-            padding: 3px 8px;
+            background: #eaf8ff;
+            color: #0284c7;
+            padding: 5px 10px;
             border-radius: 999px;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 800;
         }
 
         .open-btn {
-            background: #00CBD4;
+            background: linear-gradient(135deg, #00CBD4, #0ea5e9);
             color: white;
             text-decoration: none;
-            padding: 7px 12px;
-            border-radius: 8px;
+            padding: 9px 15px;
+            border-radius: 11px;
             font-size: 12px;
+            font-weight: 800;
+            transition: 0.2s ease;
+            z-index: 1;
+        }
+
+        .open-btn:hover {
+            background: linear-gradient(135deg, #0ea5e9, #115FB3);
+            transform: translateY(-1px);
+        }
+
+        .success-msg {
+            color: #16a34a;
+            font-size: 13px;
             font-weight: 600;
         }
 
-        .open-btn:hover { background: #115FB3; }
-
-        .table-title {
+        .error-msg {
+            color: #dc2626;
+            font-size: 13px;
             font-weight: 600;
+        }
+
+        @media (max-width: 900px) {
+            .main {
+                padding: 24px 18px;
+            }
+
+            .sidebar {
+                width: 200px;
+            }
+
+            .welcome-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+        }
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .course-card,
+        .course-card:link,
+        .course-card:visited {
+            display: block;
+            text-decoration: none !important;
+            color: #111827 !important;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 20px;
+            transition: 0.25s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+        }
+
+        .course-card:hover {
+            transform: translateY(-4px);
+            border-color: #00CBD4;
+            box-shadow: 0 14px 30px rgba(0,203,212,0.15);
+        }
+
+        .course-icon {
+            font-size: 32px;
             margin-bottom: 12px;
         }
+
+        .course-name {
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .course-sub {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        @media (max-width: 600px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .material-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .material-body {
+                margin-left: 0;
+            }
+
+            .open-btn {
+                width: 100%;
+                text-align: center;
+            }
     </style>
 </head>
 
 <body>
 <form id="form1" runat="server">
     <div class="layout">
+
         <div class="sidebar">
             <div class="sidebar-avatar">
                 <div class="avatar-circle">DA</div>
                 <div>
-                    <div class="sidebar-name"><asp:Label ID="lblSidebarName" runat="server" /></div>
+                    <div class="sidebar-name">
+                        <asp:Label ID="lblSidebarName" runat="server" />
+                    </div>
                     <div class="sidebar-role">Lecturer</div>
                 </div>
             </div>
 
-        <a class="nav-item" href="LectProfile.aspx">My Profile</a>
-        <a class="nav-item" href="Attendance.aspx">Attendance</a>
-        <a class="nav-item" href="Assessment.aspx">Assessment</a>
-        <a class="nav-item" href="LecturerMonitorAcademicProgress.aspx">Academic Progress</a>
-        <a class="nav-item" href="LecturerPostAnnouncement.aspx">Announcements</a>
-        <a class="nav-item active" href="LecturerCourseMaterials.aspx">Course Materials</a>
-        <a class="nav-item" style="margin-top:auto; color:red;" href="Login.aspx">Logout</a>
-    </div>
-
-    <div class="main">
-
-        <div class="page-title">Course Materials</div>
-        <div class="page-sub">Select a course to manage materials</div>
-
-        <!-- COURSE SELECT -->
-        <div class="form-card">
-            <div class="field-group">
-                <div class="field-label">Select Course</div>
-                <asp:DropDownList ID="ddlCourseFilter" runat="server"
-                    AutoPostBack="true"
-                    OnSelectedIndexChanged="ddlCourseFilter_SelectedIndexChanged" />
-            </div>
+            <a class="nav-item" href="LectProfile.aspx">👤 My Profile</a>
+            <a class="nav-item" href="Attendance.aspx">📝 Attendance</a>
+            <a class="nav-item" href="Assessment.aspx">📊 Assessment</a>
+            <a class="nav-item" href="LecturerMonitorAcademicProgress.aspx">🎓 Academic Progress</a>
+            <a class="nav-item" href="LecturerPostAnnouncement.aspx">📢 Announcements</a>
+            <a class="nav-item active" href="LecturerCourseMaterials.aspx">📁 Course Materials</a>
+            <a class="nav-item" style="margin-top:auto; color:#e74c3c;" href="Login.aspx">🚪 Logout</a>
         </div>
 
-        <!-- CONTENT -->
-        <asp:Panel ID="pnlCourseContent" runat="server" Visible="false">
+        <div class="main">
 
-            <!-- POST -->
-            <div class="form-card">
-                <div class="table-title">Post Material</div>
-
-                <div class="field-group">
-                    <div class="field-label">Title</div>
-                    <asp:TextBox ID="txtTitle" runat="server" />
-                </div>
-
-                <div class="field-group">
-                    <div class="field-label">Description</div>
-                    <asp:TextBox ID="txtDescription" runat="server" TextMode="MultiLine" />
-                </div>
-
-                <div class="field-group">
-                    <div class="field-label">Upload File</div>
-                    <asp:FileUpload ID="fileUpload" runat="server" />
-                </div>
-
-                <div class="field-group">
-                    <div class="field-label">Schedule Date</div>
-                    <asp:TextBox ID="txtDate" runat="server" TextMode="Date" />
-                </div>
-
-                <asp:Button ID="btnPost" runat="server" Text="Post Material"
-                    CssClass="btn" OnClick="btnPost_Click" />
-
-                <div style="margin-top:10px;">
-                    <asp:Label ID="lblStatus" runat="server" />
+            <div class="welcome-card">
+                <div>
+                    <div class="welcome-small">Welcome back</div>
+                    <div class="welcome-name">
+                        <asp:Label ID="lblWelcomeName" runat="server" Text="Lecturer" />
+                    </div>
                 </div>
             </div>
 
-            <!-- HISTORY (MODERN CARDS) -->
-            <div class="table-card">
-                <div class="table-title">Material History</div>
+            <div class="page-title">Course Materials</div>
+            <div class="page-sub">Select a course to upload, schedule, and manage learning materials.</div>
 
-                <asp:Repeater ID="rptMaterials" runat="server">
+            <div class="form-card">
+                <div class="section-title">Select Course</div>
 
-                    <ItemTemplate>
+                <div class="field-group">
+                    <div class="field-label">Course</div>
+                    <asp:HiddenField ID="hfSelectedCourseOfferID" runat="server" Value="0" />
 
-                        <div class="material-card">
+                <div class="course-grid">
 
-                            <div class="file-icon">📄</div>
+                    <asp:Repeater ID="rptCourseCards" runat="server"
+                        OnItemCommand="rptCourseCards_ItemCommand">
 
-                            <div class="material-body">
+                        <ItemTemplate>
 
-                                <div class="material-title">
-                                    <%# Eval("MaterialTitle") %>
+                            <asp:LinkButton ID="btnCourseCard"
+                                runat="server"
+                                CssClass="course-card"
+                                CommandName="SelectCourse"
+                                CommandArgument='<%# Eval("CourseOfferID") %>'>
+
+                                <div class="course-icon">📚</div>
+
+                                <div class="course-name">
+                                    <%# Eval("DisplayName") %>
                                 </div>
 
-                                <div class="material-desc">
-                                    <%# Eval("Description") %>
+                                <div class="course-sub">
+                                    Click to manage materials
                                 </div>
 
-                                <div class="material-meta">
-                                    <span class="badge">
-                                        📅 <%# Eval("ScheduleDate", "{0:yyyy-MM-dd}") %>
-                                    </span>
+                            </asp:LinkButton>
 
-                                    <span>
-                                        Uploaded: <%# Eval("UploadDate", "{0:yyyy-MM-dd HH:mm}") %>
-                                    </span>
+                        </ItemTemplate>
+
+                        </asp:Repeater>
+                    </div>
+                </div>
+            </div>
+
+            <asp:Panel ID="pnlCourseContent" runat="server" Visible="false">
+
+                <div class="form-card">
+                    <div class="section-title">Post New Material</div>
+
+                    <div class="field-group">
+                        <div class="field-label">Title</div>
+                        <asp:TextBox ID="txtTitle" runat="server" placeholder="Enter material title" />
+                    </div>
+
+                    <div class="field-group">
+                        <div class="field-label">Description</div>
+                        <asp:TextBox ID="txtDescription" runat="server" TextMode="MultiLine"
+                            placeholder="Write a short description..." />
+                    </div>
+
+                    <div class="upload-area">
+                        <div class="upload-title">📎 Upload File</div>
+                        <div class="upload-sub">Upload lecture notes, slides, documents, or learning materials.</div>
+                        <asp:FileUpload ID="fileUpload" runat="server" />
+                    </div>
+
+                    <div class="field-group">
+                        <div class="field-label">Schedule Date</div>
+                        <asp:TextBox ID="txtDate" runat="server" TextMode="Date" />
+                    </div>
+
+                    <asp:Button ID="btnPost" runat="server" Text="Post Material"
+                        CssClass="btn" OnClick="btnPost_Click" />
+
+                    <div style="margin-top:10px;">
+                        <asp:Label ID="lblStatus" runat="server" />
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="section-title">Material History</div>
+
+                    <asp:Repeater ID="rptMaterials" runat="server">
+                        <ItemTemplate>
+                            <div class="material-card">
+
+                                <div class="file-icon">📄</div>
+
+                                <div class="material-body">
+                                    <div class="material-title">
+                                        <%# Eval("MaterialTitle") %>
+                                    </div>
+
+                                    <div class="material-desc">
+                                        <%# Eval("Description") %>
+                                    </div>
+
+                                    <div class="material-meta">
+                                        <span class="badge">
+                                            📅 <%# Eval("ScheduleDate", "{0:yyyy-MM-dd}") %>
+                                        </span>
+
+                                        <span>
+                                            Uploaded: <%# Eval("UploadDate", "{0:yyyy-MM-dd HH:mm}") %>
+                                        </span>
+                                    </div>
                                 </div>
+
+                                <a class="open-btn"
+                                   href='<%# ResolveUrl(Eval("FileURL").ToString()) %>'
+                                   target="_blank">
+                                   Open
+                                </a>
 
                             </div>
+                        </ItemTemplate>
+                    </asp:Repeater>
 
-                            <a class="open-btn"
-                               href='<%# ResolveUrl(Eval("FileURL").ToString()) %>'
-                               target="_blank">
-                               Open
-                            </a>
+                </div>
 
-                        </div>
+            </asp:Panel>
 
-                    </ItemTemplate>
-
-                </asp:Repeater>
-
-            </div>
-
-        </asp:Panel>
-
+        </div>
     </div>
-</div>
-
 </form>
 </body>
 </html>
