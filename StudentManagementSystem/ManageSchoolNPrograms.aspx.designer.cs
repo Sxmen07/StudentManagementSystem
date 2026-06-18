@@ -60,6 +60,15 @@ namespace StudentManagementSystem
         protected global::System.Web.UI.WebControls.TextBox txtSemesterTerm;
 
         /// <summary>
+        /// txtAcademicYear control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtAcademicYear;
+
+        /// <summary>
         /// txtStartDay control.
         /// </summary>
         /// <remarks>
@@ -78,15 +87,6 @@ namespace StudentManagementSystem
         protected global::System.Web.UI.WebControls.TextBox txtEndDay;
 
         /// <summary>
-        /// btnSaveSemester control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnSaveSemester;
-
-        /// <summary>
         /// btnCancelSemester control.
         /// </summary>
         /// <remarks>
@@ -94,6 +94,15 @@ namespace StudentManagementSystem
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnCancelSemester;
+
+        /// <summary>
+        /// btnSaveSemester control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnSaveSemester;
 
         /// <summary>
         /// gvSemesters control.
@@ -132,15 +141,6 @@ namespace StudentManagementSystem
         protected global::System.Web.UI.WebControls.TextBox txtSchoolName;
 
         /// <summary>
-        /// btnSaveSchool control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnSaveSchool;
-
-        /// <summary>
         /// btnCancelSchool control.
         /// </summary>
         /// <remarks>
@@ -148,6 +148,15 @@ namespace StudentManagementSystem
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnCancelSchool;
+
+        /// <summary>
+        /// btnSaveSchool control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnSaveSchool;
 
         /// <summary>
         /// gvSchools control.
@@ -166,6 +175,42 @@ namespace StudentManagementSystem
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.DropDownList ddlFilterLevel;
+
+        /// <summary>
+        /// ddlFilterSchool control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.DropDownList ddlFilterSchool;
+
+        /// <summary>
+        /// btnExportCSV control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.LinkButton btnExportCSV;
+
+        /// <summary>
+        /// btnExportExcel control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.LinkButton btnExportExcel;
+
+        /// <summary>
+        /// btnExportPDF control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.LinkButton btnExportPDF;
 
         /// <summary>
         /// lblProgStatus control.
@@ -240,15 +285,6 @@ namespace StudentManagementSystem
         protected global::System.Web.UI.WebControls.TextBox txtDescription;
 
         /// <summary>
-        /// btnSaveProg control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnSaveProg;
-
-        /// <summary>
         /// btnCancelProg control.
         /// </summary>
         /// <remarks>
@@ -256,6 +292,15 @@ namespace StudentManagementSystem
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnCancelProg;
+
+        /// <summary>
+        /// btnSaveProg control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnSaveProg;
 
         /// <summary>
         /// gvProgrammes control.
