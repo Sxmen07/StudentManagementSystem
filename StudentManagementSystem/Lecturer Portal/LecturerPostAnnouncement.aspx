@@ -577,7 +577,10 @@
 
         <div class="sidebar">
             <div class="sidebar-avatar">
-                <div class="avatar-circle">DA</div>
+                <a href="LectProfile.aspx" style="text-decoration:none;">
+                    <div class="avatar-circle">DW</div>
+                </a>
+
                 <div>
                     <div class="sidebar-name">
                         <asp:Label ID="lblSidebarName" runat="server" />
@@ -586,7 +589,7 @@
                 </div>
             </div>
 
-            <a href="LectProfile.aspx" class="nav-item">👤 My Profile</a>
+            <a href="LectDashboard.aspx" class="nav-item">🏠 Dashboard</a>
             <a href="Attendance.aspx" class="nav-item">📝 Attendance</a>
             <a href="Assessment.aspx" class="nav-item">📊 Assessment</a>
             <a href="LecturerMonitorAcademicProgress.aspx" class="nav-item">🎓 Academic Progress</a>
