@@ -66,10 +66,10 @@ namespace StudentManagementSystem
         {
             string selectedFilter = ddlFilterRole != null ? ddlFilterRole.SelectedValue : "All";
 
-            // Updated parts to select ProfilePictureUrl fields from individual tables
-            string hopPart = "SELECT HopID AS UserID, HopEmail AS Username, UserRole AS Role, ProfilePictureUrl FROM HeadofProgramme";
-            string lecPart = "SELECT LecturerID AS UserID, LecturerEmail AS Username, UserRole AS Role, ProfilePictureUrl FROM Lecturer";
-            string boldPart = "SELECT StudentID AS UserID, StudentEmail AS Username, UserRole AS Role, ProfilePictureUrl FROM Student";
+            // Selects the clean true background primary key along with your custom DB DisplayID column
+            string hopPart = "SELECT HopID AS UserID, DisplayID, HopEmail AS Username, UserRole AS Role, ProfilePictureUrl FROM HeadofProgramme";
+            string lecPart = "SELECT LecturerID AS UserID, DisplayID, LecturerEmail AS Username, UserRole AS Role, ProfilePictureUrl FROM Lecturer";
+            string boldPart = "SELECT StudentID AS UserID, DisplayID, StudentEmail AS Username, UserRole AS Role, ProfilePictureUrl FROM Student";
 
             string finalQuery = "";
 
@@ -245,7 +245,7 @@ namespace StudentManagementSystem
             if (!args.Contains(",")) return;
 
             string[] parsedArgs = args.Split(',');
-            string targetId = parsedArgs[0];
+            string targetId = parsedArgs[0]; // Receives clean integer base database key safely
             string targetRole = parsedArgs[1];
 
             if (e.CommandName == "EditUser")

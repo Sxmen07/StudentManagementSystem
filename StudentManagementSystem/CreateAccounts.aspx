@@ -22,14 +22,28 @@
 
         <div class="flex-1 overflow-y-auto bg-[#FBFBFA] h-full flex flex-col">
             
-            <div class="bg-white border-b border-[#EBEBE9] px-12 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0">
-                <div>
-                    <h2 class="text-xl font-bold text-[#111625] tracking-tight">Identity Management</h2>
-                    <p class="text-[#7C7B77] text-xs mt-0.5">Monitor directory records, verify tier classifications, and provision user credentials.</p>
+            <div class="relative bg-[#F4F7FE] border-b border-[#EBEBE9] px-12 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0 overflow-hidden">
+                
+                <div class="absolute inset-0 pointer-events-none select-none opacity-20">
+                    <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="-20" cy="50%" r="60" fill="none" stroke="#3B82F6" stroke-width="4" />
+                        <circle cx="40" cy="90%" r="40" fill="none" stroke="#F97316" stroke-width="2" stroke-dasharray="4 4" />
+                        
+                        <circle cx="86%" cy="35%" r="70" fill="none" stroke="#10B981" stroke-width="10" /> <circle cx="93%" cy="60%" r="55" fill="none" stroke="#3B82F6" stroke-width="5" />  <circle cx="98%" cy="85%" r="40" fill="none" stroke="#F97316" stroke-width="2.5" /> </svg>
+                </div>
+
+                <div class="relative z-10 flex items-center gap-4">
+                    <div class="bg-[#3B82F6]/10 text-[#3B82F6] p-3.5 rounded-2xl border border-[#3B82F6]/20 shadow-sm flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-users-gear text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-[#111625] tracking-tight">Identity Management</h2>
+                        <p class="text-[#7C7B77] text-xs mt-0.5 font-medium">Monitor directory records, verify tier classifications, and provision user credentials.</p>
+                    </div>
                 </div>
                 
-                <div class="flex items-center gap-3 self-end sm:self-auto">
-                    <div class="flex items-center gap-2 bg-[#F7F7F5] border border-[#EBEBE9] rounded-xl px-3 py-1.5 shadow-sm">
+                <div class="relative z-10 flex items-center gap-3 self-end sm:self-auto">
+                    <div class="flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-[#EBEBE9] rounded-xl px-3 py-1.5 shadow-sm">
                         <span class="text-[11px] font-bold text-[#7C7B77] uppercase tracking-wider">Access:</span>
                         <asp:DropDownList ID="ddlFilterRole" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddlFilterRole_SelectedIndexChanged" 
                             CssClass="bg-transparent text-xs font-semibold text-[#2F2F2F] outline-none cursor-pointer pr-1">
@@ -48,7 +62,7 @@
             </div>
 
             <div class="flex-1 px-12 py-8 overflow-y-auto custom-scrollbar">
-                <div class="max-w-6xl mx-auto space-y-4">
+                <div class="w-full space-y-4">
                     
                     <asp:Label ID="lblStatus" runat="server" CssClass="block text-xs font-medium p-3.5 rounded-xl shadow-sm mb-2" Visible="false"></asp:Label>
 
@@ -58,8 +72,12 @@
                             <HeaderStyle CssClass="bg-[#F7F7F5] text-[#7C7B77] font-bold uppercase tracking-wider border-b border-[#EBEBE9]" />
                             <RowStyle CssClass="border-b border-[#F1F1EF] hover:bg-[#FBFBFA]/70 transition-colors text-[#2F2F2F]" />
                             <Columns>
-                                <asp:BoundField DataField="UserID" HeaderText="ID" 
-                                    HeaderStyle-CssClass="p-4 w-24 text-[10px] text-center select-none" ItemStyle-CssClass="p-4 text-center font-bold text-zinc-400 w-24" />
+                                
+                                <asp:TemplateField HeaderText="ID" HeaderStyle-CssClass="p-4 w-24 text-[10px] text-center select-none" ItemStyle-CssClass="p-4 text-center font-bold text-zinc-400 w-24">
+                                    <ItemTemplate>
+                                        <%# Eval("DisplayID") %>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
                                 
                                 <asp:TemplateField HeaderText="Photo" HeaderStyle-CssClass="p-4 text-center text-[10px] w-24">
                                     <ItemTemplate>
