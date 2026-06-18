@@ -22,6 +22,9 @@ namespace LecturerPortal
             if (!IsPostBack)
             {
                 LoadSidebarProfile();
+
+                lblWelcomeName.Text = lblSidebarName.Text;
+
                 LoadDashboardMetrics();
                 RenderPerformanceChart();
             }

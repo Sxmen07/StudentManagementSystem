@@ -3,10 +3,11 @@ using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Web.UI;
+using System.Xml.Linq;
 
 namespace LecturerPortal
 {
-    public partial class Dashboard : Page
+    public partial class LectProfile : Page
     {
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -28,26 +29,40 @@ namespace LecturerPortal
             if (dt.Rows.Count > 0)
             {
                 DataRow row = dt.Rows[0];
-                txtName.Text = row["LecturerName"].ToString();
+
+                string lecturerName = row["LecturerName"].ToString();
+
+                txtName.Text = lecturerName;
                 txtEmail.Text = row["LecturerEmail"].ToString();
                 txtContact.Text = row["ContactNo"].ToString();
                 txtDepartment.Text = row["Department"].ToString();
-                lblSidebarName.Text = row["LecturerName"].ToString();
 
-                // Compute Initials for fallback placeholders
-                string lecturerName = row["LecturerName"].ToString();
+                lblSidebarName.Text = lecturerName;
+                lblWelcomeName.Text = lecturerName;
+
+                // Generate initials
                 string initials = "LE";
+
                 if (!string.IsNullOrEmpty(lecturerName))
                 {
-                    string[] parts = lecturerName.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    initials = parts.Length > 1 ? (parts[0][0].ToString() + parts[1][0].ToString()).ToUpper() : parts[0][0].ToString().ToUpper();
+                    string[] parts = lecturerName.Split(
+                        new[] { ' ' },
+                        StringSplitOptions.RemoveEmptyEntries
+                    );
+
+                    initials = parts.Length > 1
+                        ? (parts[0][0].ToString() + parts[1][0].ToString()).ToUpper()
+                        : parts[0][0].ToString().ToUpper();
                 }
+
                 litInitials.Text = initials;
                 lblMainInitials.Text = initials;
 
-                // Profile Image Sync Verification Logic
+                // Profile Image
                 string imagePath = row["ProfileImagePath"]?.ToString();
-                if (!string.IsNullOrEmpty(imagePath) && File.Exists(Server.MapPath(imagePath)))
+
+                if (!string.IsNullOrEmpty(imagePath) &&
+                    File.Exists(Server.MapPath(imagePath)))
                 {
                     string cacheBuster = "?t=" + DateTime.Now.Ticks;
 

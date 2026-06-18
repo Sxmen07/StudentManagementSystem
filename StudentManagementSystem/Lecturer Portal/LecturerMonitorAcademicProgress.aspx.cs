@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
@@ -18,11 +19,57 @@ namespace LecturerPortal
 
             if (!IsPostBack)
             {
+                LoadSidebarProfilePic();
                 LoadProgrammes();
                 ResetDashboardCards();
             }
         }
-        
+
+        private void LoadSidebarProfilePic()
+        {
+            string lecturerName = Session["LecturerName"]?.ToString() ?? "Lecturer";
+            lblSidebarName.Text = lecturerName;
+
+            if (!string.IsNullOrEmpty(lecturerName))
+            {
+                string[] parts = lecturerName.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length > 1)
+                    litSideInitials.Text = (parts[0][0].ToString() + parts[1][0].ToString()).ToUpper();
+                else
+                    litSideInitials.Text = parts[0][0].ToString().ToUpper();
+            }
+            else
+            {
+                litSideInitials.Text = "LE";
+            }
+
+            try
+            {
+                string query = "SELECT ProfileImagePath FROM Lecturer WHERE LecturerID = @ID";
+                SqlParameter[] p = { new SqlParameter("@ID", Session["LecturerID"]) };
+                DataTable dt = DBHelper.ExecuteQuery(query, p);
+
+                if (dt.Rows.Count > 0 && dt.Rows[0]["ProfileImagePath"] != DBNull.Value)
+                {
+                    string imgPath = dt.Rows[0]["ProfileImagePath"].ToString();
+                    if (!string.IsNullOrEmpty(imgPath) && File.Exists(Server.MapPath(imgPath)))
+                    {
+                        imgSidebar.ImageUrl = imgPath + "?t=" + DateTime.Now.Ticks;
+                        imgSidebar.Visible = true;
+                        litSideInitials.Visible = false;
+                        return;
+                    }
+                }
+            }
+            catch
+            {
+                // Fallback softly to showing text placeholder characters on query exception errors
+            }
+
+            imgSidebar.Visible = false;
+            litSideInitials.Visible = true;
+        }
+
         private void LoadProgrammes()
         {
             string query = @"

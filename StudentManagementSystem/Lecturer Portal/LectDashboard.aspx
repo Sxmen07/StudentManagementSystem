@@ -5,99 +5,365 @@
     <title>Lecturer Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; margin: 0; }
-        
-        .layout { display: flex; min-height: 100vh; flex-direction: row; }
-        
-        /* Sidebar Layout matching Attendance & LectProfile styling exactly */
-        .sidebar { width: 240px; background: #fff; border-right: 1px solid #e8e8e8; padding: 24px 14px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
-        .sidebar-profile { display: flex; flex-direction: column; align-items: center; text-align: center; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid #f0f0f0; gap: 10px; }
-        .avatar-container { position: relative; width: 80px; height: 80px; }
-        .avatar-circle { width: 80px; height: 80px; border-radius: 50%; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; color: #1d4ed8; overflow: hidden; border: 2px solid #1d4ed8; cursor: pointer; transition: transform 0.2s; }
-        .avatar-circle:hover { transform: scale(1.04); box-shadow: 0 2px 8px rgba(29, 78, 216, 0.15); }
-        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
-        .sidebar-name { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-top: 4px; }
-        .sidebar-role { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
-        
-        .nav-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; font-size: 13px; color: #555; text-decoration: none; cursor: pointer; }
-        .nav-item:hover { background: #f5f5f5; }
-        .nav-item.active { background: #f0f7ff; color: #1d4ed8; font-weight: 600; }
 
-        /* Main Workspace Panel */
-        .main { flex: 1; padding: 32px 36px; min-width: 0; }
-        .page-title { font-size: 22px; font-weight: 600; color: #1a1a1a; margin-bottom: 6px; }
-        .page-sub { font-size: 13px; color: #888; margin-bottom: 20px; }
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #eef7ff, #f8fbff);
+            margin: 0;
+            color: #1f2937;
+        }
 
-        /* Summary Dashboard Information Cards Grid Layout */
-        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .card { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #e8e8e8; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; border-left: 4px solid #1d4ed8; }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
-        .card-red { border-left-color: #dc2626; }
-        .card-orange { border-left-color: #f97316; }
-        
-        .card-title { font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; margin-bottom: 8px; display: block; letter-spacing: .04em; }
-        .card-value { font-size: 26px; font-weight: 700; color: #1a1a1a; }
-        
-        .chart-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 24px; max-width: 750px; }
-        .chart-header { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.02em; }
-        .hidden-framework-controls { display: none !important; }
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
 
-        @media (max-width: 768px) {
-            .layout { flex-direction: column; }
-            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #e8e8e8; padding: 16px; flex-direction: row; flex-wrap: wrap; }
-            .sidebar-profile { width: 100%; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; }
-            .main { padding: 20px 16px; }
-            .metrics-grid { grid-template-columns: 1fr; }
+        .sidebar {
+            width: 220px;
+            background: rgba(255,255,255,0.92);
+            border-right: 1px solid #e5e7eb;
+            padding: 22px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: 4px 0 18px rgba(0,0,0,0.03);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar-avatar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .avatar-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00CBD4, #1d4ed8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 8px 18px rgba(14,165,233,0.28);
+            overflow: hidden;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .avatar-circle:hover {
+            transform: scale(1.05);
+        }
+
+        .avatar-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .sidebar-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .sidebar-role {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 11px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            color: #4b5563;
+            text-decoration: none;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: 0.2s ease;
+        }
+
+        .nav-item:hover {
+            background: #f3f8ff;
+            color: #1d4ed8;
+            transform: translateX(3px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #eaf8ff, #f0fbff);
+            color: #0284c7;
+            font-weight: 700;
+            box-shadow: inset 3px 0 0 #00CBD4;
+        }
+
+        .main {
+            flex: 1;
+            padding: 36px 44px;
+            animation: fadeUp 0.35s ease;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .welcome-card {
+            background: linear-gradient(135deg, #00CBD4, #0ea5e9);
+            color: white;
+            padding: 22px 24px;
+            border-radius: 22px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 14px 35px rgba(14,165,233,0.25);
+        }
+
+        .welcome-small {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 3px;
+        }
+
+        .welcome-name {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .welcome-pill {
+            background: rgba(255,255,255,0.22);
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 5px;
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 22px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.96);
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            padding: 20px;
+            cursor: pointer;
+            transition: 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        }
+
+        .card::after {
+            content: "";
+            position: absolute;
+            right: -25px;
+            top: -25px;
+            width: 75px;
+            height: 75px;
+            background: rgba(0,203,212,0.12);
+            border-radius: 50%;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.07);
+            border-color: #bfdbfe;
+        }
+
+        .card-icon {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: #6b7280;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: block;
+            letter-spacing: 0.4px;
+        }
+
+        .card-value {
+            font-size: 29px;
+            font-weight: 800;
+            color: #0284c7;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-red .card-value {
+            color: #dc2626;
+        }
+
+        .card-orange .card-value {
+            color: #f97316;
+        }
+
+        .chart-card {
+            background: rgba(255,255,255,0.96);
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 820px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            transition: 0.2s ease;
+        }
+
+        .chart-card:hover {
+            box-shadow: 0 18px 40px rgba(0,0,0,0.07);
+        }
+
+        .chart-header {
+            font-size: 15px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 16px;
+        }
+
+        .hidden-framework-controls {
+            display: none !important;
+        }
+
+        @media (max-width: 900px) {
+            .main {
+                padding: 24px 18px;
+            }
+
+            .sidebar {
+                width: 200px;
+            }
+
+            .welcome-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
+
 <body>
 <form id="form1" runat="server">
 <div class="layout">
-    
+
     <div class="sidebar">
-        <div class="sidebar-profile">
-            <a href="LectProfile.aspx" style="text-decoration: none;">
-                <div class="avatar-container">
-                    <div class="avatar-circle">
-                        <asp:Image ID="imgSidebar" runat="server" />
-                        <asp:Literal ID="litSideInitials" runat="server" />
-                    </div>
+        <div class="sidebar-avatar">
+            <a href="LectProfile.aspx" style="text-decoration:none;">
+                <div class="avatar-circle">
+                    <asp:Image ID="imgSidebar" runat="server" />
+                    <asp:Literal ID="litSideInitials" runat="server" />
                 </div>
             </a>
+
             <div>
-                <div class="sidebar-name"><asp:Label ID="lblSidebarName" runat="server" /></div>
+                <div class="sidebar-name">
+                    <asp:Label ID="lblSidebarName" runat="server" />
+                </div>
                 <div class="sidebar-role">Lecturer</div>
             </div>
         </div>
-        
-        <a href="LectDashboard.aspx" class="nav-item active">Dashboard</a>
-        <a href="Attendance.aspx" class="nav-item">Attendance</a>
-        <a href="Assessment.aspx" class="nav-item">Assessment</a>
-        <a href="LecturerMonitorAcademicProgress.aspx" class="nav-item">Academic Progress</a>
-        <a href="LecturerPostAnnouncement.aspx" class="nav-item">Announcements</a>
-        <a href="LecturerCourseMaterials.aspx" class="nav-item">Course Materials</a>
-        <a href="Login.aspx" class="nav-item" style="margin-top:auto;color:#e74c3c;">Logout</a>
+
+        <a href="LectDashboard.aspx" class="nav-item active">🏠 Dashboard</a>
+        <a href="Attendance.aspx" class="nav-item">📝 Attendance</a>
+        <a href="Assessment.aspx" class="nav-item">📊 Assessment</a>
+        <a href="LecturerMonitorAcademicProgress.aspx" class="nav-item">🎓 Academic Progress</a>
+        <a href="LecturerPostAnnouncement.aspx" class="nav-item">📢 Announcements</a>
+        <a href="LecturerCourseMaterials.aspx" class="nav-item">📁 Course Materials</a>
+        <a href="Login.aspx" class="nav-item" style="margin-top:auto;color:#e74c3c;">🚪 Logout</a>
     </div>
 
     <div class="main">
+
+        <div class="welcome-card">
+            <div>
+                <div class="welcome-small">Welcome back</div>
+                <div class="welcome-name">
+                    <asp:Label ID="lblWelcomeName" runat="server" Text="Lecturer" />
+                </div>
+            </div>
+        </div>
+
         <div class="page-title">Lecturer Insights Dashboard</div>
         <div class="page-sub">Overview tracking modules for cohort tracks, critical performance status, and attendance parameters.</div>
 
         <div class="metrics-grid">
             <div class="card" onclick="location.href='Attendance.aspx'">
+                <div class="card-icon">📅</div>
                 <span class="card-title">Average Attendance Rate</span>
-                <div class="card-value"><asp:Label ID="lblAvgAttendance" runat="server" Text="0%" /></div>
+                <div class="card-value">
+                    <asp:Label ID="lblAvgAttendance" runat="server" Text="0%" />
+                </div>
             </div>
+
             <div class="card card-red" onclick="location.href='Attendance.aspx'">
+                <div class="card-icon">⚠️</div>
                 <span class="card-title">Low Attendance Track (&lt;80%)</span>
-                <div class="card-value"><asp:Label ID="lblLowAttendanceCount" runat="server" Text="0" /></div>
+                <div class="card-value">
+                    <asp:Label ID="lblLowAttendanceCount" runat="server" Text="0" />
+                </div>
             </div>
+
             <div class="card card-orange" onclick="location.href='Assessment.aspx'">
+                <div class="card-icon">📉</div>
                 <span class="card-title">Failing Status Risk Marks (&lt;40%)</span>
-                <div class="card-value"><asp:Label ID="lblFailingCount" runat="server" Text="0" /></div>
+                <div class="card-value">
+                    <asp:Label ID="lblFailingCount" runat="server" Text="0" />
+                </div>
             </div>
         </div>
 

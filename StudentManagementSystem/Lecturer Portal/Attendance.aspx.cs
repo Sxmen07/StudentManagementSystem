@@ -17,13 +17,13 @@ namespace LecturerPortal
                 Response.Redirect("Login.aspx");
 
             lblSidebarName.Text = Session["LecturerName"]?.ToString();
+            lblWelcomeName.Text = Session["LecturerName"]?.ToString();
 
             if (!IsPostBack)
             {
-                // Auto-fill the date input field with today's current date
                 txtDate.Text = DateTime.Today.ToString("yyyy-MM-dd");
-                LoadSidebarProfilePic(); // Load the lecturer's profile picture or initials
-                LoadProgrammes(); // Fetch the academic degrees assigned to this lecturer
+                LoadSidebarProfilePic();
+                LoadProgrammes();
             }
         }
 
@@ -314,9 +314,9 @@ namespace LecturerPortal
 
             // Pull summary metrics matching system states
             string query = @"SELECT s.StudentID, s.StudentName,
-                     SUM(CASE WHEN ar.Status = 'Present' THEN 1 ELSE 0 END) as PresentDays,
-                     SUM(CASE WHEN ar.Status = 'Absent' THEN 1 ELSE 0 END) as AbsentDays,
-                     CAST(ROUND(AVG(CASE WHEN ar.Status = 'Present' THEN 100.0 ELSE 0.0 END), 2) AS NVARCHAR) + '%' as AttendanceRate
+                     SUM(CASE WHEN ar.AttendanceStatus = 'Present' THEN 1 ELSE 0 END) as PresentDays,
+                     SUM(CASE WHEN ar.AttendanceStatus = 'Absent' THEN 1 ELSE 0 END) as AbsentDays,
+                     CAST(ROUND(AVG(CASE WHEN ar.AttendanceStatus = 'Present' THEN 100.0 ELSE 0.0 END), 2) AS NVARCHAR) + '%' as AttendanceRate
                      FROM Student s
                      INNER JOIN Enrolment e ON e.StudentID = s.StudentID
                      LEFT JOIN AttendanceRecord ar ON ar.StudentID = s.StudentID AND ar.CourseOfferID = e.CourseOfferID

@@ -17,10 +17,13 @@ namespace LecturerPortal
                 Response.Redirect("Login.aspx");
 
             lblSidebarName.Text = Session["LecturerName"]?.ToString();
+            lblWelcomeName.Text = Session["LecturerName"]?.ToString();
 
             if (!IsPostBack)
-                LoadSidebarProfilePic(); // Load lecturer profile image or initials
-                LoadProgrammes(); // Fetch departments assigned to lecturer account references
+            {
+                LoadSidebarProfilePic();
+                LoadProgrammes();
+            }
         }
 
         private void LoadSidebarProfilePic()

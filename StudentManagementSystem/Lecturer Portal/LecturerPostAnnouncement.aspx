@@ -55,6 +55,13 @@
             font-weight: 800;
             color: white;
             box-shadow: 0 8px 18px rgba(14,165,233,0.28);
+            overflow: hidden;
+        }
+
+        .avatar-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .sidebar-name {
@@ -576,17 +583,22 @@
     <div class="layout">
 
         <div class="sidebar">
-            <div class="sidebar-avatar">
-                <div class="avatar-circle">DA</div>
-                <div>
-                    <div class="sidebar-name">
-                        <asp:Label ID="lblSidebarName" runat="server" />
-                    </div>
-                    <div class="sidebar-role">Lecturer</div>
-                </div>
-            </div>
+             <div class="sidebar-avatar">
+                 <a href="LectProfile.aspx" style="text-decoration:none;">
+                     <div class="avatar-circle">
+                         <asp:Image ID="imgSidebar" runat="server" />
+                         <asp:Literal ID="litSideInitials" runat="server" />
+                     </div>
+                 </a>
+                 <div>
+                     <div class="sidebar-name">
+                         <asp:Label ID="lblSidebarName" runat="server" />
+                     </div>
+                     <div class="sidebar-role">Lecturer</div>
+                 </div>
+             </div>
 
-            <a href="LectProfile.aspx" class="nav-item">👤 My Profile</a>
+            <a href="LectDashboard.aspx" class="nav-item">🏠 Dashboard</a>
             <a href="Attendance.aspx" class="nav-item">📝 Attendance</a>
             <a href="Assessment.aspx" class="nav-item">📊 Assessment</a>
             <a href="LecturerMonitorAcademicProgress.aspx" class="nav-item">🎓 Academic Progress</a>
