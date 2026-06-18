@@ -78,58 +78,76 @@ namespace StudentManagementSystem
         protected global::System.Web.UI.WebControls.Literal litTotalCourses;
 
         /// <summary>
-        /// litTotalLecturers control.
+        /// litActiveSemester control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Literal litTotalLecturers;
+        protected global::System.Web.UI.WebControls.Literal litActiveSemester;
 
         /// <summary>
-        /// litTotalStudents control.
+        /// hfAdmins control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Literal litTotalStudents;
+        protected global::System.Web.UI.WebControls.HiddenField hfAdmins;
 
         /// <summary>
-        /// litTotalOffers control.
+        /// hfLecturers control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Literal litTotalOffers;
+        protected global::System.Web.UI.WebControls.HiddenField hfLecturers;
 
         /// <summary>
-        /// litTotalMaterials control.
+        /// hfStudents control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Literal litTotalMaterials;
+        protected global::System.Web.UI.WebControls.HiddenField hfStudents;
 
         /// <summary>
-        /// litTotalAnnouncements control.
+        /// hfCourseNames control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Literal litTotalAnnouncements;
+        protected global::System.Web.UI.WebControls.HiddenField hfCourseNames;
 
         /// <summary>
-        /// rptRecentAnnouncements control.
+        /// hfCourseEnrollment control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater rptRecentAnnouncements;
+        protected global::System.Web.UI.WebControls.HiddenField hfCourseEnrollment;
+
+        /// <summary>
+        /// hfFacultyNames control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfFacultyNames;
+
+        /// <summary>
+        /// hfFacultyStudents control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfFacultyStudents;
 
         /// <summary>
         /// litCountAdmins control.
@@ -157,6 +175,15 @@ namespace StudentManagementSystem
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Literal litCountStudents;
+
+        /// <summary>
+        /// rptRecentAnnouncements control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Repeater rptRecentAnnouncements;
 
         /// <summary>
         /// litInboxCount control.
