@@ -22,7 +22,7 @@ namespace LecturerPortal
                 ResetDashboardCards();
             }
         }
-        
+
         private void LoadProgrammes()
         {
             string query = @"
