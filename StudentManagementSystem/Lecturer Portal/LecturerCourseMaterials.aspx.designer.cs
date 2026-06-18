@@ -33,6 +33,42 @@ namespace LecturerPortal
         protected global::System.Web.UI.WebControls.Label lblSidebarName;
 
         /// <summary>
+        /// lblWelcomeName control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblWelcomeName;
+
+        /// <summary>
+        /// hfSelectedCourseOfferID control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfSelectedCourseOfferID;
+
+        /// <summary>
+        /// rptCourseCards control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Repeater rptCourseCards;
+
+        /// <summary>
+        /// pnlCourseContent control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Panel pnlCourseContent;
+
+        /// <summary>
         /// txtTitle control.
         /// </summary>
         /// <remarks>
@@ -40,15 +76,6 @@ namespace LecturerPortal
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtTitle;
-
-        /// <summary>
-        /// ddlCourse control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlCourse;
 
         /// <summary>
         /// txtDescription control.
@@ -96,12 +123,12 @@ namespace LecturerPortal
         protected global::System.Web.UI.WebControls.Label lblStatus;
 
         /// <summary>
-        /// gvMaterials control.
+        /// rptMaterials control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.GridView gvMaterials;
+        protected global::System.Web.UI.WebControls.Repeater rptMaterials;
     }
 }

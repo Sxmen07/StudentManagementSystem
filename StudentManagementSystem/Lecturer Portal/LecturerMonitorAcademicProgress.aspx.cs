@@ -14,6 +14,7 @@ namespace LecturerPortal
                 Response.Redirect("Login.aspx");
 
             lblSidebarName.Text = Session["LecturerName"]?.ToString();
+            lblWelcomeName.Text = Session["LecturerName"]?.ToString();
 
             if (!IsPostBack)
             {
@@ -21,7 +22,7 @@ namespace LecturerPortal
                 ResetDashboardCards();
             }
         }
-
+        
         private void LoadProgrammes()
         {
             string query = @"
