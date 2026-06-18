@@ -53,7 +53,7 @@
             align-items: center;
             justify-content: center;
             font-size: 13px;
-            font-weigh6t: 800;
+            font-weight: 800;
             color: white;
             box-shadow: 0 8px 18px rgba(14,165,233,0.28);
         }
@@ -447,6 +447,7 @@
                 width: 100%;
                 text-align: center;
             }
+        }
     </style>
 </head>
 
@@ -456,7 +457,10 @@
 
         <div class="sidebar">
             <div class="sidebar-avatar">
-                <div class="avatar-circle">DA</div>
+                <a href="LectProfile.aspx" style="text-decoration:none;">
+                    <div class="avatar-circle">DW</div>
+                </a>
+
                 <div>
                     <div class="sidebar-name">
                         <asp:Label ID="lblSidebarName" runat="server" />
@@ -465,7 +469,7 @@
                 </div>
             </div>
 
-            <a class="nav-item" href="LectProfile.aspx">👤 My Profile</a>
+            <a href="LectDashboard.aspx" class="nav-item">🏠 Dashboard</a>
             <a class="nav-item" href="Attendance.aspx">📝 Attendance</a>
             <a class="nav-item" href="Assessment.aspx">📊 Assessment</a>
             <a class="nav-item" href="LecturerMonitorAcademicProgress.aspx">🎓 Academic Progress</a>
