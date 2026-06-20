@@ -221,13 +221,15 @@ namespace LecturerPortal
                 return;
             }
 
-            if (!fileUpload.HasFile)
-            {
-                ShowError("No file detected. Please choose a file before posting.");
-                return;
-            }
+            string attachmentPath = "";
 
-            string attachmentPath = SaveUploadedFile();
+            if (fileUpload.HasFile)
+            {
+                attachmentPath = SaveUploadedFile();
+
+                if (attachmentPath == null)
+                    return; // invalid file type
+            }
 
             string targetType;
             string targetValue;

@@ -252,8 +252,23 @@
 
         .form-layout {
             display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 24px;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            max-width: 760px;
+        }
+
+        .form-card {
+            max-width: 850px;
+            margin: 0 auto 18px auto;
+        }
+
+        .btn-post {
+            height: 56px;
+            margin-top: 8px;
+        }
+
+        .upload-box {
+            margin-top: 4px;
         }
 
         .section-title {
@@ -279,9 +294,9 @@
         }
 
         select, input[type=text], input[type=date], textarea {
-            padding: 10px 13px;
+            padding: 14px 15px;
             border: 1px solid #dbe1ea;
-            border-radius: 11px;
+            border-radius: 15px;
             font-size: 13px;
             color: #111827;
             background: #fbfdff;
@@ -306,8 +321,9 @@
             border: 1px dashed #cbd5e1;
             border-radius: 16px;
             padding: 16px;
-            background: #f8fbff;
+            background: linear-gradient(135deg,#f8fbff,#ecfeff);
             margin-bottom: 14px;
+            border-color: #8bdde5;
         }
 
         .upload-title {
@@ -345,10 +361,11 @@
 
         .btn-post {
             padding: 12px 20px;
+            height: 56px;
             background: linear-gradient(135deg, #00CBD4, #0ea5e9);
             color: #fff;
             border: none;
-            border-radius: 12px;
+            border-radius: 15px;
             font-size: 14px;
             font-weight: 800;
             cursor: pointer;
@@ -437,6 +454,34 @@
                 align-items: flex-start;
                 gap: 12px;
             }
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .post-subtitle {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: -8px;
+        }
+
+        .post-badge {
+            background: #ecfeff;
+            color: #0284c7;
+            padding: 9px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .form-card {
+            padding: 30px;
+            border-radius: 26px;
         }
 
         @media (max-width: 600px) {
@@ -584,7 +629,10 @@
 
         <div class="sidebar">
             <div class="sidebar-avatar">
-                <div class="avatar-circle">DA</div>
+                <div class="avatar-circle">
+                    <asp:Image ID="imgSidebar" runat="server" Visible="false" />
+                    <asp:Literal ID="litSideInitials" runat="server" Text="LE" />
+                </div>
                 <div>
                     <div class="sidebar-name">
                         <asp:Label ID="lblSidebarName" runat="server" />
@@ -642,7 +690,18 @@
                     OnClick="btnBack_Click" />
 
                 <div class="form-card">
-                    <div class="section-title">Post New Announcement</div>
+                    <div class="post-header">
+                        <div>
+                            <div class="section-title">Post New Announcement</div>
+                            <div class="post-subtitle">
+                                Create announcements, reminders and updates for your students.
+                            </div>
+                        </div>
+
+                        <div class="post-badge">
+                            📢 Announcement
+                        </div>
+                    </div>
 
                     <div class="form-layout">
                         <div>
