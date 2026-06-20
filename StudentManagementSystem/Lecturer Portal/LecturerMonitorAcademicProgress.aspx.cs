@@ -289,10 +289,10 @@ namespace LecturerPortal
 
         private void ResetDashboardCards()
         {
-            lblTotalStudents.Text = "0";
-            lblAverageAttendance.Text = "0%";
+            lblTotalStudents.Text = "-";
+            lblAverageAttendance.Text = "-";
             lblAverageGrade.Text = "-";
-            lblRiskStudents.Text = "0";
+            lblRiskStudents.Text = "-";
         }
 
         private string GetGrade(decimal percentage)

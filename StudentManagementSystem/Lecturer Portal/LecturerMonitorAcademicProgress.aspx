@@ -440,7 +440,10 @@
 
         <div class="sidebar">
             <div class="sidebar-avatar">
-                <div class="avatar-circle">DA</div>
+                <div class="avatar-circle">
+                    <asp:Image ID="imgSidebar" runat="server" Visible="false" />
+                    <asp:Literal ID="litSideInitials" runat="server" Text="LE" />
+                </div>
                 <div>
                     <div class="sidebar-name">
                         <asp:Label ID="lblSidebarName" runat="server" />
@@ -476,7 +479,7 @@
                 <div class="stat-card">
                     <div class="stat-icon">👨‍🎓</div>
                     <div class="stat-value">
-                        <asp:Label ID="lblTotalStudents" runat="server" Text="0" />
+                        <asp:Label ID="lblTotalStudents" runat="server" Text="-" />
                     </div>
                     <div class="stat-label">Total Students</div>
                 </div>
@@ -484,7 +487,7 @@
                 <div class="stat-card">
                     <div class="stat-icon">📅</div>
                     <div class="stat-value">
-                        <asp:Label ID="lblAverageAttendance" runat="server" Text="0%" />
+                        <asp:Label ID="lblAverageAttendance" runat="server" Text="-" />
                     </div>
                     <div class="stat-label">Average Attendance</div>
                 </div>
@@ -500,7 +503,7 @@
                 <div class="stat-card">
                     <div class="stat-icon">⚠️</div>
                     <div class="stat-value">
-                        <asp:Label ID="lblRiskStudents" runat="server" Text="0" />
+                        <asp:Label ID="lblRiskStudents" runat="server" Text="-" />
                     </div>
                     <div class="stat-label">At Risk Students</div>
                 </div>
