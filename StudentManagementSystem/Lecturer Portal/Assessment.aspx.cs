@@ -48,7 +48,6 @@ namespace LecturerPortal
             }
             else
             {
-                // Fallback softly to text block initials placeholder if image read fails
                 litSideInitials.Text = "LE";
             }
 
@@ -72,26 +71,23 @@ namespace LecturerPortal
             }
             catch
             {
-                // Fallback softly to text block initials placeholder if image read fails
+                // Soft error catch bypass
             }
 
             imgSidebar.Visible = false;
             litSideInitials.Visible = true;
         }
 
-        // Retrieves qualification list structures available for assignment evaluations
         private void LoadProgrammes()
         {
             string query = @"
-                SELECT DISTINCT p.ProgrammeCode, p.ProgrammeName
+                SELECT DISTINCT p.ProgrammeCode, p.ProgrammeName 
                 FROM Programme p
                 INNER JOIN Course c ON c.ProgrammeCode = p.ProgrammeCode
                 INNER JOIN CourseOffer co ON co.CourseCode = c.CourseCode
                 WHERE co.LecturerID = @LID";
 
-            SqlParameter[] p = { new SqlParameter("@LID", Session["LecturerID"]) };
-            DataTable dt = DBHelper.ExecuteQuery(query, p);
-
+            DataTable dt = DBHelper.ExecuteQuery(query, new[] { new SqlParameter("@LID", Session["LecturerID"]) });
             ddlProgramme.DataSource = dt;
             ddlProgramme.DataTextField = "ProgrammeName";
             ddlProgramme.DataValueField = "ProgrammeCode";
@@ -102,47 +98,39 @@ namespace LecturerPortal
             ddlCourseOffer.Items.Add(new ListItem("-- Select Course --", "0"));
         }
 
-        // Stacks downstream updates loading matching course instances for a chosen programme
         protected void ddlProgramme_Changed(object sender, EventArgs e)
         {
             ddlCourseOffer.Items.Clear();
-
             if (!string.IsNullOrEmpty(ddlProgramme.SelectedValue))
             {
                 string query = @"
-                    SELECT co.CourseOfferID,
-                           c.CourseName + ' (' + s.Semester + ' ' + CAST(co.Year AS NVARCHAR) + ')' AS DisplayName
+                    SELECT co.CourseOfferID, c.CourseName + ' (' + s.Semester + ' ' + CAST(co.Year AS NVARCHAR) + ')' AS DisplayName
                     FROM CourseOffer co
                     INNER JOIN Course c ON c.CourseCode = co.CourseCode
                     INNER JOIN Semester s ON s.SemesterID = co.SemesterID
-                    WHERE co.LecturerID = @LID
-                    AND c.ProgrammeCode = @PCode
-                    AND co.OfferStatus = 'Available'";
+                    WHERE co.LecturerID = @LID AND c.ProgrammeCode = @PCode AND co.OfferStatus = 'Available'";
 
                 SqlParameter[] p = {
                     new SqlParameter("@LID", Session["LecturerID"]),
                     new SqlParameter("@PCode", ddlProgramme.SelectedValue)
                 };
 
-                DataTable dt = DBHelper.ExecuteQuery(query, p);
-                ddlCourseOffer.DataSource = dt;
+                ddlCourseOffer.DataSource = DBHelper.ExecuteQuery(query, p);
                 ddlCourseOffer.DataTextField = "DisplayName";
                 ddlCourseOffer.DataValueField = "CourseOfferID";
                 ddlCourseOffer.DataBind();
             }
 
             ddlCourseOffer.Items.Insert(0, new ListItem("-- Select Course --", "0"));
-            hfCourseOfferID.Value = ""; // Invalidate any previously loaded course - it no longer matches the selection
+            hfCourseOfferID.Value = "";
             pnlTable.Visible = false;
             pnlAssessmentModal.Visible = false;
             pnlExportOptions.Visible = false;
-            lblStatus.Text = ""; // Clear out stale warning messages
+            lblStatus.Text = "";
         }
 
-        // Fires when "Load Grid" command triggers from UI actions
         protected void btnLoad_Click(object sender, EventArgs e)
         {
-            // Robust validation checking BOTH dropdown constraints simultaneously
             if (string.IsNullOrEmpty(ddlProgramme.SelectedValue) ||
                 string.IsNullOrEmpty(ddlCourseOffer.SelectedValue) ||
                 ddlCourseOffer.SelectedValue == "0")
@@ -160,13 +148,11 @@ namespace LecturerPortal
             pnlExportOptions.Visible = true;
             lblExportStatus.Text = "";
 
-            RenderAssessmentTable(); // Calls dynamic construction loops
+            RenderAssessmentTable();
         }
 
-        // Unveils settings overlay panel to add, edit, or clear columns
         protected void btnOpenAssessmentModal_Click(object sender, EventArgs e)
         {
-            // Preventive validation before attempting to render setup panels
             if (string.IsNullOrEmpty(ddlProgramme.SelectedValue) ||
                 string.IsNullOrEmpty(ddlCourseOffer.SelectedValue) ||
                 ddlCourseOffer.SelectedValue == "0")
@@ -185,18 +171,16 @@ namespace LecturerPortal
             if (string.IsNullOrEmpty(hfCourseOfferID.Value))
                 hfCourseOfferID.Value = ddlCourseOffer.SelectedValue;
 
-            BindAssessmentGrid();    // Populate the standard inner configuration data sheet
-            RenderAssessmentTable();  // Redraw matrix layout fields
+            BindAssessmentGrid();
+            RenderAssessmentTable();
         }
 
-        // Restores primary spreadsheet interfaces, dismissing configuration screens
         protected void btnCloseAssessmentModal_Click(object sender, EventArgs e)
         {
             pnlAssessmentModal.Visible = false;
             RenderAssessmentTable();
         }
 
-        // Creates a new column scheme ruleset (e.g., Assignment 1, Quiz)
         protected void btnAddAssessment_Click(object sender, EventArgs e)
         {
             pnlTable.Visible = true;
@@ -207,14 +191,12 @@ namespace LecturerPortal
 
             string assessmentName = txtAssessmentName.Text.Trim();
 
-            // Validation Rule 1: Text box blank check
             if (assessmentName == "")
             {
                 ShowError("Enter assessment name.");
                 BindAssessmentGrid(); RenderAssessmentTable(); return;
             }
 
-            // Validation Rule 2: Max possible score structure formatting check
             decimal maxMarks;
             if (!decimal.TryParse(txtMaxMarks.Text, out maxMarks) || maxMarks <= 0)
             {
@@ -222,7 +204,6 @@ namespace LecturerPortal
                 BindAssessmentGrid(); RenderAssessmentTable(); return;
             }
 
-            // Validation Rule 3: Evaluation weight formatting check
             decimal weightage;
             if (!decimal.TryParse(txtWeightage.Text, out weightage) || weightage <= 0)
             {
@@ -230,21 +211,18 @@ namespace LecturerPortal
                 BindAssessmentGrid(); RenderAssessmentTable(); return;
             }
 
-            // Validation Rule 4: Prevent multiple Final Exam column creation definitions
             if (IsFinalExamName(assessmentName) && FinalExamExists(hfCourseOfferID.Value))
             {
                 ShowError("Only one Final Exam is allowed.");
                 BindAssessmentGrid(); RenderAssessmentTable(); return;
             }
 
-            // Validation Rule 5: Block combined weight allocations exceeding 100% caps
             if (GetTotalWeightage(hfCourseOfferID.Value) + weightage > 100)
             {
                 ShowError("Total assessment weightage cannot exceed 100%.");
                 BindAssessmentGrid(); RenderAssessmentTable(); return;
             }
 
-            // Insert new structural tracking entity record row to database schema
             string query = @"
                 INSERT INTO Assessment (AssessmentName, MaxMarks, Weightage, CourseOfferID)
                 VALUES (@Name, @MaxMarks, @Weightage, @COID)";
@@ -258,7 +236,6 @@ namespace LecturerPortal
 
             DBHelper.ExecuteNonQuery(query, p);
 
-            // Clean data entries for subsequent column allocations
             txtAssessmentName.Text = ""; txtMaxMarks.Text = ""; txtWeightage.Text = "";
 
             ShowSuccess("Assessment column added.");
@@ -266,7 +243,6 @@ namespace LecturerPortal
             RenderAssessmentTable();
         }
 
-        // Reads the dynamic numeric text inputs across grid panels and posts entries to SQL
         protected void btnSaveScores_Click(object sender, EventArgs e)
         {
             pnlTable.Visible = true;
@@ -275,7 +251,6 @@ namespace LecturerPortal
             DataTable students = GetStudents(courseOfferID);
             DataTable assessments = GetAssessments(courseOfferID);
 
-            // Row processing tracking matrix logic loops
             foreach (DataRow student in students.Rows)
             {
                 int studentID = Convert.ToInt32(student["StudentID"]);
@@ -285,17 +260,15 @@ namespace LecturerPortal
                     int assessmentID = Convert.ToInt32(assessment["AssessmentID"]);
                     decimal maxMarks = Convert.ToDecimal(assessment["MaxMarks"]);
 
-                    // Trace generated input name tokens matching layout fields (mark_ID_ID)
                     string fieldName = "mark_" + assessmentID + "_" + studentID;
 
                     decimal obtainedMark = 0;
                     decimal.TryParse(Request.Form[fieldName], out obtainedMark);
 
-                    // Ensure grades stay within valid ranges (0 to maximum defined points)
                     if (obtainedMark < 0) obtainedMark = 0;
                     if (obtainedMark > maxMarks) obtainedMark = maxMarks;
 
-                    SaveStudentMark(assessmentID, studentID, obtainedMark); // Upsert scores
+                    SaveStudentMark(assessmentID, studentID, obtainedMark);
                 }
             }
 
@@ -303,7 +276,6 @@ namespace LecturerPortal
             RenderAssessmentTable();
         }
 
-        // Puts a column row into an inline editable layout field state
         protected void gvAssessments_RowEditing(object sender, GridViewEditEventArgs e)
         {
             gvAssessments.EditIndex = e.NewEditIndex;
@@ -311,7 +283,6 @@ namespace LecturerPortal
             BindAssessmentGrid();
         }
 
-        // Safely cancels cell edit focus interactions without modifying data sets
         protected void gvAssessments_RowCancelingEdit(object sender, GridViewCancelEditEventArgs e)
         {
             gvAssessments.EditIndex = -1;
@@ -319,7 +290,6 @@ namespace LecturerPortal
             BindAssessmentGrid();
         }
 
-        // Saves modified target row configurations, validation thresholds, and properties
         protected void gvAssessments_RowUpdating(object sender, GridViewUpdateEventArgs e)
         {
             int assessmentID = Convert.ToInt32(gvAssessments.DataKeys[e.RowIndex].Value);
@@ -361,23 +331,20 @@ namespace LecturerPortal
             };
 
             DBHelper.ExecuteNonQuery(query, p);
-            gvAssessments.EditIndex = -1; // Clear edit cell flags
+            gvAssessments.EditIndex = -1;
             pnlAssessmentModal.Visible = true;
             ShowSuccess("Assessment column updated.");
             BindAssessmentGrid();
             RenderAssessmentTable();
         }
 
-        // Drops columns from tracking sheets, erasing dependencies from storage records
         protected void gvAssessments_RowDeleting(object sender, GridViewDeleteEventArgs e)
         {
             int assessmentID = Convert.ToInt32(gvAssessments.DataKeys[e.RowIndex].Value);
 
-            // Delete dependent student grades first to respect foreign key constraint actions
             SqlParameter[] deleteScoreParams = { new SqlParameter("@AID", assessmentID) };
             DBHelper.ExecuteNonQuery("DELETE FROM StudentAssessment WHERE AssessmentID = @AID", deleteScoreParams);
 
-            // Delete the assessment definition column record
             SqlParameter[] deleteAssessmentParams = { new SqlParameter("@AID", assessmentID) };
             DBHelper.ExecuteNonQuery("DELETE FROM Assessment WHERE AssessmentID = @AID", deleteAssessmentParams);
 
@@ -387,14 +354,12 @@ namespace LecturerPortal
             RenderAssessmentTable();
         }
 
-        // Pulls structural schema items and populates settings grids
         private void BindAssessmentGrid()
         {
             gvAssessments.DataSource = GetAssessments(hfCourseOfferID.Value);
             gvAssessments.DataBind();
         }
 
-        // Dynamically renders the core score-entry table structure with text box controls and interactive overall total column
         private void RenderAssessmentTable()
         {
             string courseOfferID = hfCourseOfferID.Value;
@@ -402,24 +367,20 @@ namespace LecturerPortal
             DataTable assessments = GetAssessments(courseOfferID);
             DataTable marks = GetMarks(courseOfferID);
 
-            // Set aggregate total percentage allocations label indicator on panel summaries
             lblTotalWeightage.Text = GetTotalWeightage(courseOfferID).ToString("0.##") + "%";
 
             StringBuilder html = new StringBuilder();
             html.Append("<table>");
             html.Append("<thead><tr><th>No</th><th>Student ID</th><th>Student Name</th>");
 
-            // Render a header cell for each assessment column
             foreach (DataRow ass in assessments.Rows)
             {
                 html.Append($"<th>{Server.HtmlEncode(ass["AssessmentName"].ToString())}<br/><small>Max: {ass["MaxMarks"]} ({ass["Weightage"]}%)</small></th>");
             }
 
-            // Append the overall calculated dynamic cumulative summary tracking column header
             html.Append("<th>Total (%)</th>");
             html.Append("</tr></thead><tbody>");
 
-            // Render row item panels listing students and their respective grade inputs
             int index = 1;
             foreach (DataRow student in students.Rows)
             {
@@ -431,7 +392,6 @@ namespace LecturerPortal
 
                 decimal totalWeightPercentage = 0;
 
-                // Render matching grade boxes containing accurate data entries
                 foreach (DataRow ass in assessments.Rows)
                 {
                     int assessmentID = Convert.ToInt32(ass["AssessmentID"]);
@@ -440,7 +400,6 @@ namespace LecturerPortal
                     decimal markValue = FindMark(marks, assessmentID, studentID);
                     string inputFieldName = $"mark_{assessmentID}_{studentID}";
 
-                    // Calculate active cumulative row totals matching export engine definitions
                     if (maxMarks > 0)
                     {
                         totalWeightPercentage += (markValue / maxMarks) * weightage;
@@ -449,24 +408,21 @@ namespace LecturerPortal
                     html.Append($"<td><input type='number' step='0.01' name='{inputFieldName}' value='{markValue.ToString("0.##")}' class='score-input'/></td>");
                 }
 
-                // Render the calculated on-screen row total percentage field
                 html.Append($"<td style='font-weight:bold; color:#111; background-color:#fcfdfd;'>{totalWeightPercentage.ToString("0.00")}%</td>");
                 html.Append("</tr>");
                 index++;
             }
 
-            // Render a fallback message row if no students are enrolled
             if (students.Rows.Count == 0)
             {
-                int totalCols = assessments.Rows.Count + 4; // Adjusted to account for the new total percentage column
+                int totalCols = assessments.Rows.Count + 4;
                 html.Append($"<tr><td colspan='{totalCols}' style='text-align:center;color:#aaa;padding:20px;'>No enrolled students found.</td></tr>");
             }
 
             html.Append("</tbody></table>");
-            litAssessmentTable.Text = html.ToString(); // Push generated code to the browser layout
+            litAssessmentTable.Text = html.ToString();
         }
 
-        // Helper: Fetches students enrolled in the class offering
         private DataTable GetStudents(string courseOfferID)
         {
             string query = @"SELECT s.StudentID, s.StudentName FROM Student s
@@ -475,14 +431,12 @@ namespace LecturerPortal
             return DBHelper.ExecuteQuery(query, new[] { new SqlParameter("@COID", courseOfferID) });
         }
 
-        // Helper: Fetches all assessment columns set up for this course offering
         private DataTable GetAssessments(string courseOfferID)
         {
             string query = "SELECT * FROM Assessment WHERE CourseOfferID = @COID ORDER BY AssessmentID";
             return DBHelper.ExecuteQuery(query, new[] { new SqlParameter("@COID", courseOfferID) });
         }
 
-        // Helper: Fetches all recorded student scores for this course offering
         private DataTable GetMarks(string courseOfferID)
         {
             string query = @"SELECT sa.* FROM StudentAssessment sa
@@ -491,7 +445,6 @@ namespace LecturerPortal
             return DBHelper.ExecuteQuery(query, new[] { new SqlParameter("@COID", courseOfferID) });
         }
 
-        // Helper: Saves or updates a student's score using an upsert (MERGE) statement
         private void SaveStudentMark(int assessmentID, int studentID, decimal mark)
         {
             string query = @"
@@ -512,14 +465,12 @@ namespace LecturerPortal
             DBHelper.ExecuteNonQuery(query, p);
         }
 
-        // Helper: Sums up the total weight percentages allocated to this course offering
         private decimal GetTotalWeightage(string courseOfferID)
         {
             string query = "SELECT ISNULL(SUM(Weightage), 0) FROM Assessment WHERE CourseOfferID = @COID";
             return Convert.ToDecimal(DBHelper.ExecuteScalar(query, new[] { new SqlParameter("@COID", courseOfferID) }));
         }
 
-        // Helper: Sums up weight percentages excluding the current assessment being updated
         private decimal GetTotalWeightageExceptCurrent(string courseOfferID, int assessmentID)
         {
             string query = "SELECT ISNULL(SUM(Weightage), 0) FROM Assessment WHERE CourseOfferID = @COID AND AssessmentID <> @AID";
@@ -527,14 +478,12 @@ namespace LecturerPortal
             return Convert.ToDecimal(DBHelper.ExecuteScalar(query, p));
         }
 
-        // Helper: Checks if a Final Exam column has already been created for this course offering
         private bool FinalExamExists(string courseOfferID)
         {
             string query = "SELECT COUNT(*) FROM Assessment WHERE CourseOfferID = @COID AND LOWER(AssessmentName) = 'final exam'";
             return Convert.ToInt32(DBHelper.ExecuteScalar(query, new[] { new SqlParameter("@COID", courseOfferID) })) > 0;
         }
 
-        // Helper: Checks if another Final Exam exists, excluding the current assessment row
         private bool FinalExamExistsExceptCurrent(string courseOfferID, int assessmentID)
         {
             string query = "SELECT COUNT(*) FROM Assessment WHERE CourseOfferID = @COID AND AssessmentID <> @AID AND LOWER(AssessmentName) = 'final exam'";
@@ -542,13 +491,11 @@ namespace LecturerPortal
             return Convert.ToInt32(DBHelper.ExecuteScalar(query, p)) > 0;
         }
 
-        // Helper: Checks if an assessment string matches the term "Final Exam" (ignores casing)
         private bool IsFinalExamName(string name)
         {
             return name.Trim().Equals("Final Exam", StringComparison.OrdinalIgnoreCase);
         }
 
-        // Helper: Scans a data table to locate a saved score value matching specific IDs
         private decimal FindMark(DataTable marks, int assessmentID, int studentID)
         {
             foreach (DataRow row in marks.Rows)
@@ -556,7 +503,7 @@ namespace LecturerPortal
                 if (Convert.ToInt32(row["AssessmentID"]) == assessmentID && Convert.ToInt32(row["StudentID"]) == studentID)
                     return Convert.ToDecimal(row["ObtainedMark"]);
             }
-            return 0; // Return zero if no mark has been saved yet
+            return 0;
         }
 
         protected void btnDownloadReport_Click(object sender, EventArgs e)
@@ -574,7 +521,6 @@ namespace LecturerPortal
             DataTable assessments = GetAssessments(courseOfferID);
             DataTable marks = GetMarks(courseOfferID);
 
-            // Layout definition with exactly 3 columns (Student Name, Assessment, Marks)
             DataTable reportTable = new DataTable();
             reportTable.Columns.Add("Student Name");
             reportTable.Columns.Add("Assessment");
@@ -585,7 +531,6 @@ namespace LecturerPortal
                 int studentID = Convert.ToInt32(student["StudentID"]);
                 string studentName = student["StudentName"].ToString();
 
-                // 1. Calculate overall weighted metric summary beforehand
                 decimal totalWeightPercentage = 0;
                 foreach (DataRow ass in assessments.Rows)
                 {
@@ -599,7 +544,6 @@ namespace LecturerPortal
                 }
                 string totalText = totalWeightPercentage.ToString("0.00") + "%";
 
-                // Fallback handle if no active dynamic assignment structural items exist yet
                 if (assessments.Rows.Count == 0)
                 {
                     DataRow newRow = reportTable.NewRow();
@@ -608,7 +552,6 @@ namespace LecturerPortal
                     newRow["Marks"] = "-";
                     reportTable.Rows.Add(newRow);
 
-                    // Place total row right underneath the fallback entry row
                     DataRow totalRow = reportTable.NewRow();
                     totalRow["Student Name"] = "";
                     totalRow["Assessment"] = "Total Assessment Percentage";
@@ -617,7 +560,6 @@ namespace LecturerPortal
                     continue;
                 }
 
-                // 2. Append all granular individual record detail items
                 foreach (DataRow ass in assessments.Rows)
                 {
                     int assessmentID = Convert.ToInt32(ass["AssessmentID"]);
@@ -631,9 +573,8 @@ namespace LecturerPortal
                     reportTable.Rows.Add(newRow);
                 }
 
-                // 3. Append the overall dynamic total metric summary row AT THE BOTTOM of the last assessment item
                 DataRow summaryRow = reportTable.NewRow();
-                summaryRow["Student Name"] = ""; // Left empty to seamlessly group with the student block above it
+                summaryRow["Student Name"] = "";
                 summaryRow["Assessment"] = "Total Assessment Percentage";
                 summaryRow["Marks"] = totalText;
                 reportTable.Rows.Add(summaryRow);
@@ -647,11 +588,13 @@ namespace LecturerPortal
                 ReportExporter.ExportToCSV(reportTable, filename, title);
             else
                 ReportExporter.ExportToOfficeHTML(reportTable, filename + "." + format, format, title);
+
+            // CRITICAL FIX: Halts ASP.NET page lifecycle rendering directly here 
+            // to stop page markup from pouring into the clean exported stream bytes.
+            Response.End();
         }
 
-        // Formats confirmation messages on the tracking dashboard layout
         private void ShowSuccess(string msg) { lblStatus.Text = msg; lblStatus.CssClass = "success-msg"; }
-        // Formats alert problem descriptions on the tracking dashboard layout
         private void ShowError(string msg) { lblStatus.Text = msg; lblStatus.CssClass = "error-msg"; }
     }
 }

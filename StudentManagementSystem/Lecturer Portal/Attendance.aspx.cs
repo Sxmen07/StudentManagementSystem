@@ -341,6 +341,10 @@ namespace LecturerPortal
                 ReportExporter.ExportToCSV(dt, filename, title);
             else
                 ReportExporter.ExportToOfficeHTML(dt, filename + "." + format, format, title);
+
+            // CRITICAL FIX: Instantly stops the ASP.NET lifecycle so the page's HTML 
+            // does not leak out and append into your clean CSV/Excel output stream.
+            Response.End();
         }
     }
 }
