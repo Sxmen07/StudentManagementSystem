@@ -56,6 +56,11 @@
             color: white;
             box-shadow: 0 8px 18px rgba(14,165,233,0.28);
             overflow: hidden;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+        .avatar-circle:hover {
+            transform: scale(1.05);
         }
 
         .avatar-circle img {
@@ -629,10 +634,12 @@
 
         <div class="sidebar">
             <div class="sidebar-avatar">
-                <div class="avatar-circle">
-                    <asp:Image ID="imgSidebar" runat="server" Visible="false" />
-                    <asp:Literal ID="litSideInitials" runat="server" Text="LE" />
-                </div>
+                <a href="LectProfile.aspx" style="text-decoration:none;">
+                    <div class="avatar-circle">
+                        <asp:Image ID="imgSidebar" runat="server" Visible="false" />
+                        <asp:Literal ID="litSideInitials" runat="server" Text="LE" />
+                    </div>
+                </a>
                 <div>
                     <div class="sidebar-name">
                         <asp:Label ID="lblSidebarName" runat="server" />
