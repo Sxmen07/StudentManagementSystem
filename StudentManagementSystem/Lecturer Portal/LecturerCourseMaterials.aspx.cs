@@ -96,7 +96,7 @@ namespace LecturerPortal
         private void LoadMaterials()
         {
             string query = @"
-                SELECT MaterialID, MaterialTitle, Description, FileURL, ScheduleDate, UploadDate
+                SELECT MaterialID, MaterialTitle, Description, MaterialCategory, FileURL, ScheduleDate, UploadDate
                 FROM CourseMaterial
                 WHERE CourseOfferID = @COID
                 AND UploadByLecturerID = @LID
@@ -143,15 +143,16 @@ namespace LecturerPortal
 
             string query = @"
                 INSERT INTO CourseMaterial
-                (CourseOfferID, MaterialTitle, Description, FileURL, ScheduleDate, UploadDate, UploadByLecturerID)
+                (CourseOfferID, MaterialTitle, Description, MaterialCategory, FileURL, ScheduleDate, UploadDate, UploadByLecturerID)
                 VALUES
-                (@COID, @Title, @Desc, @FileURL, @ScheduleDate, GETDATE(), @LID)";
+                (@COID, @Title, @Desc, @Category, @FileURL, @ScheduleDate, GETDATE(), @LID)";
 
             SqlParameter[] p =
             {
                 new SqlParameter("@COID", hfSelectedCourseOfferID.Value),
                 new SqlParameter("@Title", txtTitle.Text.Trim()),
                 new SqlParameter("@Desc", string.IsNullOrEmpty(txtDescription.Text) ? (object)DBNull.Value : txtDescription.Text.Trim()),
+                new SqlParameter("@Category", ddlCategory.SelectedValue),
                 new SqlParameter("@FileURL", fileURL),
                 new SqlParameter("@ScheduleDate", scheduleDate),
                 new SqlParameter("@LID", Session["LecturerID"])
@@ -174,6 +175,7 @@ namespace LecturerPortal
                     UPDATE CourseMaterial
                     SET MaterialTitle = @Title,
                         Description = @Desc,
+                        MaterialCategory = @Category,
                         FileURL = @FileURL,
                         ScheduleDate = @ScheduleDate
                     WHERE MaterialID = @MID
@@ -183,6 +185,7 @@ namespace LecturerPortal
                 {
                     new SqlParameter("@Title", txtTitle.Text.Trim()),
                     new SqlParameter("@Desc", string.IsNullOrEmpty(txtDescription.Text) ? (object)DBNull.Value : txtDescription.Text.Trim()),
+                    new SqlParameter("@Category", ddlCategory.SelectedValue),
                     new SqlParameter("@FileURL", fileURL),
                     new SqlParameter("@ScheduleDate", scheduleDate),
                     new SqlParameter("@MID", hfEditingMaterialID.Value),
@@ -197,6 +200,7 @@ namespace LecturerPortal
                     UPDATE CourseMaterial
                     SET MaterialTitle = @Title,
                         Description = @Desc,
+                        MaterialCategory = @Category,
                         ScheduleDate = @ScheduleDate
                     WHERE MaterialID = @MID
                     AND UploadByLecturerID = @LID";
@@ -205,6 +209,7 @@ namespace LecturerPortal
                 {
                     new SqlParameter("@Title", txtTitle.Text.Trim()),
                     new SqlParameter("@Desc", string.IsNullOrEmpty(txtDescription.Text) ? (object)DBNull.Value : txtDescription.Text.Trim()),
+                    new SqlParameter("@Category", ddlCategory.SelectedValue),
                     new SqlParameter("@ScheduleDate", scheduleDate),
                     new SqlParameter("@MID", hfEditingMaterialID.Value),
                     new SqlParameter("@LID", Session["LecturerID"])
@@ -219,16 +224,16 @@ namespace LecturerPortal
             if (e.CommandName == "EditMaterial")
             {
                 string query = @"
-            SELECT MaterialID, MaterialTitle, Description, ScheduleDate
-            FROM CourseMaterial
-            WHERE MaterialID = @MID
-            AND UploadByLecturerID = @LID";
+                    SELECT MaterialID, MaterialTitle, Description, MaterialCategory, ScheduleDate
+                    FROM CourseMaterial
+                    WHERE MaterialID = @MID
+                    AND UploadByLecturerID = @LID";
 
                 SqlParameter[] p =
                 {
-            new SqlParameter("@MID", e.CommandArgument.ToString()),
-            new SqlParameter("@LID", Session["LecturerID"])
-        };
+                    new SqlParameter("@MID", e.CommandArgument.ToString()),
+                    new SqlParameter("@LID", Session["LecturerID"])
+                };
 
                 DataTable dt = DBHelper.ExecuteQuery(query, p);
 
@@ -240,6 +245,9 @@ namespace LecturerPortal
                     txtTitle.Text = row["MaterialTitle"].ToString();
                     txtDescription.Text = row["Description"].ToString();
 
+                    if (row["MaterialCategory"] != DBNull.Value)
+                        ddlCategory.SelectedValue = row["MaterialCategory"].ToString();
+
                     if (row["ScheduleDate"] != DBNull.Value)
                         txtDate.Text = Convert.ToDateTime(row["ScheduleDate"]).ToString("yyyy-MM-dd");
 
@@ -250,12 +258,14 @@ namespace LecturerPortal
             else if (e.CommandName == "DeleteMaterial")
             {
                 string query = @"
-                DELETE FROM CourseMaterial
-                WHERE MaterialID = @MID";
+                    DELETE FROM CourseMaterial
+                    WHERE MaterialID = @MID
+                    AND UploadByLecturerID = @LID";
 
                 SqlParameter[] p =
                 {
-                 new SqlParameter("@MID", e.CommandArgument.ToString())
+                    new SqlParameter("@MID", e.CommandArgument.ToString()),
+                    new SqlParameter("@LID", Session["LecturerID"])
                 };
 
                 DBHelper.ExecuteNonQuery(query, p);
@@ -292,6 +302,7 @@ namespace LecturerPortal
             txtTitle.Text = "";
             txtDescription.Text = "";
             txtDate.Text = "";
+            ddlCategory.SelectedIndex = 0;
             hfEditingMaterialID.Value = "0";
             btnPost.Text = "Post Material";
         }

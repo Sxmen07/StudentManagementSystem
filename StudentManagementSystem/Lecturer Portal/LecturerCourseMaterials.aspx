@@ -57,6 +57,12 @@
             color: white;
             box-shadow: 0 8px 18px rgba(14,165,233,0.28);
             overflow: hidden;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .avatar-circle:hover {
+            transform: scale(1.05);
         }
 
         .avatar-circle img {
@@ -578,10 +584,12 @@
 
         <div class="sidebar">
             <div class="sidebar-avatar">
-                <div class="avatar-circle">
-                    <asp:Image ID="imgSidebar" runat="server" Visible="false" />
-                    <asp:Literal ID="litSideInitials" runat="server" Text="LE" />
-                </div>
+                <a href="LectProfile.aspx" style="text-decoration:none;">
+                    <div class="avatar-circle">
+                        <asp:Image ID="imgSidebar" runat="server" Visible="false" />
+                        <asp:Literal ID="litSideInitials" runat="server" Text="LE" />
+                    </div>
+                </a>
                 <div>
                     <div class="sidebar-name">
                         <asp:Label ID="lblSidebarName" runat="server" />
@@ -678,6 +686,15 @@
                                 placeholder="Write a short description for students..." />
                         </div>
 
+                        <div class="field-group">
+                            <div class="field-label">Category</div>
+                            <asp:DropDownList ID="ddlCategory" runat="server">
+                                <asp:ListItem Text="Lecture Module" Value="Lecture Module" />
+                                <asp:ListItem Text="Assignment" Value="Assignment" />
+                                <asp:ListItem Text="Tutorial" Value="Tutorial" />
+                            </asp:DropDownList>
+                        </div>
+
                         <div class="upload-area">
                             <div class="upload-title">📎 Attach File</div>
                             <div class="upload-sub">Optional. You can post material even without uploading a file.</div>
@@ -724,6 +741,10 @@
                                         <div class="material-meta">
                                             <span class="badge">
                                                 📅 <%# Eval("ScheduleDate", "{0:yyyy-MM-dd}") %>
+                                            </span>
+
+                                            <span class="badge">
+                                                📂 <%# Eval("MaterialCategory") %>
                                             </span>
 
                                             <span>
