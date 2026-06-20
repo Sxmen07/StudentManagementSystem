@@ -130,6 +130,7 @@ namespace LecturerPortal
             ddlCourseOffer.Items.Insert(0, new ListItem("-- Select Course --", "0"));
             pnlTable.Visible = false;   // Hide tracking workspace panels until they hit Load
             pnlHistory.Visible = false;
+            pnlExportOptions.Visible = false; // Stale CourseOfferID is no longer valid for export until reloaded
         }
 
         // Load Student List
@@ -168,7 +169,9 @@ namespace LecturerPortal
 
             pnlTable.Visible = true; // Show tracking sheet workspace
             pnlHistory.Visible = false;
+            pnlExportOptions.Visible = true; // Report can only be generated once a course's data is actually loaded
             lblStatus.Text = "";
+            lblExportStatus.Text = "";
         }
 
 
@@ -312,23 +315,32 @@ namespace LecturerPortal
         {
             if (string.IsNullOrEmpty(hfCourseOfferID.Value)) return;
 
-            // Pull summary metrics matching system states
-            string query = @"SELECT s.StudentID, s.StudentName,
-                     SUM(CASE WHEN ar.AttendanceStatus = 'Present' THEN 1 ELSE 0 END) as PresentDays,
-                     SUM(CASE WHEN ar.AttendanceStatus = 'Absent' THEN 1 ELSE 0 END) as AbsentDays,
-                     CAST(ROUND(AVG(CASE WHEN ar.AttendanceStatus = 'Present' THEN 100.0 ELSE 0.0 END), 2) AS NVARCHAR) + '%' as AttendanceRate
+            // Direct database projection; numeric calculations are performed natively by the SQL engine
+            string query = @"SELECT 
+                        s.StudentID AS [Student ID], 
+                        s.StudentName AS [Student Name],
+                        SUM(CASE WHEN ar.AttendanceStatus = 'Present' THEN 1 ELSE 0 END) AS [Present Count],
+                        SUM(CASE WHEN ar.AttendanceStatus = 'Late' THEN 1 ELSE 0 END) AS [Late Count],
+                        SUM(CASE WHEN ar.AttendanceStatus = 'Absent' THEN 1 ELSE 0 END) AS [Absent Count],
+                        CASE WHEN COUNT(ar.AttendanceID) = 0 THEN 0
+                             ELSE (SUM(CASE WHEN ar.AttendanceStatus IN ('Present', 'Late') THEN 1 ELSE 0 END) * 100.0) / COUNT(ar.AttendanceID)
+                        END AS [Attendance Rate (%)]
                      FROM Student s
                      INNER JOIN Enrolment e ON e.StudentID = s.StudentID
                      LEFT JOIN AttendanceRecord ar ON ar.StudentID = s.StudentID AND ar.CourseOfferID = e.CourseOfferID
                      WHERE e.CourseOfferID = @COID AND e.EnrolStatus = 'Enrolled'
-                     GROUP BY s.StudentID, s.StudentName";
+                     GROUP BY s.StudentID, s.StudentName
+                     ORDER BY s.StudentName";
 
             DataTable dt = DBHelper.ExecuteQuery(query, new[] { new SqlParameter("@COID", hfCourseOfferID.Value) });
             string format = ddlExportType.SelectedValue;
             string filename = $"Attendance_Report_{hfCourseOfferID.Value}_{DateTime.Now:yyyyMMdd}";
+            string title = "Attendance Summary Report";
 
-            if (format == "csv") ReportExporter.ExportToCSV(dt, filename);
-            else ReportExporter.ExportToOfficeHTML(dt, filename + "." + format, format);
+            if (format == "csv")
+                ReportExporter.ExportToCSV(dt, filename, title);
+            else
+                ReportExporter.ExportToOfficeHTML(dt, filename + "." + format, format, title);
         }
     }
 }

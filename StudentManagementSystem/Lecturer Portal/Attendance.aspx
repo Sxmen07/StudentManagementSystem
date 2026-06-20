@@ -689,16 +689,20 @@
             </div>
         </asp:Panel>
 
-        <asp:Panel ID="pnlExportOptions" runat="server" CssClass="export-card">
+        <asp:Panel ID="pnlExportOptions" runat="server" CssClass="export-card" Visible="false">
             <strong>Export Summary Report:</strong>
 
             <asp:DropDownList ID="ddlExportType" runat="server" CssClass="score-input">
                 <asp:ListItem Text="Excel (.xls)" Value="xls" />
                 <asp:ListItem Text="Word (.doc)" Value="doc" />
-                <asp:ListItem Text="CSV Vector (.csv)" Value="csv" />
+                <asp:ListItem Text="CSV (.csv)" Value="csv" />
             </asp:DropDownList>
 
             <asp:Button ID="btnDownloadReport" runat="server" Text="Download" CssClass="btn-primary" OnClick="btnDownloadReport_Click" />
+
+            <div>
+                <asp:Label ID="lblExportStatus" runat="server" CssClass="error-msg" />
+            </div>
         </asp:Panel>
 
     </div>

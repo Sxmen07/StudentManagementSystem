@@ -24,6 +24,13 @@ namespace LecturerPortal
                 LoadSidebarProfilePic();
                 LoadProgrammes();
             }
+            else
+            {
+                // Panel.Visible isn't persisted across postbacks automatically, so re-derive it here
+                // from the hidden field (already restored from posted form data by this point).
+                // Individual handlers below also flip it true the moment they first populate hfCourseOfferID.
+                pnlExportOptions.Visible = !string.IsNullOrEmpty(hfCourseOfferID.Value);
+            }
         }
 
         private void LoadSidebarProfilePic()
@@ -41,6 +48,7 @@ namespace LecturerPortal
             }
             else
             {
+                // Fallback softly to text block initials placeholder if image read fails
                 litSideInitials.Text = "LE";
             }
 
@@ -124,8 +132,10 @@ namespace LecturerPortal
             }
 
             ddlCourseOffer.Items.Insert(0, new ListItem("-- Select Course --", "0"));
+            hfCourseOfferID.Value = ""; // Invalidate any previously loaded course - it no longer matches the selection
             pnlTable.Visible = false;
             pnlAssessmentModal.Visible = false;
+            pnlExportOptions.Visible = false;
             lblStatus.Text = ""; // Clear out stale warning messages
         }
 
@@ -140,12 +150,15 @@ namespace LecturerPortal
                 ShowError("Please select both a programme and a course.");
                 pnlTable.Visible = false;
                 pnlAssessmentModal.Visible = false;
+                pnlExportOptions.Visible = false;
                 return;
             }
 
             hfCourseOfferID.Value = ddlCourseOffer.SelectedValue;
             pnlTable.Visible = true;
             pnlAssessmentModal.Visible = false;
+            pnlExportOptions.Visible = true;
+            lblExportStatus.Text = "";
 
             RenderAssessmentTable(); // Calls dynamic construction loops
         }
@@ -161,11 +174,13 @@ namespace LecturerPortal
                 ShowError("Please select both a programme and a course.");
                 pnlTable.Visible = false;
                 pnlAssessmentModal.Visible = false;
+                pnlExportOptions.Visible = false;
                 return;
             }
 
             pnlTable.Visible = true;
             pnlAssessmentModal.Visible = true;
+            pnlExportOptions.Visible = true;
 
             if (string.IsNullOrEmpty(hfCourseOfferID.Value))
                 hfCourseOfferID.Value = ddlCourseOffer.SelectedValue;
@@ -379,7 +394,7 @@ namespace LecturerPortal
             gvAssessments.DataBind();
         }
 
-        // Dynamically renders the core score-entry table structure with text box controls
+        // Dynamically renders the core score-entry table structure with text box controls and interactive overall total column
         private void RenderAssessmentTable()
         {
             string courseOfferID = hfCourseOfferID.Value;
@@ -399,6 +414,9 @@ namespace LecturerPortal
             {
                 html.Append($"<th>{Server.HtmlEncode(ass["AssessmentName"].ToString())}<br/><small>Max: {ass["MaxMarks"]} ({ass["Weightage"]}%)</small></th>");
             }
+
+            // Append the overall calculated dynamic cumulative summary tracking column header
+            html.Append("<th>Total (%)</th>");
             html.Append("</tr></thead><tbody>");
 
             // Render row item panels listing students and their respective grade inputs
@@ -411,15 +429,28 @@ namespace LecturerPortal
                 html.Append($"<td>{studentID}</td>");
                 html.Append($"<td>{Server.HtmlEncode(student["StudentName"].ToString())}</td>");
 
+                decimal totalWeightPercentage = 0;
+
                 // Render matching grade boxes containing accurate data entries
                 foreach (DataRow ass in assessments.Rows)
                 {
                     int assessmentID = Convert.ToInt32(ass["AssessmentID"]);
+                    decimal maxMarks = Convert.ToDecimal(ass["MaxMarks"]);
+                    decimal weightage = Convert.ToDecimal(ass["Weightage"]);
                     decimal markValue = FindMark(marks, assessmentID, studentID);
                     string inputFieldName = $"mark_{assessmentID}_{studentID}";
 
+                    // Calculate active cumulative row totals matching export engine definitions
+                    if (maxMarks > 0)
+                    {
+                        totalWeightPercentage += (markValue / maxMarks) * weightage;
+                    }
+
                     html.Append($"<td><input type='number' step='0.01' name='{inputFieldName}' value='{markValue.ToString("0.##")}' class='score-input'/></td>");
                 }
+
+                // Render the calculated on-screen row total percentage field
+                html.Append($"<td style='font-weight:bold; color:#111; background-color:#fcfdfd;'>{totalWeightPercentage.ToString("0.00")}%</td>");
                 html.Append("</tr>");
                 index++;
             }
@@ -427,7 +458,7 @@ namespace LecturerPortal
             // Render a fallback message row if no students are enrolled
             if (students.Rows.Count == 0)
             {
-                int totalCols = assessments.Rows.Count + 3;
+                int totalCols = assessments.Rows.Count + 4; // Adjusted to account for the new total percentage column
                 html.Append($"<tr><td colspan='{totalCols}' style='text-align:center;color:#aaa;padding:20px;'>No enrolled students found.</td></tr>");
             }
 
@@ -530,23 +561,92 @@ namespace LecturerPortal
 
         protected void btnDownloadReport_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(hfCourseOfferID.Value)) return;
+            if (string.IsNullOrEmpty(hfCourseOfferID.Value))
+            {
+                lblExportStatus.Text = "Please load a course's student list before exporting a report.";
+                return;
+            }
 
-            // Pull student grade outcomes mapped out dynamically
-            string query = @"SELECT s.StudentID, s.StudentName, 
-                     ISNULL(CAST(SUM(sa.ObtainedMark) AS NVARCHAR), '0') as TotalMarksObtained
-                     FROM Student s
-                     INNER JOIN Enrolment e ON e.StudentID = s.StudentID
-                     LEFT JOIN StudentAssessment sa ON sa.StudentID = s.StudentID
-                     WHERE e.CourseOfferID = @COID AND e.EnrolStatus = 'Enrolled'
-                     GROUP BY s.StudentID, s.StudentName";
+            lblExportStatus.Text = "";
 
-            DataTable dt = DBHelper.ExecuteQuery(query, new[] { new SqlParameter("@COID", hfCourseOfferID.Value) });
+            string courseOfferID = hfCourseOfferID.Value;
+            DataTable students = GetStudents(courseOfferID);
+            DataTable assessments = GetAssessments(courseOfferID);
+            DataTable marks = GetMarks(courseOfferID);
+
+            // Layout definition with exactly 3 columns (Student Name, Assessment, Marks)
+            DataTable reportTable = new DataTable();
+            reportTable.Columns.Add("Student Name");
+            reportTable.Columns.Add("Assessment");
+            reportTable.Columns.Add("Marks");
+
+            foreach (DataRow student in students.Rows)
+            {
+                int studentID = Convert.ToInt32(student["StudentID"]);
+                string studentName = student["StudentName"].ToString();
+
+                // 1. Calculate overall weighted metric summary beforehand
+                decimal totalWeightPercentage = 0;
+                foreach (DataRow ass in assessments.Rows)
+                {
+                    int assessmentID = Convert.ToInt32(ass["AssessmentID"]);
+                    decimal maxMarks = Convert.ToDecimal(ass["MaxMarks"]);
+                    decimal weightage = Convert.ToDecimal(ass["Weightage"]);
+                    decimal markValue = FindMark(marks, assessmentID, studentID);
+
+                    if (maxMarks > 0)
+                        totalWeightPercentage += (markValue / maxMarks) * weightage;
+                }
+                string totalText = totalWeightPercentage.ToString("0.00") + "%";
+
+                // Fallback handle if no active dynamic assignment structural items exist yet
+                if (assessments.Rows.Count == 0)
+                {
+                    DataRow newRow = reportTable.NewRow();
+                    newRow["Student Name"] = studentName;
+                    newRow["Assessment"] = "-";
+                    newRow["Marks"] = "-";
+                    reportTable.Rows.Add(newRow);
+
+                    // Place total row right underneath the fallback entry row
+                    DataRow totalRow = reportTable.NewRow();
+                    totalRow["Student Name"] = "";
+                    totalRow["Assessment"] = "Total Assessment Percentage";
+                    totalRow["Marks"] = totalText;
+                    reportTable.Rows.Add(totalRow);
+                    continue;
+                }
+
+                // 2. Append all granular individual record detail items
+                foreach (DataRow ass in assessments.Rows)
+                {
+                    int assessmentID = Convert.ToInt32(ass["AssessmentID"]);
+                    decimal maxMarks = Convert.ToDecimal(ass["MaxMarks"]);
+                    decimal markValue = FindMark(marks, assessmentID, studentID);
+
+                    DataRow newRow = reportTable.NewRow();
+                    newRow["Student Name"] = studentName;
+                    newRow["Assessment"] = ass["AssessmentName"];
+                    newRow["Marks"] = $"{markValue.ToString("0.##")}/{maxMarks.ToString("0.##")}";
+                    reportTable.Rows.Add(newRow);
+                }
+
+                // 3. Append the overall dynamic total metric summary row AT THE BOTTOM of the last assessment item
+                DataRow summaryRow = reportTable.NewRow();
+                summaryRow["Student Name"] = ""; // Left empty to seamlessly group with the student block above it
+                summaryRow["Assessment"] = "Total Assessment Percentage";
+                summaryRow["Marks"] = totalText;
+                reportTable.Rows.Add(summaryRow);
+            }
+
             string format = ddlExportType.SelectedValue;
-            string filename = $"Assessment_Report_{hfCourseOfferID.Value}_{DateTime.Now:yyyyMMdd}";
+            string filename = $"Assessment_Performance_Report_{courseOfferID}_{DateTime.Now:yyyyMMdd}";
+            string title = "Assessment Performance Report";
 
-            if (format == "csv") ReportExporter.ExportToCSV(dt, filename);
-            else ReportExporter.ExportToOfficeHTML(dt, filename + "." + format, format);
+            if (format == "csv")
+                ReportExporter.ExportToCSV(reportTable, filename, title);
+            else
+                ReportExporter.ExportToOfficeHTML(reportTable, filename + "." + format, format, title);
         }
 
         // Formats confirmation messages on the tracking dashboard layout

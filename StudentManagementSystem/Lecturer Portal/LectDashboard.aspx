@@ -4,7 +4,6 @@
 <head runat="server">
     <title>Lecturer Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         * { box-sizing: border-box; }
@@ -339,7 +338,7 @@
         </div>
 
         <div class="page-title">Lecturer Insights Dashboard</div>
-        <div class="page-sub">Overview tracking modules for cohort tracks, critical performance status, and attendance parameters.</div>
+        <div class="page-sub">Overview tracking modules for critical performance status, and attendance parameters.</div>
 
         <div class="metrics-grid">
             <div class="card" onclick="location.href='Attendance.aspx'">
@@ -364,13 +363,6 @@
                 <div class="card-value">
                     <asp:Label ID="lblFailingCount" runat="server" Text="0" />
                 </div>
-            </div>
-        </div>
-
-        <div class="chart-card">
-            <div class="chart-header">Weekly Student Cohort Tracking Curve</div>
-            <div style="position: relative; width:100%; height:auto;">
-                <canvas id="dashboardChart" height="260"></canvas>
             </div>
         </div>
 

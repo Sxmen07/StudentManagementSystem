@@ -26,7 +26,6 @@ namespace LecturerPortal
                 lblWelcomeName.Text = lblSidebarName.Text;
 
                 LoadDashboardMetrics();
-                RenderPerformanceChart();
             }
         }
 
@@ -80,47 +79,82 @@ namespace LecturerPortal
 
         private void LoadDashboardMetrics()
         {
-            // Mock assignments for tracking displays safely
-            lblAvgAttendance.Text = "84.5%";
-            lblLowAttendanceCount.Text = "3";
-            lblFailingCount.Text = "2";
+            string lecturerID = Session["LecturerID"]?.ToString();
+
+            // 1. Calculate Average Attendance Rate across all classes taught by this lecturer
+            // Safely wraps expression in a subquery to guarantee a clean scalar return value
+            string avgAttendanceQuery = @"
+                SELECT ISNULL(
+                    (SELECT CAST(AVG(CASE WHEN ar.AttendanceStatus IN ('Present', 'Late') THEN 1.0 ELSE 0.0 END) * 100 AS DECIMAL(5,1))
+                     FROM AttendanceRecord ar
+                     INNER JOIN Enrolment e ON ar.StudentID = e.StudentID AND ar.CourseOfferID = e.CourseOfferID
+                     INNER JOIN CourseOffer co ON ar.CourseOfferID = co.CourseOfferID
+                     WHERE co.LecturerID = @LID AND e.EnrolStatus = 'Enrolled'), 0.0)";
+
+            SqlParameter[] p1 = { new SqlParameter("@LID", lecturerID) };
+            object avgResult = DBHelper.ExecuteScalar(avgAttendanceQuery, p1);
+            lblAvgAttendance.Text = (avgResult != null ? avgResult.ToString() : "0.0") + "%";
+
+            // 2. Count distinct students with an overall attendance average below 80%
+            string lowAttendanceQuery = @"
+                SELECT COUNT(*) FROM (
+                    SELECT ar.StudentID, AVG(CASE WHEN ar.AttendanceStatus IN ('Present', 'Late') THEN 1.0 ELSE 0.0 END) * 100 AS StudentAvg
+                    FROM AttendanceRecord ar
+                    INNER JOIN Enrolment e ON ar.StudentID = e.StudentID AND ar.CourseOfferID = e.CourseOfferID
+                    INNER JOIN CourseOffer co ON ar.CourseOfferID = co.CourseOfferID
+                    WHERE co.LecturerID = @LID AND e.EnrolStatus = 'Enrolled'
+                    GROUP BY ar.StudentID
+                ) AS SubQuery 
+                WHERE StudentAvg < 80.0";
+
+            SqlParameter[] p2 = { new SqlParameter("@LID", lecturerID) };
+            object lowAttResult = DBHelper.ExecuteScalar(lowAttendanceQuery, p2);
+            lblLowAttendanceCount.Text = lowAttResult != null ? lowAttResult.ToString() : "0";
+
+            // 3. Count students whose combined assessment weighted performance total falls below 40%
+            string failingQuery = @"
+                SELECT COUNT(*) FROM (
+                    SELECT sa.StudentID,
+                           SUM(CASE WHEN a.MaxMarks > 0 THEN (sa.ObtainedMark / a.MaxMarks) * a.Weightage ELSE 0 END) AS TotalPercentage
+                    FROM StudentAssessment sa
+                    INNER JOIN Assessment a ON sa.AssessmentID = a.AssessmentID
+                    INNER JOIN CourseOffer co ON a.CourseOfferID = co.CourseOfferID
+                    INNER JOIN Enrolment e ON sa.StudentID = e.StudentID AND co.CourseOfferID = e.CourseOfferID
+                    WHERE co.LecturerID = @LID AND e.EnrolStatus = 'Enrolled'
+                    GROUP BY sa.StudentID
+                ) AS GradeQuery 
+                WHERE TotalPercentage < 40.0";
+
+            SqlParameter[] p3 = { new SqlParameter("@LID", lecturerID) };
+            object failingResult = DBHelper.ExecuteScalar(failingQuery, p3);
+            lblFailingCount.Text = failingResult != null ? failingResult.ToString() : "0";
 
             // Initialize control array bindings quietly to avoid back-end null object framework errors
             if (ddlCourseOffer != null)
             {
                 ddlCourseOffer.Items.Clear();
                 ddlCourseOffer.Items.Add(new ListItem("All Active Class Rosters", "0"));
+
+                // Dynamically populate active dropdown course components belonging to this instructor
+                string courseQuery = @"
+                    SELECT co.CourseOfferID, c.CourseName + ' (' + s.Semester + ' ' + CAST(co.Year AS NVARCHAR) + ')' AS DisplayName
+                    FROM CourseOffer co
+                    INNER JOIN Course c ON c.CourseCode = co.CourseCode
+                    INNER JOIN Semester s ON s.SemesterID = co.SemesterID
+                    WHERE co.LecturerID = @LID AND co.OfferStatus = 'Available'";
+
+                SqlParameter[] p4 = { new SqlParameter("@LID", lecturerID) };
+                DataTable dtCourses = DBHelper.ExecuteQuery(courseQuery, p4);
+                foreach (DataRow row in dtCourses.Rows)
+                {
+                    ddlCourseOffer.Items.Add(new ListItem(row["DisplayName"].ToString(), row["CourseOfferID"].ToString()));
+                }
             }
+
             if (ddlExportType != null)
             {
                 ddlExportType.SelectedIndex = 0;
             }
-        }
-
-        private void RenderPerformanceChart()
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.Append("<script>");
-            sb.Append("var ctx = document.getElementById('dashboardChart').getContext('2d');");
-            sb.Append("var myChart = new Chart(ctx, {");
-            sb.Append("    type: 'bar',");
-            sb.Append("    data: {");
-            sb.Append("        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],");
-            sb.Append("        datasets: [{");
-            sb.Append("            label: 'Average Attendance Rate %',");
-            sb.Append("            data: [92, 88, 85, 81, 84],");
-            sb.Append("            backgroundColor: '#1d4ed8',");
-            sb.Append("            borderRadius: 6");
-            sb.Append("        }]");
-            sb.Append("    },");
-            sb.Append("    options: {");
-            sb.Append("        responsive: true,");
-            sb.Append("        scales: { y: { min: 0, max: 100 } }");
-            sb.Append("    }");
-            sb.Append("});");
-            sb.Append("</script>");
-
-            litChartScript.Text = sb.ToString();
         }
     }
 }

@@ -522,18 +522,22 @@
                 </div>
             </div>
 
-            <asp:Panel ID="pnlExportOptions" runat="server" CssClass="export-card">
+            <asp:Panel ID="pnlExportOptions" runat="server" CssClass="export-card" Visible="false">
                 <strong style="font-size:13px; color:#555;">Export Summary Report:</strong>
 
-                <asp:DropDownList ID="ddlExportType" runat="server"
-                    Style="width:140px; display:inline-block; margin:0 10px;">
+                <asp:DropDownList ID="ddlExportType" runat="server" CssClass="score-input" Style="width:120px;
+                display:inline-block; margin:0 10px; padding:6px 12px; border-radius:7px; border:1px solid #d1d5db;">
                     <asp:ListItem Text="Excel (.xls)" Value="xls" />
                     <asp:ListItem Text="Word (.doc)" Value="doc" />
-                    <asp:ListItem Text="CSV Vector (.csv)" Value="csv" />
+                    <asp:ListItem Text="CSV (.csv)" Value="csv" />
                 </asp:DropDownList>
 
                 <asp:Button ID="btnDownloadReport" runat="server" Text="Download"
                     CssClass="btn btn-primary" OnClick="btnDownloadReport_Click" />
+
+                <div>
+                    <asp:Label ID="lblExportStatus" runat="server" CssClass="error-msg" />
+                </div>
             </asp:Panel>
 
             <asp:Panel ID="pnlTable" runat="server" Visible="false">
