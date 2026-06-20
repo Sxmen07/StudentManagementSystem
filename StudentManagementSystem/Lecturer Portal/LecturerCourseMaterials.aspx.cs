@@ -30,18 +30,10 @@ namespace LecturerPortal
             string lecturerName = Session["LecturerName"]?.ToString() ?? "Lecturer";
             lblSidebarName.Text = lecturerName;
 
-            if (!string.IsNullOrEmpty(lecturerName))
-            {
-                string[] parts = lecturerName.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length > 1)
-                    litSideInitials.Text = (parts[0][0].ToString() + parts[1][0].ToString()).ToUpper();
-                else
-                    litSideInitials.Text = parts[0][0].ToString().ToUpper();
-            }
-            else
-            {
-                litSideInitials.Text = "LE";
-            }
+            string[] parts = lecturerName.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            litSideInitials.Text = parts.Length > 1
+                ? (parts[0][0].ToString() + parts[1][0].ToString()).ToUpper()
+                : lecturerName[0].ToString().ToUpper();
 
             try
             {
@@ -52,6 +44,7 @@ namespace LecturerPortal
                 if (dt.Rows.Count > 0 && dt.Rows[0]["ProfileImagePath"] != DBNull.Value)
                 {
                     string imgPath = dt.Rows[0]["ProfileImagePath"].ToString();
+
                     if (!string.IsNullOrEmpty(imgPath) && File.Exists(Server.MapPath(imgPath)))
                     {
                         imgSidebar.ImageUrl = imgPath + "?t=" + DateTime.Now.Ticks;
@@ -61,10 +54,7 @@ namespace LecturerPortal
                     }
                 }
             }
-            catch
-            {
-                // Fallback softly to showing text placeholder characters on query exception errors
-            }
+            catch { }
 
             imgSidebar.Visible = false;
             litSideInitials.Visible = true;
@@ -73,23 +63,21 @@ namespace LecturerPortal
         private void LoadCourses()
         {
             string query = @"
-            SELECT co.CourseOfferID,
-                   c.CourseName + ' (' + s.Semester + ' ' + CAST(co.Year AS NVARCHAR) + ')' AS DisplayName
-            FROM CourseOffer co
-            INNER JOIN Course c ON c.CourseCode = co.CourseCode
-            INNER JOIN Semester s ON s.SemesterID = co.SemesterID
-            WHERE co.LecturerID = @LID
-            AND co.OfferStatus = 'Available'
-            ORDER BY c.CourseName";
+                SELECT co.CourseOfferID,
+                       c.CourseName + ' (' + s.Semester + ' ' + CAST(co.Year AS NVARCHAR) + ')' AS DisplayName
+                FROM CourseOffer co
+                INNER JOIN Course c ON c.CourseCode = co.CourseCode
+                INNER JOIN Semester s ON s.SemesterID = co.SemesterID
+                WHERE co.LecturerID = @LID
+                AND co.OfferStatus = 'Available'
+                ORDER BY c.CourseName";
 
             SqlParameter[] p =
             {
-            new SqlParameter("@LID", Session["LecturerID"])
-        };
+                new SqlParameter("@LID", Session["LecturerID"])
+            };
 
-            DataTable dt = DBHelper.ExecuteQuery(query, p);
-
-            rptCourseCards.DataSource = dt;
+            rptCourseCards.DataSource = DBHelper.ExecuteQuery(query, p);
             rptCourseCards.DataBind();
         }
 
@@ -98,19 +86,17 @@ namespace LecturerPortal
             if (e.CommandName == "SelectCourse")
             {
                 hfSelectedCourseOfferID.Value = e.CommandArgument.ToString();
-
                 pnlCourseContent.Visible = true;
+                ClearForm();
                 lblStatus.Text = "";
-
                 LoadMaterials();
             }
         }
 
-
         private void LoadMaterials()
         {
             string query = @"
-                SELECT MaterialTitle, Description, FileURL, ScheduleDate, UploadDate
+                SELECT MaterialID, MaterialTitle, Description, FileURL, ScheduleDate, UploadDate
                 FROM CourseMaterial
                 WHERE CourseOfferID = @COID
                 AND UploadByLecturerID = @LID
@@ -122,15 +108,13 @@ namespace LecturerPortal
                 new SqlParameter("@LID", Session["LecturerID"])
             };
 
-            DataTable dt = DBHelper.ExecuteQuery(query, p);
-
-            rptMaterials.DataSource = dt;
+            rptMaterials.DataSource = DBHelper.ExecuteQuery(query, p);
             rptMaterials.DataBind();
         }
 
         protected void btnPost_Click(object sender, EventArgs e)
         {
-            if (hfSelectedCourseOfferID.Value == "0")
+            if (string.IsNullOrEmpty(hfSelectedCourseOfferID.Value) || hfSelectedCourseOfferID.Value == "0")
             {
                 ShowError("Please select a course.");
                 return;
@@ -142,17 +126,20 @@ namespace LecturerPortal
                 return;
             }
 
-            if (!fileUpload.HasFile)
-            {
-                ShowError("Upload a file.");
-                return;
-            }
-
-            string fileURL = SaveFile();
-
             DateTime scheduleDate;
             if (!DateTime.TryParse(txtDate.Text, out scheduleDate))
                 scheduleDate = DateTime.Today;
+
+            if (hfEditingMaterialID.Value != "0")
+            {
+                UpdateMaterial(scheduleDate);
+                ClearForm();
+                ShowSuccess("Material updated successfully.");
+                LoadMaterials();
+                return;
+            }
+
+            string fileURL = fileUpload.HasFile ? SaveFile() : "";
 
             string query = @"
                 INSERT INTO CourseMaterial
@@ -164,8 +151,7 @@ namespace LecturerPortal
             {
                 new SqlParameter("@COID", hfSelectedCourseOfferID.Value),
                 new SqlParameter("@Title", txtTitle.Text.Trim()),
-                new SqlParameter("@Desc",
-                    string.IsNullOrEmpty(txtDescription.Text) ? (object)DBNull.Value : txtDescription.Text),
+                new SqlParameter("@Desc", string.IsNullOrEmpty(txtDescription.Text) ? (object)DBNull.Value : txtDescription.Text.Trim()),
                 new SqlParameter("@FileURL", fileURL),
                 new SqlParameter("@ScheduleDate", scheduleDate),
                 new SqlParameter("@LID", Session["LecturerID"])
@@ -174,8 +160,116 @@ namespace LecturerPortal
             DBHelper.ExecuteNonQuery(query, p);
 
             ClearForm();
-            ShowSuccess("Material posted.");
+            ShowSuccess("Material posted successfully.");
             LoadMaterials();
+        }
+
+        private void UpdateMaterial(DateTime scheduleDate)
+        {
+            if (fileUpload.HasFile)
+            {
+                string fileURL = SaveFile();
+
+                string query = @"
+                    UPDATE CourseMaterial
+                    SET MaterialTitle = @Title,
+                        Description = @Desc,
+                        FileURL = @FileURL,
+                        ScheduleDate = @ScheduleDate
+                    WHERE MaterialID = @MID
+                    AND UploadByLecturerID = @LID";
+
+                SqlParameter[] p =
+                {
+                    new SqlParameter("@Title", txtTitle.Text.Trim()),
+                    new SqlParameter("@Desc", string.IsNullOrEmpty(txtDescription.Text) ? (object)DBNull.Value : txtDescription.Text.Trim()),
+                    new SqlParameter("@FileURL", fileURL),
+                    new SqlParameter("@ScheduleDate", scheduleDate),
+                    new SqlParameter("@MID", hfEditingMaterialID.Value),
+                    new SqlParameter("@LID", Session["LecturerID"])
+                };
+
+                DBHelper.ExecuteNonQuery(query, p);
+            }
+            else
+            {
+                string query = @"
+                    UPDATE CourseMaterial
+                    SET MaterialTitle = @Title,
+                        Description = @Desc,
+                        ScheduleDate = @ScheduleDate
+                    WHERE MaterialID = @MID
+                    AND UploadByLecturerID = @LID";
+
+                SqlParameter[] p =
+                {
+                    new SqlParameter("@Title", txtTitle.Text.Trim()),
+                    new SqlParameter("@Desc", string.IsNullOrEmpty(txtDescription.Text) ? (object)DBNull.Value : txtDescription.Text.Trim()),
+                    new SqlParameter("@ScheduleDate", scheduleDate),
+                    new SqlParameter("@MID", hfEditingMaterialID.Value),
+                    new SqlParameter("@LID", Session["LecturerID"])
+                };
+
+                DBHelper.ExecuteNonQuery(query, p);
+            }
+        }
+
+        protected void rptMaterials_ItemCommand(object source, RepeaterCommandEventArgs e)
+        {
+            if (e.CommandName == "EditMaterial")
+            {
+                string query = @"
+            SELECT MaterialID, MaterialTitle, Description, ScheduleDate
+            FROM CourseMaterial
+            WHERE MaterialID = @MID
+            AND UploadByLecturerID = @LID";
+
+                SqlParameter[] p =
+                {
+            new SqlParameter("@MID", e.CommandArgument.ToString()),
+            new SqlParameter("@LID", Session["LecturerID"])
+        };
+
+                DataTable dt = DBHelper.ExecuteQuery(query, p);
+
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow row = dt.Rows[0];
+
+                    hfEditingMaterialID.Value = row["MaterialID"].ToString();
+                    txtTitle.Text = row["MaterialTitle"].ToString();
+                    txtDescription.Text = row["Description"].ToString();
+
+                    if (row["ScheduleDate"] != DBNull.Value)
+                        txtDate.Text = Convert.ToDateTime(row["ScheduleDate"]).ToString("yyyy-MM-dd");
+
+                    btnPost.Text = "Update Material";
+                    ShowSuccess("Editing selected material. Upload a new file only if you want to replace the old one.");
+                }
+            }
+            else if (e.CommandName == "DeleteMaterial")
+            {
+                string query = @"
+                DELETE FROM CourseMaterial
+                WHERE MaterialID = @MID";
+
+                SqlParameter[] p =
+                {
+                 new SqlParameter("@MID", e.CommandArgument.ToString())
+                };
+
+                DBHelper.ExecuteNonQuery(query, p);
+
+                ClearForm();
+                LoadMaterials();
+                ShowSuccess("Material deleted successfully.");
+            }
+        }
+
+        protected void btnCancelEdit_Click(object sender, EventArgs e)
+        {
+            ClearForm();
+            ShowSuccess("Edit cancelled.");
         }
 
         private string SaveFile()
@@ -190,7 +284,6 @@ namespace LecturerPortal
 
             fileUpload.SaveAs(path);
 
-            string urlPath = "/Uploads/CourseMaterials/" + fileName;
             return "~/Uploads/CourseMaterials/" + fileName;
         }
 
@@ -199,6 +292,8 @@ namespace LecturerPortal
             txtTitle.Text = "";
             txtDescription.Text = "";
             txtDate.Text = "";
+            hfEditingMaterialID.Value = "0";
+            btnPost.Text = "Post Material";
         }
 
         private void ShowSuccess(string msg)

@@ -244,6 +244,8 @@
             margin-bottom: 10px;
         }
 
+
+
         .btn {
             width: 100%;
             padding: 12px;
@@ -261,6 +263,74 @@
         .btn:hover {
             background: linear-gradient(135deg, #0ea5e9, #115FB3);
             transform: translateY(-1px);
+        }
+
+        .post-card {
+            width: 100%;
+            max-width: 760px;
+            padding: 30px;
+            border-radius: 28px;
+            background: rgba(255,255,255,0.98);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .post-subtitle {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: -8px;
+        }
+
+        .post-badge {
+            background: #ecfeff;
+            color: #0284c7;
+            padding: 9px 13px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            height: fit-content;
+        }
+
+        .post-card input[type="text"],
+        .post-card input[type="date"],
+        .post-card textarea {
+            background: white;
+            border-radius: 15px;
+            padding: 14px 15px;
+        }
+
+        .post-card textarea {
+            min-height: 145px;
+        }
+
+        .post-card .upload-area {
+            background: linear-gradient(135deg, #f8fbff, #ecfeff);
+            border-color: #8bdde5;
+            padding: 18px;
+        }
+
+        .button-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .button-row .btn {
+            margin-top: 10px;
+            width: 100%;
+            height: 46px;
+            padding: 12px;
+        }
+
+        .status-area {
+            margin-top: 14px;
+            min-height: 20px;
         }
 
         .material-card {
@@ -455,6 +525,50 @@
                 text-align: center;
             }
         }
+
+        .delete-btn {
+                background: #dc2626;
+            }
+
+            .delete-btn:hover {
+                background: #b91c1c;
+            }
+
+        .material-layout {
+            display: grid;
+            grid-template-columns: 0.9fr 1.3fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .material-actions {
+            display: flex;
+            gap: 8px;
+            z-index: 1;
+            position: relative;
+        }
+
+        .edit-btn {
+            background: #111827;
+        }
+
+        .cancel-btn {
+            margin-top: 10px;
+            background: #64748b;
+        }
+
+        .empty-text {
+            color: #94a3b8;
+            font-size: 13px;
+            padding: 14px;
+        }
+
+        @media (max-width: 1000px) {
+            .material-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
     </style>
 </head>
 
@@ -464,7 +578,10 @@
 
         <div class="sidebar">
             <div class="sidebar-avatar">
-                <div class="avatar-circle">DA</div>
+                <div class="avatar-circle">
+                    <asp:Image ID="imgSidebar" runat="server" Visible="false" />
+                    <asp:Literal ID="litSideInitials" runat="server" Text="LE" />
+                </div>
                 <div>
                     <div class="sidebar-name">
                         <asp:Label ID="lblSidebarName" runat="server" />
@@ -537,77 +654,117 @@
 
             <asp:Panel ID="pnlCourseContent" runat="server" Visible="false">
 
-                <div class="form-card">
-                    <div class="section-title">Post New Material</div>
+                <div class="material-layout">
 
-                    <div class="field-group">
-                        <div class="field-label">Title</div>
-                        <asp:TextBox ID="txtTitle" runat="server" placeholder="Enter material title" />
-                    </div>
-
-                    <div class="field-group">
-                        <div class="field-label">Description</div>
-                        <asp:TextBox ID="txtDescription" runat="server" TextMode="MultiLine"
-                            placeholder="Write a short description..." />
-                    </div>
-
-                    <div class="upload-area">
-                        <div class="upload-title">📎 Upload File</div>
-                        <div class="upload-sub">Upload lecture notes, slides, documents, or learning materials.</div>
-                        <asp:FileUpload ID="fileUpload" runat="server" />
-                    </div>
-
-                    <div class="field-group">
-                        <div class="field-label">Schedule Date</div>
-                        <asp:TextBox ID="txtDate" runat="server" TextMode="Date" />
-                    </div>
-
-                    <asp:Button ID="btnPost" runat="server" Text="Post Material"
-                        CssClass="btn" OnClick="btnPost_Click" />
-
-                    <div style="margin-top:10px;">
-                        <asp:Label ID="lblStatus" runat="server" />
-                    </div>
-                </div>
-
-                <div class="table-card">
-                    <div class="section-title">Material History</div>
-
-                    <asp:Repeater ID="rptMaterials" runat="server">
-                        <ItemTemplate>
-                            <div class="material-card">
-
-                                <div class="file-icon">📄</div>
-
-                                <div class="material-body">
-                                    <div class="material-title">
-                                        <%# Eval("MaterialTitle") %>
-                                    </div>
-
-                                    <div class="material-desc">
-                                        <%# Eval("Description") %>
-                                    </div>
-
-                                    <div class="material-meta">
-                                        <span class="badge">
-                                            📅 <%# Eval("ScheduleDate", "{0:yyyy-MM-dd}") %>
-                                        </span>
-
-                                        <span>
-                                            Uploaded: <%# Eval("UploadDate", "{0:yyyy-MM-dd HH:mm}") %>
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <a class="open-btn"
-                                   href='<%# ResolveUrl(Eval("FileURL").ToString()) %>'
-                                   target="_blank">
-                                   Open
-                                </a>
-
+                    <div class="form-card post-card">
+                        <div class="post-header">
+                            <div>
+                                <div class="section-title">Post / Edit Material</div>
+                                <div class="post-subtitle">Add notes, slides, documents, or simple material details.</div>
                             </div>
-                        </ItemTemplate>
-                    </asp:Repeater>
+                            <div class="post-badge">📁 Material</div>
+                        </div>
+
+                        <asp:HiddenField ID="hfEditingMaterialID" runat="server" Value="0" />
+
+                        <div class="field-group">
+                            <div class="field-label">Material Title</div>
+                            <asp:TextBox ID="txtTitle" runat="server" placeholder="Example: Week 3 Lecture Notes" />
+                        </div>
+
+                        <div class="field-group">
+                            <div class="field-label">Description</div>
+                            <asp:TextBox ID="txtDescription" runat="server" TextMode="MultiLine"
+                                placeholder="Write a short description for students..." />
+                        </div>
+
+                        <div class="upload-area">
+                            <div class="upload-title">📎 Attach File</div>
+                            <div class="upload-sub">Optional. You can post material even without uploading a file.</div>
+                            <asp:FileUpload ID="fileUpload" runat="server" />
+                        </div>
+
+                        <div class="field-group">
+                            <div class="field-label">Schedule Date</div>
+                            <asp:TextBox ID="txtDate" runat="server" TextMode="Date" />
+                        </div>
+
+                        <div class="button-row">
+                            <asp:Button ID="btnPost" runat="server" Text="Post Material"
+                                CssClass="btn" OnClick="btnPost_Click" />
+
+                            <asp:Button ID="btnCancelEdit" runat="server" Text="Cancel"
+                                CssClass="btn cancel-btn" OnClick="btnCancelEdit_Click"
+                                CausesValidation="false" />
+                        </div>
+
+                        <div class="status-area">
+                            <asp:Label ID="lblStatus" runat="server" />
+                        </div>
+                    </div>
+
+                    <div class="table-card">
+                        <div class="section-title">Material History</div>
+
+                        <asp:Repeater ID="rptMaterials" runat="server" OnItemCommand="rptMaterials_ItemCommand">
+                            <ItemTemplate>
+                                <div class="material-card">
+
+                                    <div class="file-icon">📄</div>
+
+                                    <div class="material-body">
+                                        <div class="material-title">
+                                            <%# Eval("MaterialTitle") %>
+                                        </div>
+
+                                        <div class="material-desc">
+                                            <%# Eval("Description") %>
+                                        </div>
+
+                                        <div class="material-meta">
+                                            <span class="badge">
+                                                📅 <%# Eval("ScheduleDate", "{0:yyyy-MM-dd}") %>
+                                            </span>
+
+                                            <span>
+                                                Uploaded: <%# Eval("UploadDate", "{0:yyyy-MM-dd HH:mm}") %>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="material-actions">
+                                        <asp:HyperLink ID="lnkOpen"
+                                            runat="server"
+                                            CssClass="open-btn"
+                                            NavigateUrl='<%# ResolveUrl(Eval("FileURL").ToString()) %>'
+                                            Visible='<%# !string.IsNullOrEmpty(Eval("FileURL").ToString()) %>'
+                                            Text="Open"
+                                            Target="_blank">
+                                        </asp:HyperLink>
+
+                                        <asp:LinkButton ID="btnEditMaterial"
+                                            runat="server"
+                                            CssClass="open-btn edit-btn"
+                                            CommandName="EditMaterial"
+                                            CommandArgument='<%# Eval("MaterialID") %>'>
+                                            Edit
+                                        </asp:LinkButton>
+
+                                        <asp:LinkButton ID="btnDeleteMaterial"
+                                            runat="server"
+                                            CssClass="open-btn delete-btn"
+                                            CommandName="DeleteMaterial"
+                                            CommandArgument='<%# Eval("MaterialID") %>'
+                                            OnClientClick="return confirm('Delete this material?');">
+                                            Delete
+                                        </asp:LinkButton>
+                                    </div>
+
+                                </div>
+                            </ItemTemplate>
+                        </asp:Repeater>
+
+                    </div>
 
                 </div>
 
