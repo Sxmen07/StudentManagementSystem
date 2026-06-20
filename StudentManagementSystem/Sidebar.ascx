@@ -1,20 +1,16 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeBehind="Sidebar.ascx.cs" Inherits="StudentManagementSystem.Sidebar" %>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-<!-- UPDATED: Replicated the exact soft light-blue (#4FAFFF) to pastel-orange (#FFA685) gradient from image_f12960.jpg -->
 <div class="group fixed lg:relative left-0 top-0 h-full w-16 hover:w-64 bg-gradient-to-b from-[#4FAFFF] to-[#FFA685] text-white flex flex-col justify-between border-r border-white/20 transition-all duration-300 ease-in-out z-50 p-4 overflow-hidden shadow-[5px_0_25px_rgba(0,0,0,0.1)]">
     <div>
 
-        <!-- Brand Header Section -->
         <h1 class="text-xl font-bold tracking-tighter text-white mb-8 h-8 flex items-center gap-4 whitespace-nowrap overflow-hidden pl-1">
             <i class="fa-solid fa-graduation-cap text-white shrink-0 text-xl w-5 text-center drop-shadow-md"></i> 
             <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 tracking-wide font-sans font-bold">UniTrack</span>
         </h1>
         
-        <!-- Navigation Link Matrix: High contrast white text over the light gradient -->
         <nav class="space-y-1.5">
 
-            <!-- Group 1: Core System & Account Management -->
             <a href="AdminDashboard.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-all text-white hover:text-white whitespace-nowrap overflow-hidden pl-2">
                 <i class="fa-solid fa-house text-base shrink-0 w-5 text-center text-white"></i>
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Dashboard</span>
@@ -25,7 +21,6 @@
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Create Accounts</span>
             </a>
 
-            <!-- Group 2: Institutional & Academics -->
             <a href="ManageSchoolNPrograms.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-all text-white hover:text-white whitespace-nowrap overflow-hidden pl-2">
                 <i class="fa-solid fa-school text-base shrink-0 w-5 text-center text-white"></i>
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Schools & Programs</span>
@@ -36,15 +31,23 @@
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Manage Courses</span>
             </a>
 
-            <a href="ManageCalendar.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-all text-white hover:text-white whitespace-nowrap overflow-hidden pl-2">
-                <i class="fa-solid fa-calendar text-base shrink-0 w-5 text-center text-white"></i>
-                <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Academic Calendar</span>
-            </a>
-
-            <!-- Group 3: Operations Registry -->
             <a href="ManageEnrollment.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-all text-white hover:text-white whitespace-nowrap overflow-hidden pl-2">
                 <i class="fa-solid fa-door-open text-base shrink-0 w-5 text-center text-white"></i>
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Open Enrollments</span>
+            </a>
+
+            <div class="h-px bg-white/20 my-2 group-hover:block transition-all"></div>
+
+            <a href="ManageTuitionFees.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-all text-white hover:text-white whitespace-nowrap overflow-hidden pl-2">
+                <i class="fa-solid fa-file-invoice-dollar text-base shrink-0 w-5 text-center text-white"></i>
+                <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Manage Pricing</span>
+            </a>
+
+            <div class="h-px bg-white/20 my-2 group-hover:block transition-all"></div>
+
+            <a href="ManageCalendar.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-all text-white hover:text-white whitespace-nowrap overflow-hidden pl-2">
+                <i class="fa-solid fa-calendar text-base shrink-0 w-5 text-center text-white"></i>
+                <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Academic Calendar</span>
             </a>
 
             <a href="AuditAttendance.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-all text-white hover:text-white whitespace-nowrap overflow-hidden pl-2">
@@ -52,10 +55,9 @@
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Audit Attendance</span>
             </a>
             
-            <!-- Group 4: Progress & Performance Hub -->
             <a href="TrackStudentGrade.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-all text-white hover:text-white whitespace-nowrap overflow-hidden pl-2">
                 <i class="fa-solid fa-chart-simple text-base shrink-0 w-5 text-center text-white"></i>
-                <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Grade Tracker</span>
+                <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Performance Tracker</span>
             </a>
 
             <a href="ManageAnnouncements.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-all text-white hover:text-white whitespace-nowrap overflow-hidden pl-2">
@@ -68,7 +70,6 @@
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">Support Inbox</span>
             </a>
 
-            <!-- Group 5: Final User Profile Anchor -->
             <a href="UserProfile.aspx" class="flex items-center gap-4 hover:bg-white/15 p-2 rounded-md font-medium text-sm transition-all text-white hover:text-white whitespace-nowrap overflow-hidden pl-2">
                 <i class="fa-solid fa-circle-user text-base shrink-0 w-5 text-center text-white"></i>
                 <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">User Profile</span>
@@ -77,12 +78,9 @@
         </nav>
     </div>
     
-    <!-- LOWER DISMISSAL CONSOLE TERMINAL -->
     <div class="w-full h-9 overflow-hidden relative flex items-center justify-start pl-2">
-        <!-- Re-colored matching exit door tracker icon -->
         <i class="fa-solid fa-right-from-bracket text-white/80 text-base absolute left-3 pointer-events-none group-hover:opacity-0 transition-opacity duration-200"></i>
         <div class="w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <!-- UPDATED: Subtle white-bordered red outline button that blends into the orange base but highlights beautifully on hover -->
             <asp:Button ID="btnLogout" runat="server" Text="Log Out" 
                 CssClass="w-full bg-transparent border border-red-200/60 hover:bg-red-600/20 text-white font-bold text-xs py-1.5 rounded-xl transition-all duration-200 cursor-pointer text-center block uppercase tracking-wider" 
                 OnClick="btnLogout_Click" UseSubmitBehavior="false" />

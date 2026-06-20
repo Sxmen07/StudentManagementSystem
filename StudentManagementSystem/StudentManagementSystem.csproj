@@ -133,6 +133,7 @@
     <Content Include="ManageCourses.aspx" />
     <Content Include="ManageEnrollment.aspx" />
     <Content Include="ManageSchoolNPrograms.aspx" />
+    <Content Include="ManageTuitionFees.aspx" />
     <Content Include="profile_upload\default-avatar.jpg" />
     <Content Include="Register.aspx" />
     <Content Include="Register.css" />
@@ -192,6 +193,8 @@
     <Content Include="Scripts\WebForms\WebParts.js" />
     <Content Include="Scripts\WebForms\WebUIValidation.js" />
     <Content Include="Sidebar.ascx" />
+    <Content Include="StudentTuitionInvoices.aspx" />
+    <Content Include="StudentTuitionInvoicesTest.aspx" />
     <Content Include="Topbar.css" />
     <Content Include="TrackStudentGrade.aspx" />
     <Content Include="UserProfile.aspx" />
@@ -302,6 +305,13 @@
     <Compile Include="ManageSchoolNPrograms.aspx.designer.cs">
       <DependentUpon>ManageSchoolNPrograms.aspx</DependentUpon>
     </Compile>
+    <Compile Include="ManageTuitionFees.aspx.cs">
+      <DependentUpon>ManageTuitionFees.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ManageTuitionFees.aspx.designer.cs">
+      <DependentUpon>ManageTuitionFees.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Register.aspx.cs">
       <DependentUpon>Register.aspx</DependentUpon>
@@ -316,6 +326,20 @@
     </Compile>
     <Compile Include="Sidebar.ascx.designer.cs">
       <DependentUpon>Sidebar.ascx</DependentUpon>
+    </Compile>
+    <Compile Include="StudentTuitionInvoices.aspx.cs">
+      <DependentUpon>StudentTuitionInvoices.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="StudentTuitionInvoices.aspx.designer.cs">
+      <DependentUpon>StudentTuitionInvoices.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="StudentTuitionInvoicesTest.aspx.cs">
+      <DependentUpon>StudentTuitionInvoicesTest.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="StudentTuitionInvoicesTest.aspx.designer.cs">
+      <DependentUpon>StudentTuitionInvoicesTest.aspx</DependentUpon>
     </Compile>
     <Compile Include="TrackStudentGrade.aspx.cs">
       <DependentUpon>TrackStudentGrade.aspx</DependentUpon>
