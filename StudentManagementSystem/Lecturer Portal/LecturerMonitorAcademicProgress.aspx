@@ -56,6 +56,12 @@
             color: white;
             box-shadow: 0 8px 18px rgba(14,165,233,0.28);
             overflow: hidden;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .avatar-circle:hover {
+            transform: scale(1.05);
         }
 
         .avatar-circle img {
@@ -306,33 +312,41 @@
             padding: 14px 18px 4px;
         }
 
-        table {
+        .progress-table {
             width: 100%;
-            border-collapse: collapse;
             min-width: 850px;
+            border-collapse: collapse;
+            table-layout: fixed;
         }
 
-        thead th {
+        .progress-table th {
             background: #f8fbff;
-            padding: 14px;
-            font-size: 11px;
-            font-weight: 800;
-            color: #6b7280;
-            text-transform: uppercase;
+            padding: 16px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #111827;
             border-bottom: 1px solid #e5e7eb;
-            text-align: left;
+            text-align: center;
         }
 
-        tbody td {
-            padding: 14px;
+        .progress-table td {
+            padding: 16px;
             border-bottom: 1px solid #f1f5f9;
             font-size: 13px;
             color: #111827;
+            text-align: center;
             vertical-align: middle;
         }
 
-        tbody tr:hover td {
+        .progress-table tr:hover td {
             background: #f8fbff;
+        }
+
+        .progress-table th:first-child,
+        .progress-table td:first-child,
+        .progress-table th:nth-child(2),
+        .progress-table td:nth-child(2) {
+            text-align: left;
         }
 
         .student-id {
@@ -440,10 +454,12 @@
 
         <div class="sidebar">
             <div class="sidebar-avatar">
-                <div class="avatar-circle">
-                    <asp:Image ID="imgSidebar" runat="server" Visible="false" />
-                    <asp:Literal ID="litSideInitials" runat="server" Text="LE" />
-                </div>
+                <a href="LectProfile.aspx" style="text-decoration:none;">
+                    <div class="avatar-circle">
+                        <asp:Image ID="imgSidebar" runat="server" Visible="false" />
+                        <asp:Literal ID="litSideInitials" runat="server" Text="LE" />
+                    </div>
+                </a>
                 <div>
                     <div class="sidebar-name">
                         <asp:Label ID="lblSidebarName" runat="server" />
@@ -561,10 +577,11 @@
                     <asp:Label ID="lblStatus" runat="server" />
                 </div>
 
-                <asp:GridView ID="gvProgress" runat="server"
-                    AutoGenerateColumns="false"
-                    GridLines="None"
-                    EmptyDataText="No student progress found for this course.">
+            <asp:GridView ID="gvProgress" runat="server"
+                CssClass="progress-table"
+                AutoGenerateColumns="false"
+                GridLines="None"
+                EmptyDataText="No student progress found for this course.">
 
                     <Columns>
                         <asp:BoundField DataField="StudentID" HeaderText="Student ID">
