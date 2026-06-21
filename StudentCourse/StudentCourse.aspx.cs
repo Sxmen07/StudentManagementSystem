@@ -31,7 +31,7 @@ namespace StudentManagementSystem.Student
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Session["UserEmail"] == null)
-                Response.Redirect("/StudeLogin.aspx");
+                Response.Redirect("/Login.aspx");
 
             if (!IsPostBack)
             {
@@ -97,11 +97,18 @@ namespace StudentManagementSystem.Student
             List<CourseCard> currentCourses = allCourses.FindAll(c => c.SemesterEndDate >= today);
             List<CourseCard> completedCourses = allCourses.FindAll(c => c.SemesterEndDate < today);
 
+            // Bind to repeaters
             rptCurrentCourses.DataSource = currentCourses;
             rptCurrentCourses.DataBind();
             rptCompletedCourses.DataSource = completedCourses;
             rptCompletedCourses.DataBind();
 
+            // Update summary cards
+            lblTotalCourses.Text = allCourses.Count.ToString();
+            lblCurrentCount.Text = currentCourses.Count.ToString();
+            lblCompletedCount.Text = completedCourses.Count.ToString();
+
+            // Empty state visibility
             lblNoCurrent.Visible = (currentCourses.Count == 0);
             lblNoCompleted.Visible = (completedCourses.Count == 0);
         }
@@ -112,15 +119,15 @@ namespace StudentManagementSystem.Student
             {
                 pnlCurrent.Visible = true;
                 pnlCompleted.Visible = false;
-                btnCurrent.CssClass = "section-title active text-2xl font-bold";
-                btnCompleted.CssClass = "section-title inactive text-2xl font-bold";
+                btnCurrent.CssClass = "text-base font-semibold transition duration-200 tab-active";
+                btnCompleted.CssClass = "text-base font-semibold transition duration-200 tab-inactive";
             }
             else
             {
                 pnlCurrent.Visible = false;
                 pnlCompleted.Visible = true;
-                btnCurrent.CssClass = "section-title inactive text-2xl font-bold";
-                btnCompleted.CssClass = "section-title active text-2xl font-bold";
+                btnCurrent.CssClass = "text-base font-semibold transition duration-200 tab-inactive";
+                btnCompleted.CssClass = "text-base font-semibold transition duration-200 tab-active";
             }
         }
 
