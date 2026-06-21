@@ -592,6 +592,73 @@ CREATE TABLE StudentCourseStatus (
 );
 GO
 
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Programme') AND name = 'PricePerCourse')
+BEGIN
+    -- Add the numeric rate column allowing nulls initially for safe transition
+    ALTER TABLE Programme ADD PricePerCourse DECIMAL(10, 2) NULL;
+END
+GO
+
+UPDATE Programme SET PricePerCourse = 500.00 WHERE PricePerCourse IS NULL;
+GO
+
+ALTER TABLE Programme ALTER COLUMN PricePerCourse DECIMAL(10, 2) NOT NULL;
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('InvoiceReceipt') AND type = 'U')
+BEGIN
+    CREATE TABLE InvoiceReceipt (
+        InvoiceID INT IDENTITY(1,1) PRIMARY KEY,
+        StudentID INT NOT NULL,
+        SemesterID INT NOT NULL,
+        TotalAmount DECIMAL(10, 2) NOT NULL,
+        IssueDate DATETIME NOT NULL DEFAULT GETDATE()
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('InvoiceReceipt') AND name = 'PaymentStatus')
+BEGIN
+    ALTER TABLE InvoiceReceipt ADD PaymentStatus VARCHAR(20) NOT NULL DEFAULT 'PENDING';
+END
+GO
+
+--Add course type in course material--
+ ALTER TABLE CourseMaterial
+ADD MaterialCategory NVARCHAR(50);
+
+--Add table for Admin to audit attendance--
+IF OBJECT_ID('Vw_AdminAttendanceRegistry', 'V') IS NOT NULL
+    DROP VIEW Vw_AdminAttendanceRegistry;
+GO
+
+CREATE VIEW Vw_AdminAttendanceRegistry AS
+SELECT 
+    f.FacultyName AS SchoolName,
+    p.ProgrammeName,
+    c.CourseCode,
+    c.CourseName,
+    l.LecturerName,
+    s.StudentID AS StudentRoleID,
+    s.StudentName,
+    ar.AttendanceStatus,
+    f.FacultyID,
+    p.ProgrammeCode,
+    l.LecturerID,
+    ar.AttendanceDate,
+    s.ProfilePhotoPath AS ProfilePictureUrl   -- <-- Added this column
+FROM AttendanceRecord ar
+INNER JOIN CourseOffer co ON ar.CourseOfferID = co.CourseOfferID
+INNER JOIN Course c ON co.CourseCode = c.CourseCode
+INNER JOIN Programme p ON c.ProgrammeCode = p.ProgrammeCode
+INNER JOIN Faculty f ON p.FacultyID = f.FacultyID
+INNER JOIN Lecturer l ON co.LecturerID = l.LecturerID
+INNER JOIN Student s ON ar.StudentID = s.StudentID;
+GO
+
+-- Quick test: verify the view returns data
+SELECT * FROM Vw_AdminAttendanceRegistry;
+GO
 
 -- Final verification
 PRINT 'Database successfully created with IC column in Student table.';
@@ -665,3 +732,5 @@ INNER JOIN Semester s ON co.SemesterID = s.SemesterID
 WHERE e.StudentID = 1;
 
 SELECT CourseOfferID, CourseCode, SemesterID, Year FROM CourseOffer WHERE CourseCode IN ('CS101', 'CS102', 'CS201', 'CS202');
+
+UPDATE Semester SET EnrolEndDate = '7-31' WHERE Semester = 'April'
