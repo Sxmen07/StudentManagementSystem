@@ -19,6 +19,7 @@ namespace StudentManagementSystem.Student
                 Response.Redirect("/Login.aspx");
 
             LoadStudentData();
+
             if (!IsPostBack)
             {
                 LoadCurrentEnrollment();
@@ -26,9 +27,199 @@ namespace StudentManagementSystem.Student
                 LoadAvailableCourses();
                 LoadAcademicHistory();
                 LoadSummary();
+
+                if (!IsEnrollmentPeriodOpen())
+                {
+                    DisableEnrollmentButtons();
+                    ShowEnrollmentClosedMessage();
+                }
+                else
+                {
+                    ShowEnrollmentOpenMessage();
+                }
+            }
+            else
+            {
+                // On postback, only update enrollment status and button states
+                if (!IsEnrollmentPeriodOpen())
+                {
+                    DisableEnrollmentButtons();
+                    ShowEnrollmentClosedMessage();
+                }
+                else
+                {
+                    ShowEnrollmentOpenMessage();
+                }
             }
         }
 
+        // -----------------------------------------------------------------
+        // Helper: Check if enrollment is allowed for the current semester
+        // -----------------------------------------------------------------
+        private bool IsEnrollmentPeriodOpen()
+        {
+            using (SqlConnection conn = new SqlConnection(cs))
+            {
+                conn.Open();
+                string query = @"
+                    SELECT EnrolStartDate, EnrolEndDate
+                    FROM Semester
+                    WHERE SemesterID = @SemesterID";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@SemesterID", _currentSemesterId);
+                using (SqlDataReader dr = cmd.ExecuteReader())
+                {
+                    if (dr.Read())
+                    {
+                        if (dr.IsDBNull(0) || dr.IsDBNull(1))
+                            return false;
+
+                        string startMonthDay = dr.GetString(0);
+                        string endMonthDay = dr.GetString(1);
+                        string todayMonthDay = DateTime.Today.ToString("MM-dd");
+
+                        return (string.Compare(todayMonthDay, startMonthDay) >= 0 &&
+                                string.Compare(todayMonthDay, endMonthDay) <= 0);
+                    }
+                }
+            }
+            return false;
+        }
+
+        // -----------------------------------------------------------------
+        // Disable all enrollment action buttons when period is closed
+        // -----------------------------------------------------------------
+        private void DisableEnrollmentButtons()
+        {
+            foreach (GridViewRow row in gvAvailable.Rows)
+            {
+                Button btn = (Button)row.FindControl("btnEnroll");
+                if (btn != null)
+                {
+                    btn.Enabled = false;
+                    btn.Text = "Closed";
+                    btn.CssClass = "bg-gray-400 cursor-not-allowed text-white text-xs px-3 py-1 rounded";
+                }
+            }
+
+            foreach (GridViewRow row in gvCurrentEnrolled.Rows)
+            {
+                Button btn = (Button)row.FindControl("btnDrop");
+                if (btn != null)
+                {
+                    btn.Enabled = false;
+                    btn.Text = "Closed";
+                    btn.CssClass = "bg-gray-400 cursor-not-allowed text-white text-xs px-3 py-1 rounded";
+                }
+            }
+
+            foreach (GridViewRow row in gvDropped.Rows)
+            {
+                Button btn = (Button)row.FindControl("btnReenroll");
+                if (btn != null)
+                {
+                    btn.Enabled = false;
+                    btn.Text = "Closed";
+                    btn.CssClass = "bg-gray-400 cursor-not-allowed text-white text-xs px-3 py-1 rounded";
+                }
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // Show green "open" message
+        // -----------------------------------------------------------------
+        private void ShowEnrollmentOpenMessage()
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(cs))
+                {
+                    conn.Open();
+                    string query = "SELECT EnrolStartDate, EnrolEndDate FROM Semester WHERE SemesterID = @SemesterID";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@SemesterID", _currentSemesterId);
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read() && !dr.IsDBNull(0) && !dr.IsDBNull(1))
+                        {
+                            string start = DateTime.ParseExact(dr.GetString(0), "MM-dd", null).ToString("MMMM dd");
+                            string end = DateTime.ParseExact(dr.GetString(1), "MM-dd", null).ToString("MMMM dd");
+                            lblEnrollmentStatus.Text = $@"
+                                <div class='bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded' role='alert'>
+                                    <p class='font-bold'>✅ Enrollment Period Open</p>
+                                    <p>You can enroll or drop courses from {start} to {end}.</p>
+                                </div>";
+                        }
+                        else
+                        {
+                            lblEnrollmentStatus.Text = @"
+                                <div class='bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded' role='alert'>
+                                    <p class='font-bold'>✅ Enrollment Period Open</p>
+                                    <p>You are within the enrollment window. Use the buttons below.</p>
+                                </div>";
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                lblEnrollmentStatus.Text = @"
+                    <div class='bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded' role='alert'>
+                        <p class='font-bold'>✅ Enrollment Period Open</p>
+                        <p>Please contact support if you see this message unexpectedly.</p>
+                    </div>";
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // Show yellow "closed" message
+        // -----------------------------------------------------------------
+        private void ShowEnrollmentClosedMessage()
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(cs))
+                {
+                    conn.Open();
+                    string query = "SELECT EnrolStartDate, EnrolEndDate FROM Semester WHERE SemesterID = @SemesterID";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@SemesterID", _currentSemesterId);
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        if (dr.Read() && !dr.IsDBNull(0) && !dr.IsDBNull(1))
+                        {
+                            string start = DateTime.ParseExact(dr.GetString(0), "MM-dd", null).ToString("MMMM dd");
+                            string end = DateTime.ParseExact(dr.GetString(1), "MM-dd", null).ToString("MMMM dd");
+                            lblEnrollmentStatus.Text = $@"
+                                <div class='bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded' role='alert'>
+                                    <p class='font-bold'>⛔ Enrollment Period Closed</p>
+                                    <p>You can only enroll or drop courses from {start} to {end}.</p>
+                                </div>";
+                        }
+                        else
+                        {
+                            lblEnrollmentStatus.Text = @"
+                                <div class='bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded' role='alert'>
+                                    <p class='font-bold'>⛔ Enrollment Period Closed</p>
+                                    <p>Enrollment is not available at this time. Please contact your academic advisor.</p>
+                                </div>";
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                lblEnrollmentStatus.Text = @"
+                    <div class='bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded' role='alert'>
+                        <p class='font-bold'>⛔ Enrollment Period Closed</p>
+                        <p>Unable to retrieve enrollment dates. Please contact support.</p>
+                    </div>";
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // Load data methods
+        // -----------------------------------------------------------------
         private void LoadStudentData()
         {
             string email = Session["UserEmail"].ToString();
@@ -208,7 +399,6 @@ namespace StudentManagementSystem.Student
             }
 
             dt.Columns.Add("Grade", typeof(string));
-
             foreach (DataRow row in dt.Rows)
             {
                 int courseOfferId = Convert.ToInt32(row["CourseOfferID"]);
@@ -326,8 +516,18 @@ namespace StudentManagementSystem.Student
             }
         }
 
+        // -----------------------------------------------------------------
+        // Enrollment action methods
+        // -----------------------------------------------------------------
         protected void EnrollCourse_Click(object sender, EventArgs e)
         {
+            if (!IsEnrollmentPeriodOpen())
+            {
+                ClientScript.RegisterStartupScript(this.GetType(), "alert",
+                    "alert('Enrollment period is closed. You cannot enroll in new courses.');", true);
+                return;
+            }
+
             Button btn = (Button)sender;
             int courseOfferId = Convert.ToInt32(btn.CommandArgument);
 
@@ -365,10 +565,23 @@ namespace StudentManagementSystem.Student
             LoadAvailableCourses();
             LoadAcademicHistory();
             LoadSummary();
+
+            if (!IsEnrollmentPeriodOpen())
+                DisableEnrollmentButtons();
+
+            // Refresh the UpdatePanel
+            upEnrollment.Update();
         }
 
         protected void DropCourse_Click(object sender, EventArgs e)
         {
+            if (!IsEnrollmentPeriodOpen())
+            {
+                ClientScript.RegisterStartupScript(this.GetType(), "alert",
+                    "alert('Drop period is closed. You cannot drop courses now.');", true);
+                return;
+            }
+
             Button btn = (Button)sender;
             int courseOfferId = Convert.ToInt32(btn.CommandArgument);
             using (SqlConnection conn = new SqlConnection(cs))
@@ -380,15 +593,29 @@ namespace StudentManagementSystem.Student
                 cmd.Parameters.AddWithValue("@CourseOfferID", courseOfferId);
                 cmd.ExecuteNonQuery();
             }
+
             LoadCurrentEnrollment();
             LoadDroppedCourses();
             LoadAvailableCourses();
             LoadAcademicHistory();
             LoadSummary();
+
+            if (!IsEnrollmentPeriodOpen())
+                DisableEnrollmentButtons();
+
+            // Refresh the UpdatePanel
+            upEnrollment.Update();
         }
 
         protected void ReenrollCourse_Click(object sender, EventArgs e)
         {
+            if (!IsEnrollmentPeriodOpen())
+            {
+                ClientScript.RegisterStartupScript(this.GetType(), "alert",
+                    "alert('Re‑enrollment period is closed.');", true);
+                return;
+            }
+
             Button btn = (Button)sender;
             int courseOfferId = Convert.ToInt32(btn.CommandArgument);
             using (SqlConnection conn = new SqlConnection(cs))
@@ -400,16 +627,18 @@ namespace StudentManagementSystem.Student
                 cmd.Parameters.AddWithValue("@CourseOfferID", courseOfferId);
                 cmd.ExecuteNonQuery();
             }
+
             LoadCurrentEnrollment();
             LoadDroppedCourses();
             LoadAvailableCourses();
             LoadAcademicHistory();
             LoadSummary();
-        }
 
-        protected void btnPrintSchedule_Click(object sender, EventArgs e)
-        {
-            Response.Redirect("~/Student/PrintSchedule.aspx");
+            if (!IsEnrollmentPeriodOpen())
+                DisableEnrollmentButtons();
+
+            // Refresh the UpdatePanel
+            upEnrollment.Update();
         }
     }
 }
