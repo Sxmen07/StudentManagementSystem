@@ -13,16 +13,26 @@ namespace StudentManagementSystem.Student
     {
         string cs = ConfigurationManager.ConnectionStrings["StudentManagementSystemDB"].ConnectionString;
 
+        public class DailyRecord
+        {
+            public DateTime AttendanceDate { get; set; }
+            public string AttendanceStatus { get; set; }
+        }
+
         public class CourseAttendance
         {
             public int CourseOfferID { get; set; }
             public string CourseCode { get; set; }
             public string CourseName { get; set; }
-            public DataTable AttendanceTable { get; set; }
+            public List<DailyRecord> DailyRecords { get; set; }
             public int PresentCount { get; set; }
             public int LateCount { get; set; }
             public int AbsentCount { get; set; }
             public DateTime SemesterEndDate { get; set; }
+            public double OverallRate { get; set; }
+            public DateTime FirstAttendanceDate { get; set; }
+            public DateTime LastAttendanceDate { get; set; }
+            public int TotalWeeks { get; set; }
         }
 
         private bool IsCurrentTabActive
@@ -31,26 +41,63 @@ namespace StudentManagementSystem.Student
             set { ViewState["IsCurrentTabActive"] = value; }
         }
 
+        // Key = CourseOfferID, Value = SelectedWeekNumber
+        private Dictionary<string, int> SelectedWeeksState
+        {
+            get
+            {
+                if (ViewState["SelectedWeeksState"] == null)
+                {
+                    ViewState["SelectedWeeksState"] = new Dictionary<string, int>();
+                }
+                return (Dictionary<string, int>)ViewState["SelectedWeeksState"];
+            }
+            set { ViewState["SelectedWeeksState"] = value; }
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Session["UserEmail"] == null)
-                Response.Redirect("/StudeLogin.aspx");
+                Response.Redirect("/Login.aspx");
 
             if (!IsPostBack)
             {
-                // First load – bind the default tab (Current)
-                LoadAndBindCurrent();
                 IsCurrentTabActive = true;
+                LoadAndBindCurrent();
                 UpdateTabVisibility();
             }
             else
             {
-                // On postback (tab click), reload data for the active tab
                 if (IsCurrentTabActive)
                     LoadAndBindCurrent();
                 else
                     LoadAndBindHistory();
                 UpdateTabVisibility();
+            }
+        }
+
+        // =============================================================
+        // REPEATER COMMAND INTERCEPTOR (BUBBLES EVENT SAFELY)
+        // =============================================================
+        protected void rptCourses_ItemCommand(object sender, RepeaterCommandEventArgs e)
+        {
+            if (e.CommandName == "SelectWeek")
+            {
+                int targetWeek = Convert.ToInt32(e.CommandArgument);
+                HiddenField hfCourseOfferID = (HiddenField)e.Item.FindControl("hfCourseOfferID");
+
+                if (hfCourseOfferID != null)
+                {
+                    string courseOfferId = hfCourseOfferID.Value;
+
+                    SelectedWeeksState[courseOfferId] = targetWeek;
+                    ViewState["SelectedWeeksState"] = SelectedWeeksState; // Update ViewState dirty reference tracker
+
+                    if (IsCurrentTabActive)
+                        LoadAndBindCurrent();
+                    else
+                        LoadAndBindHistory();
+                }
             }
         }
 
@@ -60,6 +107,7 @@ namespace StudentManagementSystem.Student
             rptCurrentCourses.DataSource = currentCourses;
             rptCurrentCourses.DataBind();
             lblNoCurrent.Visible = (currentCourses.Count == 0);
+            UpdateSummaryCards(currentCourses);
         }
 
         private void LoadAndBindHistory()
@@ -68,14 +116,15 @@ namespace StudentManagementSystem.Student
             rptHistoryCourses.DataSource = historyCourses;
             rptHistoryCourses.DataBind();
             lblNoHistory.Visible = (historyCourses.Count == 0);
+
+            var allCourses = LoadAttendanceData();
+            UpdateSummaryCards(allCourses);
         }
 
         private List<CourseAttendance> LoadAttendanceData()
         {
             int studentId = GetStudentIdFromSession();
             if (studentId == 0) return new List<CourseAttendance>();
-
-            List<CourseAttendance> allCourses = new List<CourseAttendance>();
 
             string query = @"
                 SELECT 
@@ -92,8 +141,9 @@ namespace StudentManagementSystem.Student
                 LEFT JOIN AttendanceRecord ar ON ar.CourseOfferID = co.CourseOfferID AND ar.StudentID = e.StudentID
                 INNER JOIN Semester s ON co.SemesterID = s.SemesterID
                 WHERE e.StudentID = @StudentID AND e.EnrolStatus = 'Enrolled'
-                ORDER BY co.Year DESC, s.SemesterID DESC, ar.AttendanceDate;
-            ";
+                ORDER BY co.Year DESC, s.SemesterID DESC, ar.AttendanceDate;";
+
+            List<CourseAttendance> allCourses = new List<CourseAttendance>();
 
             using (SqlConnection conn = new SqlConnection(cs))
             using (SqlCommand cmd = new SqlCommand(query, conn))
@@ -120,33 +170,89 @@ namespace StudentManagementSystem.Student
                                 CourseOfferID = offerId,
                                 CourseCode = row["CourseCode"].ToString(),
                                 CourseName = row["CourseName"].ToString(),
-                                AttendanceTable = new DataTable(),
+                                DailyRecords = new List<DailyRecord>(),
                                 SemesterEndDate = semesterEnd,
                                 PresentCount = 0,
                                 LateCount = 0,
-                                AbsentCount = 0
+                                AbsentCount = 0,
+                                FirstAttendanceDate = DateTime.MaxValue,
+                                LastAttendanceDate = DateTime.MinValue
                             };
-                            groups[offerId].AttendanceTable.Columns.Add("AttendanceDate", typeof(DateTime));
-                            groups[offerId].AttendanceTable.Columns.Add("AttendanceStatus", typeof(string));
                         }
 
                         if (row["AttendanceDate"] != DBNull.Value)
                         {
-                            var rowToAdd = groups[offerId].AttendanceTable.NewRow();
-                            rowToAdd["AttendanceDate"] = Convert.ToDateTime(row["AttendanceDate"]);
-                            rowToAdd["AttendanceStatus"] = row["AttendanceStatus"].ToString();
-                            groups[offerId].AttendanceTable.Rows.Add(rowToAdd);
-
+                            DateTime date = Convert.ToDateTime(row["AttendanceDate"]);
                             string status = row["AttendanceStatus"].ToString();
-                            if (status == "Present") groups[offerId].PresentCount++;
-                            else if (status == "Late") groups[offerId].LateCount++;
-                            else if (status == "Absent") groups[offerId].AbsentCount++;
+
+                            var course = groups[offerId];
+                            course.DailyRecords.Add(new DailyRecord
+                            {
+                                AttendanceDate = date,
+                                AttendanceStatus = status
+                            });
+
+                            if (date < course.FirstAttendanceDate) course.FirstAttendanceDate = date;
+                            if (date > course.LastAttendanceDate) course.LastAttendanceDate = date;
+
+                            if (status == "Present") course.PresentCount++;
+                            else if (status == "Late") course.LateCount++;
+                            else if (status == "Absent") course.AbsentCount++;
                         }
                     }
+
+                    foreach (var course in groups.Values)
+                    {
+                        course.DailyRecords.Sort((a, b) => a.AttendanceDate.CompareTo(b.AttendanceDate));
+                        int total = course.PresentCount + course.LateCount + course.AbsentCount;
+                        course.OverallRate = total > 0 ? (double)(course.PresentCount + course.LateCount) / total * 100 : 0;
+
+                        if (course.DailyRecords.Count > 0)
+                        {
+                            DateTime first = course.FirstAttendanceDate;
+                            DateTime last = course.LastAttendanceDate;
+                            course.TotalWeeks = (int)Math.Ceiling((last - first).TotalDays / 7) + 1;
+                        }
+                        else
+                        {
+                            course.TotalWeeks = 1;
+                        }
+                    }
+
                     allCourses = new List<CourseAttendance>(groups.Values);
                 }
             }
             return allCourses;
+        }
+
+        private DateTime GetWeekEnd(DateTime weekStart)
+        {
+            return weekStart.AddDays(6);
+        }
+
+        private List<DailyRecord> GetRecordsForWeek(List<DailyRecord> allRecords, DateTime weekStart)
+        {
+            DateTime weekEnd = GetWeekEnd(weekStart);
+            return allRecords.FindAll(r => r.AttendanceDate >= weekStart && r.AttendanceDate <= weekEnd);
+        }
+
+        private void UpdateSummaryCards(List<CourseAttendance> courses)
+        {
+            int totalPresent = 0, totalLate = 0, totalAbsent = 0;
+            int totalRecords = 0;
+            foreach (var c in courses)
+            {
+                totalPresent += c.PresentCount;
+                totalLate += c.LateCount;
+                totalAbsent += c.AbsentCount;
+                totalRecords += c.PresentCount + c.LateCount + c.AbsentCount;
+            }
+            double overall = totalRecords > 0 ? (double)(totalPresent + totalLate) / totalRecords * 100 : 0;
+
+            lblOverallAttendance.Text = overall.ToString("F1") + "%";
+            lblTotalPresent.Text = totalPresent.ToString();
+            lblTotalLate.Text = totalLate.ToString();
+            lblTotalAbsent.Text = totalAbsent.ToString();
         }
 
         private void UpdateTabVisibility()
@@ -155,64 +261,151 @@ namespace StudentManagementSystem.Student
             {
                 pnlCurrent.Visible = true;
                 pnlHistory.Visible = false;
-                btnCurrent.CssClass = "section-title active text-2xl font-bold";
-                btnHistory.CssClass = "section-title inactive text-2xl font-bold";
+                btnCurrent.CssClass = "text-base font-semibold transition duration-200 tab-active";
+                btnHistory.CssClass = "text-base font-semibold transition duration-200 tab-inactive";
             }
             else
             {
                 pnlCurrent.Visible = false;
                 pnlHistory.Visible = true;
-                btnCurrent.CssClass = "section-title inactive text-2xl font-bold";
-                btnHistory.CssClass = "section-title active text-2xl font-bold";
+                btnCurrent.CssClass = "text-base font-semibold transition duration-200 tab-inactive";
+                btnHistory.CssClass = "text-base font-semibold transition duration-200 tab-active";
             }
         }
 
         protected void btnCurrent_Click(object sender, EventArgs e)
         {
             IsCurrentTabActive = true;
-            LoadAndBindCurrent();   // reload fresh data
+            LoadAndBindCurrent();
             UpdateTabVisibility();
         }
 
         protected void btnHistory_Click(object sender, EventArgs e)
         {
             IsCurrentTabActive = false;
-            LoadAndBindHistory();   // reload fresh data
+            LoadAndBindHistory();
             UpdateTabVisibility();
         }
 
-        // ---------- Data binding event handlers ----------
+        private void ProcessRowRendering(RepeaterItem item, CourseAttendance data)
+        {
+            GridView gvDaily = (GridView)item.FindControl("gvDailyAttendance");
+            Label lblCode = (Label)item.FindControl("lblCourseCode");
+            Label lblName = (Label)item.FindControl("lblCourseName");
+            Label lblSummary = (Label)item.FindControl("lblSummary");
+            Label lblRecordCount = (Label)item.FindControl("lblRecordCount");
+            Label lblWeekRange = (Label)item.FindControl("lblWeekRange");
+            Label lblWeekSummary = (Label)item.FindControl("lblWeekSummary");
+            ListView lvWeekButtons = (ListView)item.FindControl("lvWeekButtons");
+            Chart chart = (Chart)item.FindControl("chartAttendance");
+
+            lblCode.Text = data.CourseCode;
+            lblName.Text = data.CourseName;
+
+            int total = data.PresentCount + data.LateCount + data.AbsentCount;
+            lblRecordCount.Text = $"{total} records";
+
+            string courseKey = data.CourseOfferID.ToString();
+            if (!SelectedWeeksState.ContainsKey(courseKey))
+            {
+                SelectedWeeksState[courseKey] = 1;
+            }
+            int currentSelectedWeek = SelectedWeeksState[courseKey];
+
+            if (currentSelectedWeek > data.TotalWeeks) currentSelectedWeek = data.TotalWeeks;
+            if (currentSelectedWeek < 1) currentSelectedWeek = 1;
+
+            int weekOffsetIndex = currentSelectedWeek - 1;
+
+            DateTime weekStart = data.FirstAttendanceDate.AddDays(weekOffsetIndex * 7);
+            if (weekStart < data.FirstAttendanceDate) weekStart = data.FirstAttendanceDate;
+
+            DateTime weekEnd = GetWeekEnd(weekStart);
+            if (weekEnd > data.LastAttendanceDate) weekEnd = data.LastAttendanceDate;
+
+            lblWeekRange.Text = $"{weekStart:MMM dd} - {weekEnd:MMM dd, yyyy}";
+
+            // 1. Generate visual collection arrays matching total layout metrics
+            List<int> weekNumbers = new List<int>();
+            for (int i = 1; i <= data.TotalWeeks; i++)
+            {
+                weekNumbers.Add(i);
+            }
+
+            // Save the row's specific selected week index into the ListView control's attributes collection temporarily
+            lvWeekButtons.Attributes["data-selected-week"] = currentSelectedWeek.ToString();
+            lvWeekButtons.DataSource = weekNumbers;
+            lvWeekButtons.DataBind();
+
+            var weekRecords = GetRecordsForWeek(data.DailyRecords, weekStart);
+            if (weekRecords.Count > 0)
+            {
+                DataTable dt = new DataTable();
+                dt.Columns.Add("AttendanceDate", typeof(DateTime));
+                dt.Columns.Add("AttendanceStatus", typeof(string));
+                foreach (var record in weekRecords)
+                {
+                    dt.Rows.Add(record.AttendanceDate, record.AttendanceStatus);
+                }
+                gvDaily.DataSource = dt;
+                gvDaily.DataBind();
+
+                int weekPresent = weekRecords.FindAll(r => r.AttendanceStatus == "Present").Count;
+                int weekLate = weekRecords.FindAll(r => r.AttendanceStatus == "Late").Count;
+                int weekAbsent = weekRecords.FindAll(r => r.AttendanceStatus == "Absent").Count;
+                int weekTotal = weekPresent + weekLate + weekAbsent;
+                double weekRate = weekTotal > 0 ? (double)(weekPresent + weekLate) / weekTotal * 100 : 0;
+
+                lblWeekSummary.Text = $"Present: {weekPresent} | Late: {weekLate} | Absent: {weekAbsent} | Week Rate: {weekRate:F1}%";
+            }
+            else
+            {
+                gvDaily.DataSource = null;
+                gvDaily.DataBind();
+                lblWeekSummary.Text = "No attendance records for this week.";
+            }
+
+            if (chart != null)
+            {
+                Series series = chart.Series["Attendance"];
+                series.Points.Clear();
+                series.Points.AddXY("Present", data.PresentCount);
+                series.Points.AddXY("Late", data.LateCount);
+                series.Points.AddXY("Absent", data.AbsentCount);
+                series.Points[0].Color = System.Drawing.Color.FromArgb(40, 167, 69);
+                series.Points[1].Color = System.Drawing.Color.FromArgb(255, 193, 7);
+                series.Points[2].Color = System.Drawing.Color.FromArgb(220, 53, 69);
+            }
+
+            lblSummary.Text = $"Present: {data.PresentCount} | Late: {data.LateCount} | Absent: {data.AbsentCount} | Attendance Rate: {data.OverallRate:F1}%";
+        }
+
+        // =============================================================
+        // INNER LISTVIEW DATA BOUND HIGHLIGHT ENGINE
+        // =============================================================
+        protected void lvWeekButtons_ItemDataBound(object sender, ListViewItemEventArgs e)
+        {
+            if (e.Item.ItemType == ListViewItemType.DataItem)
+            {
+                ListView lv = (ListView)sender;
+                string activeWeekStr = lv.Attributes["data-selected-week"];
+                int currentItemWeek = (int)e.Item.DataItem;
+
+                LinkButton btnWeek = (LinkButton)e.Item.FindControl("btnWeekSelect");
+                if (btnWeek != null && btnWeek.Text == activeWeekStr)
+                {
+                    // Dynamic styling highlight assignment
+                    btnWeek.CssClass = "btn-week-badge btn-week-badge-active";
+                }
+            }
+        }
+
         protected void rptCurrentCourses_ItemDataBound(object sender, RepeaterItemEventArgs e)
         {
             if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)
             {
                 CourseAttendance data = (CourseAttendance)e.Item.DataItem;
-                GridView gv = (GridView)e.Item.FindControl("gvAttendance");
-                Label lblCode = (Label)e.Item.FindControl("lblCourseCode");
-                Label lblName = (Label)e.Item.FindControl("lblCourseName");
-                Label lblSummary = (Label)e.Item.FindControl("lblSummary");
-                Chart chart = (Chart)e.Item.FindControl("chartAttendance");
-
-                lblCode.Text = data.CourseCode;
-                lblName.Text = data.CourseName;
-                gv.DataSource = data.AttendanceTable;
-                gv.DataBind();
-
-                if (chart != null)
-                {
-                    Series series = chart.Series["Attendance"];
-                    series.Points.Clear();
-                    series.Points.AddXY("Present", data.PresentCount);
-                    series.Points.AddXY("Late", data.LateCount);
-                    series.Points.AddXY("Absent", data.AbsentCount);
-                    series.Points[0].Color = System.Drawing.Color.FromArgb(40, 167, 69);
-                    series.Points[1].Color = System.Drawing.Color.FromArgb(255, 193, 7);
-                    series.Points[2].Color = System.Drawing.Color.FromArgb(220, 53, 69);
-                }
-
-                int total = data.PresentCount + data.LateCount + data.AbsentCount;
-                double percent = total > 0 ? (double)(data.PresentCount + data.LateCount) / total * 100 : 0;
-                lblSummary.Text = $"Present: {data.PresentCount} | Late: {data.LateCount} | Absent: {data.AbsentCount} | Attendance Rate: {percent:F1}%";
+                ProcessRowRendering(e.Item, data);
             }
         }
 
@@ -221,36 +414,11 @@ namespace StudentManagementSystem.Student
             if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)
             {
                 CourseAttendance data = (CourseAttendance)e.Item.DataItem;
-                GridView gv = (GridView)e.Item.FindControl("gvAttendance");
-                Label lblCode = (Label)e.Item.FindControl("lblCourseCode");
-                Label lblName = (Label)e.Item.FindControl("lblCourseName");
-                Label lblSummary = (Label)e.Item.FindControl("lblSummary");
-                Chart chart = (Chart)e.Item.FindControl("chartAttendance");
-
-                lblCode.Text = data.CourseCode;
-                lblName.Text = data.CourseName;
-                gv.DataSource = data.AttendanceTable;
-                gv.DataBind();
-
-                if (chart != null)
-                {
-                    Series series = chart.Series["Attendance"];
-                    series.Points.Clear();
-                    series.Points.AddXY("Present", data.PresentCount);
-                    series.Points.AddXY("Late", data.LateCount);
-                    series.Points.AddXY("Absent", data.AbsentCount);
-                    series.Points[0].Color = System.Drawing.Color.FromArgb(40, 167, 69);
-                    series.Points[1].Color = System.Drawing.Color.FromArgb(255, 193, 7);
-                    series.Points[2].Color = System.Drawing.Color.FromArgb(220, 53, 69);
-                }
-
-                int total = data.PresentCount + data.LateCount + data.AbsentCount;
-                double percent = total > 0 ? (double)(data.PresentCount + data.LateCount) / total * 100 : 0;
-                lblSummary.Text = $"Present: {data.PresentCount} | Late: {data.LateCount} | Absent: {data.AbsentCount} | Attendance Rate: {percent:F1}%";
+                ProcessRowRendering(e.Item, data);
             }
         }
 
-        protected void gvAttendance_RowDataBound(object sender, GridViewRowEventArgs e)
+        protected void gvDailyAttendance_RowDataBound(object sender, GridViewRowEventArgs e)
         {
             if (e.Row.RowType == DataControlRowType.DataRow)
             {
