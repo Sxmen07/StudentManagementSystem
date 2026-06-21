@@ -1,11 +1,16 @@
 <%@ Page Title="Course Material" Language="C#" MasterPageFile="~/Student/StudentNavigationBar/StudentMaster.master" AutoEventWireup="true" CodeBehind="StudentCourseMaterial.aspx.cs" Inherits="StudentManagementSystem.Student.StudentCourseMaterial" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
-    <div class="bg-topbar-gradient h-[150px] w-full">
-        <h2 class="text-[48px] font-bold text-white px-6 py-[60px] text-shadow">Course Material</h2>
-    </div>
+    <header class="bg-topbar-gradient w-full">
+        <div class="px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold animate-welcome">
+                Course Materials
+            </h1>
+        </div>
+    </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Full width container, reduced left padding, removed centering -->
+    <div class="w-full pl-2 sm:pl-4 lg:pl-6 pr-4 sm:pr-6 lg:pr-8 py-8">
         <!-- Back button row -->
         <div class="mb-4">
             <asp:HyperLink ID="btnBackToCourses" runat="server" 
@@ -55,22 +60,26 @@
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
                                         <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material Title</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Upload Date</th>
-                                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                            <th class="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider">Material Title</th>
+                                            <th class="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider">Type</th>
+                                            <th class="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider">Upload Date</th>
+                                            <th class="px-8 py-4 text-center text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white divide-y divide-gray-200 material-list">
                             </HeaderTemplate>
                             <ItemTemplate>
                                 <tr class="material-row" data-type='<%# GetMaterialType(Eval("Title").ToString()) %>'>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%# Eval("Title") %></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><%# GetMaterialType(Eval("Title").ToString()) %></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"><%# Convert.ToDateTime(Eval("UploadDate")).ToString("MMM dd, yyyy") %></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center space-x-2">
-                                        <a href='<%# Eval("FileUrl") %>' target="_blank" class="text-green-600 hover:text-green-800 font-medium">View</a>
-                                        <a href='<%# Eval("FileUrl") %>' download class="text-indigo-600 hover:text-indigo-900 font-medium">Download</a>
+                                    <td class="px-8 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%# Eval("Title") %></td>
+                                    <td class="px-8 py-4 whitespace-nowrap text-sm text-gray-600"><%# GetMaterialType(Eval("Title").ToString()) %></td>
+                                    <td class="px-8 py-4 whitespace-nowrap text-sm text-gray-600"><%# Convert.ToDateTime(Eval("UploadDate")).ToString("MMM dd, yyyy") %></td>
+                                    <td class="px-8 py-4 whitespace-nowrap text-sm text-center space-x-3">
+                                       <a href='<%# Eval("FileUrl") %>' target="_blank" class="text-gray-600 hover:text-green-600 transition-colors duration-200" title="View">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                        <a href='<%# ResolveUrl(Eval("FileUrl").ToString()) %>' download class="text-gray-600 hover:text-indigo-600 transition-colors duration-200" title="Download">
+                                            <i class="fa-solid fa-download"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             </ItemTemplate>
@@ -85,7 +94,7 @@
             </div>
 
             <!-- Right column: Notifications -->
-            <div class="w-full lg:w-96 flex-shrink-0">
+            <div class="w-full lg:w-80 flex-shrink-0">
                 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                     <div class="p-4 border-b border-gray-200 flex justify-between items-center">
                         <h3 class="text-lg font-semibold text-gray-900">Course Notifications</h3>
@@ -94,36 +103,35 @@
                     <div class="divide-y divide-gray-100" id="notificationsList">
                         <asp:Repeater ID="rptNotifications" runat="server">
                             <ItemTemplate>
-    <div class="px-4 py-3 hover:bg-gray-50 transition border-b border-gray-100 last:border-b-0 cursor-pointer" 
-         style='<%# ((bool)Eval("IsRead") ? "background-color: #f3f4f6;" : "") %>'
-         onclick="location.href='../StudentCourseNotification/StudentCourseNotification.aspx?id=<%# Eval("AnnouncementID") %>&courseOfferId=<%# Request.QueryString["courseOfferId"] %>';">
-        <div class="flex justify-between items-start gap-2">
-            <div class="flex items-center gap-2">
-                <span class='<%# ((bool)Eval("IsRead") ? "hidden" : "inline-block w-2 h-2 bg-red-500 rounded-full") %>'></span>
-                <p class='<%# ((bool)Eval("IsRead") ? "text-sm font-medium text-gray-700" : "text-sm font-semibold text-gray-900") %>'>
-                    <%# Eval("Title") %>
-                </p>
-            </div>
-            <p class="text-xs text-gray-400 whitespace-nowrap">
-                <%# ((DateTime)Eval("CreatedDate")).ToString("MMM dd") %>
-            </p>
-        </div>
-        <p class="text-xs text-gray-400 mt-1 ml-4">
-            <%# GetTimeAgo((DateTime)Eval("CreatedDate")) %>
-        </p>
-        <div class="mt-2 flex items-center gap-3 ml-4">
-            <!-- "View" link is now optional (you can remove it) -->
-            <asp:LinkButton ID="btnMarkUnread" runat="server" 
-                CommandArgument='<%# Eval("AnnouncementID") %>'
-                OnClick="MarkNotificationAsUnread_Click"
-                CssClass="text-xs text-gray-500 hover:text-red-600"
-                Visible='<%# (bool)Eval("IsRead") %>'
-                OnClientClick="event.stopPropagation();">
-                Mark as unread
-            </asp:LinkButton>
-        </div>
-    </div>
-</ItemTemplate>
+                                <div class="px-4 py-3 hover:bg-gray-50 transition border-b border-gray-100 last:border-b-0 cursor-pointer" 
+                                     style='<%# ((bool)Eval("IsRead") ? "background-color: #f3f4f6;" : "") %>'
+                                     onclick="location.href='../StudentCourseNotification/StudentCourseNotification.aspx?id=<%# Eval("AnnouncementID") %>&courseOfferId=<%# Request.QueryString["courseOfferId"] %>';">
+                                    <div class="flex justify-between items-start gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class='<%# ((bool)Eval("IsRead") ? "hidden" : "inline-block w-2 h-2 bg-red-500 rounded-full") %>'></span>
+                                            <p class='<%# ((bool)Eval("IsRead") ? "text-sm font-medium text-gray-700" : "text-sm font-semibold text-gray-900") %>'>
+                                                <%# Eval("Title") %>
+                                            </p>
+                                        </div>
+                                        <p class="text-xs text-gray-400 whitespace-nowrap">
+                                            <%# ((DateTime)Eval("CreatedDate")).ToString("MMM dd") %>
+                                        </p>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-1 ml-4">
+                                        <%# GetTimeAgo((DateTime)Eval("CreatedDate")) %>
+                                    </p>
+                                    <div class="mt-2 flex items-center gap-3 ml-4">
+                                        <asp:LinkButton ID="btnMarkUnread" runat="server" 
+                                            CommandArgument='<%# Eval("AnnouncementID") %>'
+                                            OnClick="MarkNotificationAsUnread_Click"
+                                            CssClass="text-xs text-gray-500 hover:text-red-600"
+                                            Visible='<%# (bool)Eval("IsRead") %>'
+                                            OnClientClick="event.stopPropagation();">
+                                            Mark as unread
+                                        </asp:LinkButton>
+                                    </div>
+                                </div>
+                            </ItemTemplate>
                         </asp:Repeater>
                         <asp:Label ID="lblNoNotifications" runat="server" CssClass="block p-6 text-center text-gray-500" Visible="false" Text="No recent notifications." />
                     </div>
