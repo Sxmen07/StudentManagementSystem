@@ -15,6 +15,33 @@ namespace StudentManagementSystem.Student
     {
 
         /// <summary>
+        /// lblTotalCourses control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblTotalCourses;
+
+        /// <summary>
+        /// lblCurrentCount control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblCurrentCount;
+
+        /// <summary>
+        /// lblCompletedCount control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblCompletedCount;
+
+        /// <summary>
         /// btnCurrent control.
         /// </summary>
         /// <remarks>
