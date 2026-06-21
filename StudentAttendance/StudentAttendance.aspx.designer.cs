@@ -15,6 +15,42 @@ namespace StudentManagementSystem.Student
     {
 
         /// <summary>
+        /// lblOverallAttendance control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblOverallAttendance;
+
+        /// <summary>
+        /// lblTotalPresent control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblTotalPresent;
+
+        /// <summary>
+        /// lblTotalLate control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblTotalLate;
+
+        /// <summary>
+        /// lblTotalAbsent control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblTotalAbsent;
+
+        /// <summary>
         /// btnCurrent control.
         /// </summary>
         /// <remarks>
