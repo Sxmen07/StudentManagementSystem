@@ -46,10 +46,11 @@
                                 </svg>
                             </div>
                             <div class="flex gap-2">
-                                <button type="button" data-filter="all" class="filter-btn active px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white">All</button>
-                                <button type="button" data-filter="Lecture" class="filter-btn px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Lectures</button>
-                                <button type="button" data-filter="Assignment" class="filter-btn px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Assignments</button>
-                            </div>
+    <button type="button" data-filter="all" class="filter-btn active px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white">All</button>
+    <button type="button" data-filter="Lecturers" class="filter-btn px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Lecturers</button>
+    <button type="button" data-filter="Assignments" class="filter-btn px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Assignments</button>
+    <button type="button" data-filter="Tutorials" class="filter-btn px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Tutorials</button>
+</div>
                         </div>
                     </div>
 
@@ -62,6 +63,8 @@
                                         <tr>
                                             <th class="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider">Material Title</th>
                                             <th class="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider">Type</th>
+                                            <th class="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider">Description</th>
+                                            <th class="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider">File Name</th>
                                             <th class="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider">Upload Date</th>
                                             <th class="px-8 py-4 text-center text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider">Action</th>
                                         </tr>
@@ -69,17 +72,42 @@
                                     <tbody class="bg-white divide-y divide-gray-200 material-list">
                             </HeaderTemplate>
                             <ItemTemplate>
-                                <tr class="material-row" data-type='<%# GetMaterialType(Eval("Title").ToString()) %>'>
-                                    <td class="px-8 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%# Eval("Title") %></td>
-                                    <td class="px-8 py-4 whitespace-nowrap text-sm text-gray-600"><%# GetMaterialType(Eval("Title").ToString()) %></td>
+                                <tr class="material-row" data-type='<%# Eval("MaterialCategory") %>'>
+                                    <td class="px-8 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%# Eval("MaterialTitle") %></td>
+                                    <td class="px-8 py-4 whitespace-nowrap text-sm">
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                            <%# GetCategoryBadgeClass(Eval("MaterialCategory").ToString()) %>">
+                                            <%# Eval("MaterialCategory") %>
+                                        </span>
+                                    </td>
+                                    <td class="px-8 py-4 text-sm text-gray-600 max-w-xs truncate"><%# Eval("Description") %></td>
+                                    <td class="px-8 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <%# GetFileName(Eval("FileURL").ToString()) %>
+                                    </td>
                                     <td class="px-8 py-4 whitespace-nowrap text-sm text-gray-600"><%# Convert.ToDateTime(Eval("UploadDate")).ToString("MMM dd, yyyy") %></td>
-                                    <td class="px-8 py-4 whitespace-nowrap text-sm text-center space-x-3">
-                                       <a href='<%# Eval("FileUrl") %>' target="_blank" class="text-gray-600 hover:text-green-600 transition-colors duration-200" title="View">
-                                            <i class="fa-solid fa-eye"></i>
-                                        </a>
-                                        <a href='<%# ResolveUrl(Eval("FileUrl").ToString()) %>' download class="text-gray-600 hover:text-indigo-600 transition-colors duration-200" title="Download">
-                                            <i class="fa-solid fa-download"></i>
-                                        </a>
+                                    <td class="px-8 py-4 whitespace-nowrap text-sm text-center space-x-4">
+                                        <asp:PlaceHolder ID="phView" runat="server" 
+                                            Visible='<%# !string.IsNullOrEmpty(Eval("FileURL")?.ToString()) %>'>
+                                            <a href='<%# ResolveUrl(Eval("FileURL").ToString()) %>' target="_blank" 
+                                               class="text-gray-600 hover:text-green-600 transition-colors duration-200 inline-flex items-center gap-1" title="View">
+                                                <i class="fa-solid fa-eye"></i>
+                                                <span class="text-xs font-medium">View</span>
+                                            </a>
+                                        </asp:PlaceHolder>
+                                        
+                                        <asp:PlaceHolder ID="phDownload" runat="server" 
+                                            Visible='<%# !string.IsNullOrEmpty(Eval("FileURL")?.ToString()) %>'>
+                                            <a href='<%# ResolveUrl(Eval("FileURL").ToString()) %>' download 
+                                               class="text-gray-600 hover:text-indigo-600 transition-colors duration-200 inline-flex items-center gap-1" title="Download">
+                                                <i class="fa-solid fa-download"></i>
+                                                <span class="text-xs font-medium">Download</span>
+                                            </a>
+                                        </asp:PlaceHolder>
+                                        
+                                        <asp:PlaceHolder ID="phNoFile" runat="server" 
+                                            Visible='<%# string.IsNullOrEmpty(Eval("FileURL")?.ToString()) %>'>
+                                            <span class="text-xs text-gray-400">No file</span>
+                                        </asp:PlaceHolder>
                                     </td>
                                 </tr>
                             </ItemTemplate>
