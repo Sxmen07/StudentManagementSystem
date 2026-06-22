@@ -81,9 +81,9 @@ namespace StudentManagementSystem.Student
                     }
                 }
 
-                // 2. Materials for this course
+                // 2. Materials for this course (now includes MaterialCategory)
                 string materialQuery = @"
-                    SELECT MaterialTitle AS Title, Description, FileURL, UploadDate
+                    SELECT MaterialTitle, Description, FileURL, UploadDate, MaterialCategory
                     FROM CourseMaterial
                     WHERE CourseOfferID = @CourseOfferID
                     ORDER BY UploadDate DESC";
@@ -196,7 +196,6 @@ namespace StudentManagementSystem.Student
             }
         }
 
-        // NEW: Mark notification as unread
         protected void MarkNotificationAsUnread_Click(object sender, EventArgs e)
         {
             LinkButton btn = (LinkButton)sender;
@@ -225,30 +224,50 @@ namespace StudentManagementSystem.Student
             Response.Redirect(Request.RawUrl);
         }
 
-        protected string GetMaterialType(string title)
+        // ========== HELPER METHODS FOR MARKUP ==========
+
+        // Returns a CSS class for the category badge color
+        protected string GetCategoryBadgeClass(string category)
         {
-            string t = title.ToLower();
-            if (t.Contains("lecture") || t.Contains("slide")) return "Lecture";
-            if (t.Contains("reading") || t.Contains("chapter")) return "Reading";
-            if (t.Contains("assignment") || t.Contains("project") || t.Contains("homework")) return "Assignment";
-            return "Document";
+            if (string.IsNullOrEmpty(category)) return "bg-gray-100 text-gray-600";
+
+            switch (category.ToLower())
+            {
+                case "lecturers": return "bg-blue-100 text-blue-800";
+                case "assignments": return "bg-yellow-100 text-yellow-800";
+                case "tutorials": return "bg-green-100 text-green-800";
+                default: return "bg-gray-100 text-gray-600";
+            }
         }
 
-        protected string GetFileSize(string fileUrl)
+        // Extracts file name from the full URL (e.g., ~/Uploads/.../file.pdf -> file.pdf)
+        protected string GetFileName(string fileUrl)
         {
+            if (string.IsNullOrEmpty(fileUrl)) return "—";
             try
             {
-                string physicalPath = Server.MapPath(fileUrl);
-                if (System.IO.File.Exists(physicalPath))
-                {
-                    long bytes = new FileInfo(physicalPath).Length;
-                    if (bytes < 1024) return $"{bytes} B";
-                    if (bytes < 1048576) return $"{bytes / 1024} KB";
-                    return $"{bytes / 1048576} MB";
-                }
+                // Remove query string if any
+                int qIndex = fileUrl.IndexOf('?');
+                if (qIndex > 0) fileUrl = fileUrl.Substring(0, qIndex);
+
+                // Get the last segment after '/'
+                int lastSlash = fileUrl.LastIndexOf('/');
+                if (lastSlash >= 0) return fileUrl.Substring(lastSlash + 1);
+                return fileUrl;
             }
-            catch { }
-            return "—";
+            catch
+            {
+                return "—";
+            }
+        }
+
+        // (Legacy helper – no longer used for type, but kept for notifications)
+        protected string GetMaterialType(string title)
+        {
+            // This is no longer used for the material type column,
+            // but may be called from the markup if any leftover.
+            // We can keep it as a fallback or remove it.
+            return "Document";
         }
 
         protected string GetTimeAgo(DateTime date)
