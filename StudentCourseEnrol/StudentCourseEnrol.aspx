@@ -5,7 +5,6 @@
 
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
 
-    <!-- Font Awesome CDN (if not already in master) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
     <style type="text/css">
@@ -22,232 +21,327 @@
         .section-card:hover {
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
         }
-        .gv-header-dark th {
-            color: #ffffff !important;
-            background-color: #111827 !important;
-        }
-        .btn-enroll {
-            background-color: #0095FD;
+        .btn-pay {
+            background-color: #10b981;
             color: white;
-            transition: all 0.2s;
+            padding: 0.5rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.15s ease;
         }
-        .btn-enroll:hover {
-            background-color: #0070c0;
+        .btn-pay:hover {
+            background-color: #059669;
         }
-        .btn-drop {
-            background-color: #dc2626;
-            color: white;
-            transition: all 0.2s;
+        .btn-cancel {
+            background-color: #f3f4f6;
+            color: #374151;
+            padding: 0.5rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.15s ease;
         }
-        .btn-drop:hover {
-            background-color: #b91c1c;
-        }
-        .btn-reenroll {
-            background-color: #16a34a;
-            color: white;
-            transition: all 0.2s;
-        }
-        .btn-reenroll:hover {
-            background-color: #15803d;
-        }
-        .btn-closed {
-            background-color: #9ca3af !important;
-            color: white !important;
-            cursor: not-allowed !important;
+        .btn-cancel:hover {
+            background-color: #e5e7eb;
         }
     </style>
 
-    <!-- ============================================================ -->
-    <!-- GRADIENT HEADER                                               -->
-    <!-- ============================================================ -->
-    <header class="bg-topbar-gradient w-full">
-        <div class="px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
-            <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold animate-welcome">Course Enrollment</h1>
-            <p class="text-sm mt-1">Plan your semester and register for courses</p>
+    <div class="px-4 sm:px-6 lg:px-8 py-8 relative">
+
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Course Enrollment</h1>
+            <p class="text-gray-500 mt-1 font-medium">Manage your academic schedule, enroll in new courses, or view your history.</p>
         </div>
-    </header>
 
-    <!-- ============================================================ -->
-    <!-- MAIN CONTENT                                                  -->
-    <!-- ============================================================ -->
-    <div class="w-full pl-2 sm:pl-4 lg:pl-6 pr-4 sm:pr-6 lg:pr-8 py-8">
-
-        <!-- ScriptManager – remove if your MasterPage already has one -->
         <asp:ScriptManager ID="ScriptManager1" runat="server" />
 
-        <!-- UPDATE PANEL – all changing content goes here -->
         <asp:UpdatePanel ID="upEnrollment" runat="server" UpdateMode="Conditional">
             <ContentTemplate>
 
-                <!-- Enrollment Period Alert -->
-                <asp:Label ID="lblEnrollmentStatus" runat="server" CssClass="block mb-6"></asp:Label>
-
-                <!-- 2x Summary Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                    <div class="stat-card bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-lg bg-[#111827] flex items-center justify-center text-white text-lg flex-shrink-0">
-                            <i class="fas fa-chart-line"></i>
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5">
+                        <div class="p-3 bg-indigo-50 rounded-lg text-indigo-600">
+                            <i class="fa-solid fa-calendar-check text-xl"></i>
                         </div>
                         <div>
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Current GPA</p>
-                            <p class="text-2xl font-bold text-[#111827]">
-                                <asp:Label ID="lblCurrentGPA" runat="server" Text="—" />
+                            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Enrollment Status</h2>
+                            <p class="text-lg font-bold text-gray-900 mt-0.5">
+                                <asp:Label ID="lblEnrollmentStatus" runat="server" Text="Checking system status..." />
                             </p>
                         </div>
                     </div>
-                    <div class="stat-card bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-lg bg-[#0095FD] flex items-center justify-center text-white text-lg flex-shrink-0">
-                            <i class="fas fa-graduation-cap"></i>
+                    <div class="text-left sm:text-right">
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Current Session</span>
+                        <span class="text-sm font-bold text-indigo-600 block mt-0.5">
+                            <asp:Label ID="lblTargetSemester" runat="server" Text="—" />
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="stat-card bg-white p-5 rounded-xl border border-gray-200 shadow-sm text-center">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Enrolled Courses</p>
+                        <p class="text-3xl font-black text-[#0095FD] mt-1"><asp:Label ID="lblEnrollmentCount" runat="server" Text="0" /></p>
+                    </div>
+                    <div class="stat-card bg-white p-5 rounded-xl border border-gray-200 shadow-sm text-center">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Credits Earned</p>
+                        <p class="text-3xl font-black text-green-600 mt-1"><asp:Label ID="lblCreditsEarned" runat="server" Text="0" /></p>
+                    </div>
+                    <div class="stat-card bg-white p-5 rounded-xl border border-gray-200 shadow-sm text-center">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Required Credits</p>
+                        <p class="text-3xl font-black text-red-500 mt-1"><asp:Label ID="lblTotalRequiredCredits" runat="server" Text="0" /></p>
+                    </div>
+                    <div class="stat-card bg-white p-5 rounded-xl border border-gray-200 shadow-sm text-center">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Current GPA</p>
+                        <p class="text-3xl font-black text-indigo-600 mt-1"><asp:Label ID="lblCurrentGPA" runat="server" Text="0.00" /></p>
+                    </div>
+                </div>
+
+                <div class="flex border-b border-gray-200 mb-6">
+                    <asp:LinkButton ID="btnMyEnrollments" runat="server" OnClick="tabMyEnrollments_Click" Text="Current Enrollments"
+                        CssClass="px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-150 -mb-px" />
+                    <asp:LinkButton ID="btnAvailable" runat="server" OnClick="tabAvailable_Click" Text="Available Courses"
+                        CssClass="px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-150 -mb-px" />
+                    <asp:LinkButton ID="btnDropped" runat="server" OnClick="tabDropped_Click" Text="Dropped Courses"
+                        CssClass="px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-150 -mb-px" />
+                    <asp:LinkButton ID="btnHistory" runat="server" OnClick="tabHistory_Click" Text="Academic History"
+                        CssClass="px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-150 -mb-px" />
+                </div>
+
+                <!-- CURRENT ENROLLMENTS PANEL -->
+                <asp:Panel ID="pnlMyEnrollments" runat="server" Visible="true">
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                        <div class="p-5 border-b border-gray-200 bg-white">
+                            <h3 class="text-lg font-bold text-gray-900">Current Enrolled Courses</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Your currently active courses for the ongoing semester.</p>
                         </div>
-                        <div>
-                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Credits Earned</p>
-                            <p class="text-2xl font-bold text-[#0095FD]">
-                                <asp:Label ID="lblCreditsEarned" runat="server" Text="0" /> / <asp:Label ID="lblTotalRequiredCredits" runat="server" Text="0" />
-                            </p>
+                        <div class="overflow-x-auto">
+                            <asp:GridView ID="gvMyEnrollments" runat="server" AutoGenerateColumns="False" CssClass="min-w-full divide-y divide-gray-200"
+                                RowStyle-CssClass="hover:bg-gray-50 transition border-b border-gray-200" 
+                                AlternatingRowStyle-CssClass="bg-gray-50" GridLines="None">
+                                <Columns>
+                                    <asp:BoundField DataField="CourseCode" HeaderText="Course Code">
+                                        <HeaderStyle CssClass="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm font-medium text-gray-900" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="CourseName" HeaderText="Course Name">
+                                        <HeaderStyle CssClass="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 text-sm text-gray-700" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="Credits" HeaderText="Credits">
+                                        <HeaderStyle CssClass="px-8 py-4 text-center text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm text-center text-gray-600" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="LecturerName" HeaderText="Lecturer">
+                                        <HeaderStyle CssClass="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 text-sm text-gray-600" />
+                                    </asp:BoundField>
+                                    <asp:TemplateField HeaderText="Actions">
+                                        <HeaderStyle CssClass="px-8 py-4 text-center text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemTemplate>
+                                            <asp:Button ID="btnDrop" runat="server" Text="Drop Course" CommandArgument='<%# Eval("CourseOfferID") %>' OnClick="DropCourse_Click" 
+                                                CssClass="px-3.5 py-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors duration-150 cursor-pointer"
+                                                OnClientClick="return confirm('Are you sure you want to drop this course?');" />
+                                        </ItemTemplate>
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm text-center" />
+                                    </asp:TemplateField>
+                                </Columns>
+                            </asp:GridView>
                         </div>
+                        <asp:Label ID="lblNoEnrollments" runat="server" CssClass="block text-center py-10 text-gray-500 text-sm font-medium" Visible="false" Text="You are not enrolled in any courses for this semester." />
                     </div>
-                </div>
+                </asp:Panel>
 
-                <!-- Current Semester Enrollment -->
-                <div class="section-card bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
-                    <div class="px-6 py-4 bg-[#111827] border-b border-gray-200 flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-white">
-                            <i class="fas fa-check-circle mr-2"></i>Current Semester Enrollment
-                        </h3>
+                <!-- AVAILABLE COURSES PANEL -->
+                <asp:Panel ID="pnlAvailable" runat="server" Visible="false">
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                        <div class="p-5 border-b border-gray-200 bg-white">
+                            <h3 class="text-lg font-bold text-gray-900">Available Electives & Modules</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Offered modules available for sign‑up in the current open registration window.</p>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <asp:GridView ID="gvAvailable" runat="server" AutoGenerateColumns="False" CssClass="min-w-full divide-y divide-gray-200"
+                                RowStyle-CssClass="hover:bg-gray-50 transition border-b border-gray-200" 
+                                AlternatingRowStyle-CssClass="bg-gray-50" GridLines="None">
+                                <Columns>
+                                    <asp:BoundField DataField="CourseCode" HeaderText="Course Code">
+                                        <HeaderStyle CssClass="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm font-medium text-gray-900" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="CourseName" HeaderText="Course Name">
+                                        <HeaderStyle CssClass="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 text-sm text-gray-700" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="Credits" HeaderText="Credits">
+                                        <HeaderStyle CssClass="px-8 py-4 text-center text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm text-center text-gray-600" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="LecturerName" HeaderText="Lecturer">
+                                        <HeaderStyle CssClass="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 text-sm text-gray-600" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="CapacityInfo" HeaderText="Availability">
+                                        <HeaderStyle CssClass="px-8 py-4 text-center text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm text-center text-gray-500 font-medium" />
+                                    </asp:BoundField>
+                                    <asp:TemplateField HeaderText="Actions">
+                                        <HeaderStyle CssClass="px-8 py-4 text-center text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemTemplate>
+                                            <asp:Button ID="btnEnroll" runat="server" Text="Enroll" CommandArgument='<%# Eval("CourseOfferID") %>' OnClick="EnrollCourse_Click" 
+                                                Enabled='<%# Convert.ToInt32(Eval("AvailableSlots")) > 0 %>'
+                                                CssClass='<%# Convert.ToInt32(Eval("AvailableSlots")) > 0 ? "px-5 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors duration-150 cursor-pointer" : "px-5 py-1.5 text-xs font-semibold text-gray-400 bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed" %>' />
+                                        </ItemTemplate>
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm text-center" />
+                                    </asp:TemplateField>
+                                </Columns>
+                            </asp:GridView>
+                        </div>
+                        <asp:Label ID="lblNoAvailable" runat="server" CssClass="block text-center py-10 text-gray-500 text-sm font-medium" Visible="false" Text="No additional courses available for enrollment at this time." />
                     </div>
-                    <div class="overflow-x-auto">
-                        <asp:GridView ID="gvCurrentEnrolled" runat="server" AutoGenerateColumns="False"
-                            CssClass="min-w-full bg-white text-sm"
-                            HeaderStyle-CssClass="gv-header-dark"
-                            RowStyle-CssClass="border-b border-gray-100 hover:bg-gray-50 transition"
-                            AlternatingRowStyle-CssClass="bg-gray-50"
-                            GridLines="None">
-                            <Columns>
-                                <asp:BoundField DataField="CourseCode" HeaderText="Code" ItemStyle-CssClass="px-4 py-3 font-medium text-gray-900" />
-                                <asp:BoundField DataField="CourseName" HeaderText="Name" ItemStyle-CssClass="px-4 py-3 text-gray-700" />
-                                <asp:BoundField DataField="Instructor" HeaderText="Instructor" ItemStyle-CssClass="px-4 py-3 text-gray-700" />
-                                <asp:BoundField DataField="Credits" HeaderText="Credits" ItemStyle-CssClass="px-4 py-3 text-center text-gray-700" />
-                                <asp:TemplateField HeaderText="Action">
-                                    <ItemTemplate>
-                                        <asp:Button ID="btnDrop" runat="server" Text="Drop" CommandArgument='<%# Eval("CourseOfferID") %>'
-                                            OnClick="DropCourse_Click" CssClass="btn-drop text-xs px-3 py-1 rounded" />
-                                    </ItemTemplate>
-                                    <ItemStyle CssClass="px-4 py-3 text-center" />
-                                </asp:TemplateField>
-                            </Columns>
-                        </asp:GridView>
-                    </div>
-                    <asp:Label ID="lblNoCurrent" runat="server" CssClass="block p-6 text-center text-gray-500" Visible="false" Text="You are not enrolled in any current courses." />
-                </div>
+                </asp:Panel>
 
-                <!-- Dropped Courses -->
-                <div class="section-card bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
-                    <div class="px-6 py-4 bg-[#111827] border-b border-gray-200 flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-white">
-                            <i class="fas fa-times-circle mr-2"></i>Dropped Courses (This Semester)
-                        </h3>
+                <!-- DROPPED COURSES PANEL -->
+                <asp:Panel ID="pnlDropped" runat="server" Visible="false">
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                        <div class="p-5 border-b border-gray-200 bg-white">
+                            <h3 class="text-lg font-bold text-gray-900">Withdrawn & Dropped Modules</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Modules dropped during this term session. You can re‑enroll if slots and dates permit.</p>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <asp:GridView ID="gvDropped" runat="server" AutoGenerateColumns="False" CssClass="min-w-full divide-y divide-gray-200"
+                                RowStyle-CssClass="hover:bg-gray-50 transition border-b border-gray-200" 
+                                AlternatingRowStyle-CssClass="bg-gray-50" GridLines="None">
+                                <Columns>
+                                    <asp:BoundField DataField="CourseCode" HeaderText="Course Code">
+                                        <HeaderStyle CssClass="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm font-medium text-gray-900" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="CourseName" HeaderText="Course Name">
+                                        <HeaderStyle CssClass="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 text-sm text-gray-700" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="Credits" HeaderText="Credits">
+                                        <HeaderStyle CssClass="px-8 py-4 text-center text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm text-center text-gray-600" />
+                                    </asp:BoundField>
+                                    <asp:TemplateField HeaderText="Actions">
+                                        <HeaderStyle CssClass="px-8 py-4 text-center text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemTemplate>
+                                            <asp:Button ID="btnReenroll" runat="server" Text="Re‑enroll" CommandArgument='<%# Eval("CourseOfferID") %>' OnClick="ReenrollCourse_Click" 
+                                                CssClass="px-4 py-1.5 text-xs font-semibold text-green-600 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-colors duration-150 cursor-pointer" />
+                                        </ItemTemplate>
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm text-center" />
+                                    </asp:TemplateField>
+                                </Columns>
+                            </asp:GridView>
+                        </div>
+                        <asp:Label ID="lblNoDropped" runat="server" CssClass="block text-center py-10 text-gray-500 text-sm font-medium" Visible="false" Text="No dropped courses on record for this semester." />
                     </div>
-                    <div class="overflow-x-auto">
-                        <asp:GridView ID="gvDropped" runat="server" AutoGenerateColumns="False"
-                            CssClass="min-w-full bg-white text-sm"
-                            HeaderStyle-CssClass="gv-header-dark"
-                            RowStyle-CssClass="border-b border-gray-100 hover:bg-gray-50 transition"
-                            AlternatingRowStyle-CssClass="bg-gray-50"
-                            GridLines="None">
-                            <Columns>
-                                <asp:BoundField DataField="CourseCode" HeaderText="Code" ItemStyle-CssClass="px-4 py-3 font-medium text-gray-900" />
-                                <asp:BoundField DataField="CourseName" HeaderText="Name" ItemStyle-CssClass="px-4 py-3 text-gray-700" />
-                                <asp:BoundField DataField="Instructor" HeaderText="Instructor" ItemStyle-CssClass="px-4 py-3 text-gray-700" />
-                                <asp:BoundField DataField="Credits" HeaderText="Credits" ItemStyle-CssClass="px-4 py-3 text-center text-gray-700" />
-                                <asp:TemplateField HeaderText="Action">
-                                    <ItemTemplate>
-                                        <asp:Button ID="btnReenroll" runat="server" Text="Re‑enroll" CommandArgument='<%# Eval("CourseOfferID") %>'
-                                            OnClick="ReenrollCourse_Click" CssClass="btn-reenroll text-xs px-3 py-1 rounded" />
-                                    </ItemTemplate>
-                                    <ItemStyle CssClass="px-4 py-3 text-center" />
-                                </asp:TemplateField>
-                            </Columns>
-                        </asp:GridView>
-                    </div>
-                    <asp:Label ID="lblNoDropped" runat="server" CssClass="block p-6 text-center text-gray-500" Visible="false" Text="No dropped courses for this semester." />
-                </div>
+                </asp:Panel>
 
-                <!-- Available for Enrollment -->
-                <div class="section-card bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
-                    <div class="px-6 py-4 bg-[#111827] border-b border-gray-200 flex justify-between items-center">
-                        <div>
-                            <h3 class="text-lg font-semibold text-white">
-                                <i class="fas fa-plus-circle mr-2"></i>Available for Enrollment
+                <!-- ACADEMIC HISTORY PANEL -->
+                <asp:Panel ID="pnlHistory" runat="server" Visible="false">
+                    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                        <div class="p-5 border-b border-gray-200 bg-white">
+                            <h3 class="text-lg font-bold text-gray-900">Completed Academic History</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Historical timeline tracking all courses completed throughout your university curriculum timeline.</p>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <asp:GridView ID="gvHistory" runat="server" AutoGenerateColumns="False" CssClass="min-w-full divide-y divide-gray-200"
+                                RowStyle-CssClass="hover:bg-gray-50 transition border-b border-gray-200" 
+                                AlternatingRowStyle-CssClass="bg-gray-50" GridLines="None">
+                                <Columns>
+                                    <asp:BoundField DataField="SemesterYear" HeaderText="Semester">
+                                        <HeaderStyle CssClass="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm text-gray-600" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="CourseCode" HeaderText="Code">
+                                        <HeaderStyle CssClass="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm font-medium text-gray-900" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="CourseName" HeaderText="Name">
+                                        <HeaderStyle CssClass="px-8 py-4 text-left text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 text-sm text-gray-700" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="Grade" HeaderText="Grade">
+                                        <HeaderStyle CssClass="px-8 py-4 text-center text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm text-center font-semibold text-gray-900" />
+                                    </asp:BoundField>
+                                    <asp:BoundField DataField="Credits" HeaderText="Cr">
+                                        <HeaderStyle CssClass="px-8 py-4 text-center text-xs font-medium bg-[#0095FD] text-white uppercase tracking-wider" />
+                                        <ItemStyle CssClass="px-8 py-4 whitespace-nowrap text-sm text-center text-gray-700" />
+                                    </asp:BoundField>
+                                </Columns>
+                            </asp:GridView>
+                        </div>
+                        <asp:Label ID="lblNoHistory" runat="server" CssClass="block text-center py-10 text-gray-500 text-sm font-medium" Visible="false" Text="No completed courses yet." />
+                    </div>
+                </asp:Panel>
+
+                <!-- PAYMENT MODAL -->
+                <div id="paymentModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" style="display:none;">
+                    <div class="bg-white rounded-xl shadow-xl border border-gray-200 max-w-lg w-full overflow-hidden mx-4">
+                        <div class="p-6 border-b border-gray-100 bg-gray-50">
+                            <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                <i class="fas fa-receipt text-emerald-600"></i> Review Invoice Summary
                             </h3>
-                            <p class="text-sm text-white/70">
-                                <asp:Label ID="lblTargetSemester" runat="server" Text="Next Semester" />
-                            </p>
+                            <p class="text-xs text-gray-500 mt-1">Please confirm tuition amounts before executing secure transaction gateways.</p>
+                        </div>
+                        <div class="p-6 max-h-60 overflow-y-auto">
+                            <asp:Repeater ID="rptPaymentCourses" runat="server">
+                                <ItemTemplate>
+                                    <div class="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">
+                                        <div>
+                                            <p class="text-sm font-bold text-gray-800"><%# Eval("CourseCode") %></p>
+                                            <p class="text-xs text-gray-500 mt-0.5"><%# Eval("CourseName") %></p>
+                                        </div>
+                                        <p class="text-sm font-black text-gray-900">RM <%# Convert.ToDecimal(Eval("Price")).ToString("N2") %></p>
+                                    </div>
+                                </ItemTemplate>
+                            </asp:Repeater>
+                        </div>
+                        <div class="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Due Amount</p>
+                                <p class="text-2xl font-black text-emerald-600 mt-0.5">RM <asp:Label ID="lblModalTotal" runat="server" Text="0.00" /></p>
+                            </div>
+                            <div class="flex gap-3">
+                                <button type="button" class="btn-cancel" onclick="closePaymentModal()">Cancel</button>
+                                <asp:LinkButton ID="btnConfirmPayment" runat="server" CssClass="btn-pay" OnClick="btnConfirmPayment_Click">Confirm Payment</asp:LinkButton>
+                            </div>
                         </div>
                     </div>
-                    <div class="overflow-x-auto">
-                        <asp:GridView ID="gvAvailable" runat="server" AutoGenerateColumns="False"
-                            CssClass="min-w-full bg-white text-sm"
-                            HeaderStyle-CssClass="gv-header-dark"
-                            RowStyle-CssClass="border-b border-gray-100 hover:bg-gray-50 transition"
-                            AlternatingRowStyle-CssClass="bg-gray-50"
-                            GridLines="None">
-                            <Columns>
-                                <asp:BoundField DataField="CourseCode" HeaderText="Code" ItemStyle-CssClass="px-4 py-3 font-medium text-gray-900" />
-                                <asp:BoundField DataField="CourseName" HeaderText="Name" ItemStyle-CssClass="px-4 py-3 text-gray-700" />
-                                <asp:BoundField DataField="Credits" HeaderText="Credits" ItemStyle-CssClass="px-4 py-3 text-center text-gray-700" />
-                                <asp:BoundField DataField="Schedule" HeaderText="Schedule" ItemStyle-CssClass="px-4 py-3 text-gray-700" />
-                                <asp:TemplateField HeaderText="Action">
-                                    <ItemTemplate>
-                                        <asp:Button ID="btnEnroll" runat="server" Text="Enroll" CommandArgument='<%# Eval("CourseOfferID") %>'
-                                            OnClick="EnrollCourse_Click" CssClass="btn-enroll text-xs px-3 py-1 rounded" />
-                                    </ItemTemplate>
-                                    <ItemStyle CssClass="px-4 py-3 text-center" />
-                                </asp:TemplateField>
-                            </Columns>
-                        </asp:GridView>
-                    </div>
-                    <asp:Label ID="lblNoAvailable" runat="server" CssClass="block p-6 text-center text-gray-500" Visible="false" Text="No courses available for enrollment at this time." />
                 </div>
 
-                <!-- Academic History -->
-                <div class="section-card bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 bg-[#111827] border-b border-gray-200 flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-white">
-                            <i class="fas fa-history mr-2"></i>Academic History
-                        </h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <asp:GridView ID="gvHistory" runat="server" AutoGenerateColumns="False"
-                            CssClass="min-w-full bg-white text-sm"
-                            HeaderStyle-CssClass="gv-header-dark"
-                            RowStyle-CssClass="border-b border-gray-100 hover:bg-gray-50 transition"
-                            AlternatingRowStyle-CssClass="bg-gray-50"
-                            GridLines="None">
-                            <Columns>
-                                <asp:BoundField DataField="SemesterYear" HeaderText="Semester" ItemStyle-CssClass="px-4 py-3 text-gray-700" />
-                                <asp:BoundField DataField="CourseCode" HeaderText="Course Code" ItemStyle-CssClass="px-4 py-3 font-medium text-gray-900" />
-                                <asp:BoundField DataField="CourseName" HeaderText="Course Name" ItemStyle-CssClass="px-4 py-3 text-gray-700" />
-                                <asp:BoundField DataField="Grade" HeaderText="Grade" ItemStyle-CssClass="px-4 py-3 text-center font-semibold text-gray-900" />
-                                <asp:BoundField DataField="Credits" HeaderText="Credits" ItemStyle-CssClass="px-4 py-3 text-center text-gray-700" />
-                            </Columns>
-                        </asp:GridView>
-                    </div>
-                    <asp:Label ID="lblNoHistory" runat="server" CssClass="block p-6 text-center text-gray-500" Visible="false" Text="No completed courses yet." />
-                </div>
+                <!-- FLOATING PAYMENT BUTTON -->
+                <asp:Panel ID="pnlFloatingPayment" runat="server" CssClass="fixed bottom-8 right-8 z-50">
+    <asp:LinkButton ID="btnPayFloating" runat="server" 
+        CssClass="float-btn"
+        OnClick="btnPayAll_Click"
+        Text="<i class='fas fa-credit-card text-lg'></i><span class='btn-text'> Payment</span>" />
+</asp:Panel>
 
             </ContentTemplate>
         </asp:UpdatePanel>
 
     </div>
 
-    <!-- Script to apply "Closed" class to disabled buttons -->
     <script type="text/javascript">
-        (function () {
+        function openPaymentModal() {
+            var modal = document.getElementById('paymentModal');
+            if (modal) modal.style.display = 'flex';
+        }
+        function closePaymentModal() {
+            var modal = document.getElementById('paymentModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function pageLoad() {
+            // Re-apply styles on async postbacks
             document.querySelectorAll('input[value="Closed"]').forEach(function (btn) {
-                btn.classList.add('btn-closed');
-                btn.disabled = true;
+                btn.classList.add('bg-gray-100', 'text-gray-400', 'border-gray-200', 'cursor-not-allowed');
+                btn.classList.remove('text-indigo-600', 'bg-indigo-50', 'hover:bg-indigo-100', 'border-indigo-200');
             });
-        })();
+        }
     </script>
 
 </asp:Content>
