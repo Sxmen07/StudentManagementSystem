@@ -1,11 +1,11 @@
 -- =====================================================
--- COMPLETE REBUILD SCRIPT WITH IC COLUMN
+-- COMPLETE REBUILD SCRIPT – StudentManagementSystem
+-- Fixed: batch separators, foreign keys, ID references
 -- =====================================================
 
 USE master;
 GO
 
--- Forcefully close all connections and drop the database
 IF EXISTS (SELECT name FROM sys.databases WHERE name = 'StudentManagementSystem')
 BEGIN
     DECLARE @kill VARCHAR(8000) = '';
@@ -13,12 +13,10 @@ BEGIN
     FROM sys.dm_exec_sessions
     WHERE database_id = DB_ID('StudentManagementSystem');
     EXEC(@kill);
-    
     DROP DATABASE StudentManagementSystem;
 END
 GO
 
--- Create new database
 CREATE DATABASE StudentManagementSystem;
 GO
 
@@ -26,46 +24,60 @@ USE StudentManagementSystem;
 GO
 
 -- ============================================
--- Table: HeadofProgramme
+-- 1. TABLES
 -- ============================================
+
 CREATE TABLE HeadofProgramme (
-    HopID       INT IDENTITY(1,1) PRIMARY KEY,
-    HopName     NVARCHAR(100) NOT NULL,
-    HopEmail    NVARCHAR(100) NOT NULL UNIQUE,
-    Password    NVARCHAR(255) NOT NULL,
-    ContactNo   NVARCHAR(20),
-    UserRole    NVARCHAR(20) NOT NULL DEFAULT 'Admin'
+    HopID              INT IDENTITY(1,1) PRIMARY KEY,
+    HopName            NVARCHAR(100) NOT NULL,
+    HopEmail           NVARCHAR(100) NOT NULL UNIQUE,
+    Password           NVARCHAR(255) NOT NULL,
+    ContactNo          NVARCHAR(20),
+    UserRole           NVARCHAR(20) NOT NULL DEFAULT 'Admin',
+    ProfilePictureUrl  NVARCHAR(MAX) NULL,
+    BannerPictureUrl   VARCHAR(MAX) NULL,
+    IdentityNumber     NVARCHAR(50) NULL,
+    ResetToken         VARCHAR(50) NULL,
+    ResetTokenExpiresAt DATETIME NULL,
     CONSTRAINT CHK_HopRole CHECK (UserRole = 'Admin')
 );
+GO
 
--- ============================================
--- Table: Lecturer
--- ============================================
 CREATE TABLE Lecturer (
-    LecturerID   INT IDENTITY(1,1) PRIMARY KEY,
-    LecturerName NVARCHAR(100) NOT NULL,
-    LecturerEmail NVARCHAR(100) NOT NULL UNIQUE,
-    Password     NVARCHAR(255) NOT NULL,
-    ContactNo    NVARCHAR(20),
-    Department   NVARCHAR(100),
-    UserRole     NVARCHAR(20) NOT NULL DEFAULT 'Lecturer'
+    LecturerID         INT IDENTITY(1,1) PRIMARY KEY,
+    LecturerName       NVARCHAR(100) NOT NULL,
+    LecturerEmail      NVARCHAR(100) NOT NULL UNIQUE,
+    Password           NVARCHAR(255) NOT NULL,
+    ContactNo          NVARCHAR(20),
+    Department         NVARCHAR(100),
+    UserRole           NVARCHAR(20) NOT NULL DEFAULT 'Lecturer',
+    ProfilePictureUrl  NVARCHAR(MAX) NULL,
+    BannerPictureUrl   VARCHAR(MAX) NULL,
+    IdentityNumber     NVARCHAR(50) NULL,
+    ResetToken         VARCHAR(50) NULL,
+    ResetTokenExpiresAt DATETIME NULL,
     CONSTRAINT CHK_LecturerRole CHECK (UserRole = 'Lecturer')
 );
+GO
 
--- ============================================
--- Table: Programme
--- ============================================
-CREATE TABLE Programme (
-    ProgrammeCode   NVARCHAR(20) PRIMARY KEY,
-    ProgrammeName   NVARCHAR(100) NOT NULL,
-    Level           NVARCHAR(20) CHECK (Level IN ('Foundation', 'Certificate', 'Diploma', 'Degree')),
-    TotalCreditHours INT NOT NULL,
-    Description     NVARCHAR(500)
+CREATE TABLE Faculty (
+    FacultyID   INT IDENTITY(1,1) PRIMARY KEY,
+    FacultyName NVARCHAR(150) NOT NULL UNIQUE
 );
+GO
 
--- ============================================
--- Table: Semester
--- ============================================
+CREATE TABLE Programme (
+    ProgrammeCode    NVARCHAR(20) PRIMARY KEY,
+    ProgrammeName    NVARCHAR(100) NOT NULL,
+    Level            NVARCHAR(20) CHECK (Level IN ('Foundation', 'Certificate', 'Diploma', 'Degree')),
+    TotalCreditHours INT NOT NULL,
+    Description      NVARCHAR(500),
+    FacultyID        INT NULL,
+    PricePerCourse   DECIMAL(10,2) NOT NULL DEFAULT 500.00,
+    CONSTRAINT FK_Programme_Faculty FOREIGN KEY (FacultyID) REFERENCES Faculty(FacultyID)
+);
+GO
+
 CREATE TABLE Semester (
     SemesterID     INT IDENTITY(1,1) PRIMARY KEY,
     Semester       NVARCHAR(10) NOT NULL CHECK (Semester IN ('Jan', 'April', 'August')),
@@ -73,34 +85,42 @@ CREATE TABLE Semester (
     EndMonthDay    CHAR(5) NOT NULL,
     EnrolStartDate CHAR(5) NULL,
     EnrolEndDate   CHAR(5) NULL,
+    AcademicYear   INT NOT NULL DEFAULT 2026,
     CONSTRAINT CHK_StartMonthDay CHECK (StartMonthDay LIKE '[0-9][0-9]-[0-9][0-9]'),
     CONSTRAINT CHK_EndMonthDay   CHECK (EndMonthDay   LIKE '[0-9][0-9]-[0-9][0-9]')
 );
+GO
 
--- ============================================
--- Table: Student (with IC column)
--- ============================================
 CREATE TABLE Student (
-    StudentID      INT IDENTITY(1,1) PRIMARY KEY,
-    StudentName    NVARCHAR(100) NOT NULL,
-    StudentEmail   NVARCHAR(100) NOT NULL UNIQUE,
-    Password       NVARCHAR(255) NOT NULL,
-    PersonalEmail  NVARCHAR(100),
-    ContactNo      NVARCHAR(20),
-    IC             NVARCHAR(20) NOT NULL UNIQUE,          -- IC column added
-    SemesterID     INT NOT NULL,
-    IntakeYear     INT NOT NULL,
-    ProgrammeCode  NVARCHAR(20),
-    UserRole       NVARCHAR(20) NOT NULL DEFAULT 'Student',
-    ProfilePhotoPath NVARCHAR(500) NULL,
+    StudentID         INT IDENTITY(1,1) PRIMARY KEY,
+    StudentName       NVARCHAR(100) NOT NULL,
+    StudentEmail      NVARCHAR(100) NOT NULL UNIQUE,
+    Password          NVARCHAR(255) NOT NULL,
+    PersonalEmail     NVARCHAR(100),
+    ContactNo         NVARCHAR(20),
+    IC                NVARCHAR(20) NOT NULL UNIQUE,
+    SemesterID        INT NOT NULL,
+    IntakeYear        INT NOT NULL,
+    ProgrammeCode     NVARCHAR(20),
+    UserRole          NVARCHAR(20) NOT NULL DEFAULT 'Student',
+    ProfilePhotoPath  NVARCHAR(500) NULL,
+    ProfilePictureUrl NVARCHAR(MAX) NULL,
+    BannerPictureUrl  VARCHAR(MAX) NULL,
+    IdentityNumber    NVARCHAR(50) NULL,
+    ResetToken        VARCHAR(50) NULL,
+    ResetTokenExpiresAt DATETIME NULL,
     CONSTRAINT CHK_StudentRole CHECK (UserRole = 'Student'),
     CONSTRAINT FK_Student_Programme FOREIGN KEY (ProgrammeCode) REFERENCES Programme(ProgrammeCode),
     CONSTRAINT FK_Student_Semester FOREIGN KEY (SemesterID) REFERENCES Semester(SemesterID)
 );
+GO
 
--- ============================================
--- Table: Course
--- ============================================
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Student') AND name = 'ProgrammeCode')
+BEGIN
+    ALTER TABLE Student ADD ProgrammeCode VARCHAR(20) NULL;
+END
+GO
+
 CREATE TABLE Course (
     CourseCode     NVARCHAR(20) PRIMARY KEY,
     CourseName     NVARCHAR(100) NOT NULL,
@@ -109,10 +129,8 @@ CREATE TABLE Course (
     ProgrammeCode  NVARCHAR(20),
     CONSTRAINT FK_Course_Programme FOREIGN KEY (ProgrammeCode) REFERENCES Programme(ProgrammeCode)
 );
+GO
 
--- ============================================
--- Table: CourseOffer
--- ============================================
 CREATE TABLE CourseOffer (
     CourseOfferID INT IDENTITY(1,1) PRIMARY KEY,
     CourseCode    NVARCHAR(20),
@@ -120,14 +138,13 @@ CREATE TABLE CourseOffer (
     Year          INT NOT NULL,
     OfferStatus   NVARCHAR(20) NOT NULL DEFAULT 'Available' CHECK (OfferStatus IN ('Available', 'Not Available')),
     LecturerID    INT,
+    MaxCapacity   INT NOT NULL DEFAULT 40,
     CONSTRAINT FK_CourseOffer_Course FOREIGN KEY (CourseCode) REFERENCES Course(CourseCode),
     CONSTRAINT FK_CourseOffer_Semester FOREIGN KEY (SemesterID) REFERENCES Semester(SemesterID),
     CONSTRAINT FK_CourseOffer_Lecturer FOREIGN KEY (LecturerID) REFERENCES Lecturer(LecturerID)
 );
+GO
 
--- ============================================
--- Table: CourseMaterial
--- ============================================
 CREATE TABLE CourseMaterial (
     MaterialID         INT IDENTITY(1,1) PRIMARY KEY,
     CourseOfferID      INT NOT NULL,
@@ -140,10 +157,10 @@ CREATE TABLE CourseMaterial (
     CONSTRAINT FK_CourseMaterial_CourseOffer FOREIGN KEY (CourseOfferID) REFERENCES CourseOffer(CourseOfferID),
     CONSTRAINT FK_CourseMaterial_Lecturer FOREIGN KEY (UploadByLecturerID) REFERENCES Lecturer(LecturerID)
 );
+GO
 
--- ============================================
--- Table: Enrolment
--- ============================================
+ALTER TABLE CourseMaterial ADD MaterialCategory NVARCHAR(50);
+
 CREATE TABLE Enrolment (
     EnrolmentID   INT IDENTITY(1,1) PRIMARY KEY,
     StudentID     INT,
@@ -154,10 +171,8 @@ CREATE TABLE Enrolment (
     CONSTRAINT FK_Enrolment_CourseOffer FOREIGN KEY (CourseOfferID) REFERENCES CourseOffer(CourseOfferID),
     CONSTRAINT UQ_Enrolment UNIQUE (StudentID, CourseOfferID)
 );
+GO
 
--- ============================================
--- Table: Assessment
--- ============================================
 CREATE TABLE Assessment (
     AssessmentID   INT IDENTITY(1,1) PRIMARY KEY,
     AssessmentName NVARCHAR(50) NOT NULL,
@@ -166,10 +181,8 @@ CREATE TABLE Assessment (
     CourseOfferID  INT,
     CONSTRAINT FK_Assessment_CourseOffer FOREIGN KEY (CourseOfferID) REFERENCES CourseOffer(CourseOfferID)
 );
+GO
 
--- ============================================
--- Table: StudentAssessment
--- ============================================
 CREATE TABLE StudentAssessment (
     StudentAssessmentID INT IDENTITY(1,1) PRIMARY KEY,
     AssessmentID        INT,
@@ -179,10 +192,8 @@ CREATE TABLE StudentAssessment (
     CONSTRAINT FK_StudentAssessment_Student FOREIGN KEY (StudentID) REFERENCES Student(StudentID),
     CONSTRAINT UQ_StudentAssessment UNIQUE (AssessmentID, StudentID)
 );
+GO
 
--- ============================================
--- Table: GradeScale
--- ============================================
 CREATE TABLE GradeScale (
     GradeScaleID INT IDENTITY(1,1) PRIMARY KEY,
     MinMarks     DECIMAL(5,2) NOT NULL,
@@ -192,10 +203,8 @@ CREATE TABLE GradeScale (
     CONSTRAINT CHK_GradeRange CHECK (MinMarks <= MaxMarks),
     CONSTRAINT CHK_GradePoint CHECK (GradePoint BETWEEN 0 AND 4.0)
 );
+GO
 
--- ============================================
--- Table: AttendanceRecord
--- ============================================
 CREATE TABLE AttendanceRecord (
     AttendanceID     INT IDENTITY(1,1) PRIMARY KEY,
     StudentID        INT,
@@ -206,10 +215,8 @@ CREATE TABLE AttendanceRecord (
     CONSTRAINT FK_Attendance_CourseOffer FOREIGN KEY (CourseOfferID) REFERENCES CourseOffer(CourseOfferID),
     CONSTRAINT UQ_Attendance UNIQUE (StudentID, CourseOfferID, AttendanceDate)
 );
+GO
 
--- ============================================
--- Table: Announcement
--- ============================================
 CREATE TABLE Announcement (
     AnnouncementID INT IDENTITY(1,1) PRIMARY KEY,
     Title          NVARCHAR(200) NOT NULL,
@@ -217,54 +224,211 @@ CREATE TABLE Announcement (
     TargetType     NVARCHAR(50) NOT NULL,
     TargetValue    NVARCHAR(50) NULL,
     CreatedDate    DATETIME NOT NULL DEFAULT GETDATE(),
+    AttachmentPath NVARCHAR(255) NULL,
     CONSTRAINT CHK_TargetType CHECK (TargetType IN ('CourseCode', 'CourseOfferID', 'ProgrammeCode', 'All'))
 );
+GO
 
--- ============================================
--- Table: AcademicCalendar
--- ============================================
+CREATE TABLE EmailLog (
+    EmailLogID     INT IDENTITY(1,1) PRIMARY KEY,
+    AnnouncementID INT NULL,
+    ToEmail        NVARCHAR(255) NULL,
+    Subject        NVARCHAR(255) NULL,
+    Body           NVARCHAR(MAX) NULL,
+    SentDate       DATETIME DEFAULT GETDATE(),
+    Status         NVARCHAR(50) NULL
+);
+GO
+
 CREATE TABLE AcademicCalendar (
     EventID          INT IDENTITY(1,1) PRIMARY KEY,
-    EventName        NVARCHAR(100) NOT NULL,
-    EventDescription NVARCHAR(500),
+    EventName        NVARCHAR(150) NOT NULL,
+    EventDescription NVARCHAR(500) NULL,
     EventDate        DATE NOT NULL,
+    SemesterID       INT NOT NULL,
+    HexColor         NVARCHAR(20) NOT NULL DEFAULT '#3B82F6',
+    TargetRole       NVARCHAR(20) NOT NULL DEFAULT 'All',
     CreatedAT        DATETIME NOT NULL DEFAULT GETDATE(),
-    TargetRole       NVARCHAR(20) NOT NULL CHECK (TargetRole IN ('Lecturer', 'Student', 'All'))
+    CONSTRAINT FK_Calendar_Semester FOREIGN KEY (SemesterID) REFERENCES Semester(SemesterID),
+    CONSTRAINT CHK_TargetRole_Calendar CHECK (TargetRole IN ('Lecturer', 'Student', 'All'))
 );
+GO
 
--- ============================================
--- Table: NotificationReadStatus
--- ============================================
 CREATE TABLE NotificationReadStatus (
-    StatusID INT IDENTITY(1,1) PRIMARY KEY,
-    StudentID INT NOT NULL,
+    StatusID       INT IDENTITY(1,1) PRIMARY KEY,
+    StudentID      INT NOT NULL,
     AnnouncementID INT NOT NULL,
-    IsRead BIT NOT NULL DEFAULT 0,
-    ReadDate DATETIME NULL,
+    IsRead         BIT NOT NULL DEFAULT 0,
+    ReadDate       DATETIME NULL,
     CONSTRAINT FK_NotifRead_Student FOREIGN KEY (StudentID) REFERENCES Student(StudentID),
     CONSTRAINT FK_NotifRead_Announcement FOREIGN KEY (AnnouncementID) REFERENCES Announcement(AnnouncementID),
     CONSTRAINT UQ_StudentAnnouncement UNIQUE (StudentID, AnnouncementID)
 );
+GO
 
--- ============================================
--- Table: DashboardPreferences
--- ============================================
 CREATE TABLE DashboardPreferences (
-    PreferenceID INT IDENTITY(1,1) PRIMARY KEY,
-    StudentID INT NOT NULL UNIQUE,
-    ShowCurrentCourses BIT NOT NULL DEFAULT 1,
+    PreferenceID        INT IDENTITY(1,1) PRIMARY KEY,
+    StudentID           INT NOT NULL UNIQUE,
+    ShowCurrentCourses  BIT NOT NULL DEFAULT 1,
     ShowAcademicSnapshot BIT NOT NULL DEFAULT 1,
-    ShowAttendance BIT NOT NULL DEFAULT 1,
-    ShowNotifications BIT NOT NULL DEFAULT 1,
-    ShowQuickActions BIT NOT NULL DEFAULT 1,
+    ShowAttendance      BIT NOT NULL DEFAULT 1,
+    ShowNotifications   BIT NOT NULL DEFAULT 1,
+    ShowQuickActions    BIT NOT NULL DEFAULT 1,
     CONSTRAINT FK_DashPref_Student FOREIGN KEY (StudentID) REFERENCES Student(StudentID)
 );
+GO
 
--- =====================================================
--- INSERT SAMPLE DATA
--- =====================================================
+CREATE TABLE StudentCourseStatus (
+    StatusID            INT IDENTITY(1,1) PRIMARY KEY,
+    StudentID           INT NOT NULL,
+    CourseOfferID       INT NOT NULL,
+    Status              NVARCHAR(20) NOT NULL CHECK (Status IN ('Enrolled', 'In Progress', 'Completed', 'Failed', 'Dropped')),
+    ProgressPercentage  DECIMAL(5,2) NULL DEFAULT 0,
+    FinalMark           DECIMAL(5,2) NULL,
+    FinalGrade          NVARCHAR(5) NULL,
+    GradePoint          DECIMAL(3,2) NULL,
+    StartedDate         DATETIME NULL DEFAULT GETDATE(),
+    CompletedDate       DATETIME NULL,
+    IsCurrent           BIT NOT NULL DEFAULT 1,
+    CONSTRAINT FK_SCS_Student FOREIGN KEY (StudentID) REFERENCES Student(StudentID),
+    CONSTRAINT FK_SCS_CourseOffer FOREIGN KEY (CourseOfferID) REFERENCES CourseOffer(CourseOfferID),
+    CONSTRAINT UQ_SCS UNIQUE (StudentID, CourseOfferID)
+);
+GO
 
--- GradeScale
+CREATE TABLE InvoiceReceipt (
+    InvoiceID      INT IDENTITY(1,1) PRIMARY KEY,
+    StudentID      INT NOT NULL,
+    SemesterID     INT NOT NULL,
+    TotalAmount    DECIMAL(10,2) NOT NULL,
+    IssueDate      DATETIME NOT NULL DEFAULT GETDATE(),
+    PaymentStatus  VARCHAR(20) NOT NULL DEFAULT 'PENDING'
+);
+GO
+
+CREATE TABLE AdminMessage (
+    MessageID      INT IDENTITY(1,1) PRIMARY KEY,
+    SenderEmail    VARCHAR(100) NOT NULL,
+    Subject        VARCHAR(150) NOT NULL,
+    MessageText    NVARCHAR(MAX) NOT NULL,
+    SubmissionDate DATETIME NOT NULL DEFAULT GETDATE()
+);
+GO
+
+CREATE TABLE AdminAnnouncement (
+    AnnouncementID  INT IDENTITY(1,1) PRIMARY KEY,
+    Title           NVARCHAR(150) NOT NULL,
+    ContentText     NVARCHAR(MAX) NOT NULL,
+    TargetAdmin     BIT NOT NULL DEFAULT 0,
+    TargetLecturer  BIT NOT NULL DEFAULT 0,
+    TargetStudent   BIT NOT NULL DEFAULT 0,
+    CreatedDate     DATETIME DEFAULT GETDATE(),
+    SenderAdminID   INT NULL
+);
+GO
+
+CREATE TABLE PaymentRecord (
+    PaymentID       INT IDENTITY(1,1) PRIMARY KEY,
+    StudentID       INT NOT NULL,
+    InvoiceID       INT NULL,                    -- Optional: link to InvoiceReceipt
+    SemesterID      INT NOT NULL,                -- Which semester this payment is for
+    ReferenceID     NVARCHAR(50) NOT NULL UNIQUE, -- e.g., "PAY-2026-001"
+    Amount          DECIMAL(10,2) NOT NULL,
+    PaymentDate     DATETIME NULL,               -- Date student made the payment (actual)
+    UploadDate      DATETIME NOT NULL DEFAULT GETDATE(),
+    PaymentProof    NVARCHAR(500) NULL,           -- File path to uploaded receipt/image
+    StudentStatus   NVARCHAR(20) NOT NULL DEFAULT 'Pending', -- Student's view: Pending, Success, Failed
+    VerifiedStatus  NVARCHAR(20) NOT NULL DEFAULT 'Pending', -- Finance: Pending, Verified, Rejected
+    VerifiedBy      INT NULL,                    -- Admin/Finance staff ID
+    VerifiedDate    DATETIME NULL,
+    Comments        NVARCHAR(500) NULL,          -- Finance rejection reason or notes
+    CONSTRAINT FK_Payment_Student FOREIGN KEY (StudentID) REFERENCES Student(StudentID),
+    CONSTRAINT FK_Payment_Semester FOREIGN KEY (SemesterID) REFERENCES Semester(SemesterID),
+    CONSTRAINT CHK_StudentStatus CHECK (StudentStatus IN ('Pending', 'Success', 'Failed')),
+    CONSTRAINT CHK_VerifiedStatus CHECK (VerifiedStatus IN ('Pending', 'Verified', 'Rejected'))
+);
+
+-- ============================================
+-- 2. COMPUTED COLUMNS
+-- ============================================
+
+ALTER TABLE HeadofProgramme ADD CustomRoleID AS ('A' + CAST(HopID AS VARCHAR(10)));
+ALTER TABLE HeadofProgramme ADD DisplayID AS ('A' + CAST(HopID + 1000 AS VARCHAR(20))) PERSISTED;
+GO
+
+ALTER TABLE Lecturer ADD CustomRoleID AS ('L' + CAST(LecturerID AS VARCHAR(10)));
+ALTER TABLE Lecturer ADD DisplayID AS ('L' + CAST(LecturerID + 1000 AS VARCHAR(20))) PERSISTED;
+GO
+
+ALTER TABLE Student ADD CustomRoleID AS ('S' + CAST(StudentID AS VARCHAR(10)));
+ALTER TABLE Student ADD DisplayID AS ('S' + CAST(StudentID + 1000 AS VARCHAR(20))) PERSISTED;
+GO
+
+-- ============================================
+-- 3. VIEWS
+-- ============================================
+
+CREATE OR ALTER VIEW Vw_AdminAttendanceRegistry AS
+SELECT 
+    f.FacultyID,
+    f.FacultyName AS SchoolName,
+    p.ProgrammeCode,
+    p.ProgrammeName,
+    c.CourseCode,
+    c.CourseName,
+    l.LecturerID,
+    l.LecturerName,
+    att.AttendanceDate,
+    s.CustomRoleID AS StudentRoleID,
+    s.StudentID,
+    s.StudentName,
+    s.ProfilePictureUrl,
+    att.AttendanceStatus
+FROM AttendanceRecord att
+INNER JOIN Student s ON att.StudentID = s.StudentID
+INNER JOIN CourseOffer co ON att.CourseOfferID = co.CourseOfferID
+INNER JOIN Course c ON co.CourseCode = c.CourseCode
+INNER JOIN Lecturer l ON co.LecturerID = l.LecturerID
+INNER JOIN Programme p ON s.ProgrammeCode = p.ProgrammeCode
+INNER JOIN Faculty f ON p.FacultyID = f.FacultyID;
+GO
+
+CREATE OR ALTER VIEW Vw_EnrollmentCapacityRegistry AS
+SELECT 
+    co.CourseOfferID,
+    co.CourseCode,
+    c.CourseName,
+    p.ProgrammeCode,
+    p.ProgrammeName,
+    f.FacultyID,
+    f.FacultyName AS SchoolName,
+    s.SemesterID,
+    s.Semester,
+    co.LecturerID,
+    l.LecturerName,
+    co.MaxCapacity,
+    (SELECT COUNT(1) FROM Enrolment e WHERE e.CourseOfferID = co.CourseOfferID AND e.EnrolStatus = 'Enrolled') AS TotalEnrolled
+FROM CourseOffer co
+INNER JOIN Course c ON co.CourseCode = c.CourseCode
+INNER JOIN Programme p ON c.ProgrammeCode = p.ProgrammeCode
+INNER JOIN Faculty f ON p.FacultyID = f.FacultyID
+INNER JOIN Semester s ON co.SemesterID = s.SemesterID
+INNER JOIN Lecturer l ON co.LecturerID = l.LecturerID;
+GO
+
+-- ============================================
+-- 4. RESEED IDENTITIES TO START FROM 1000
+-- ============================================
+
+DBCC CHECKIDENT ('HeadofProgramme', RESEED, 999);
+DBCC CHECKIDENT ('Lecturer', RESEED, 999);
+DBCC CHECKIDENT ('Student', RESEED, 999);
+GO
+
+-- ============================================
+-- 5. SAMPLE DATA INSERTS
+-- ============================================
+
 INSERT INTO GradeScale (MinMarks, MaxMarks, Grade, GradePoint)
 VALUES
     (0,    39.9, 'F',  0.00),
@@ -278,85 +442,106 @@ VALUES
     (75,   79.9, 'A-', 3.67),
     (80,   89.9, 'A',  4.00),
     (90,  100.0, 'A+', 4.00);
+GO
 
--- Semester
-INSERT INTO Semester (Semester, StartMonthDay, EndMonthDay, EnrolStartDate, EnrolEndDate)
+INSERT INTO Semester (Semester, StartMonthDay, EndMonthDay, EnrolStartDate, EnrolEndDate, AcademicYear)
 VALUES 
-    ('Jan',    '01-01', '03-31', '01-01', '01-14'),
-    ('April',  '04-01', '07-31', '04-01', '04-14'),
-    ('August', '08-01', '12-31', '08-01', '08-14');
+    ('Jan',    '01-01', '03-31', '01-01', '01-14', 2026),
+    ('April',  '04-01', '07-31', '04-01', '04-14', 2026),
+    ('August', '08-01', '12-31', '08-01', '08-14', 2026);
+GO
 
--- Programme
-INSERT INTO Programme (ProgrammeCode, ProgrammeName, Level, TotalCreditHours)
-VALUES ('BSECS', 'Bachelor of Software Engineering in Computer Science', 'Degree', 135);
+UPDATE Semester SET EnrolEndDate = '4-31' WHERE Semester = 'April'
 
--- HeadofProgramme
+INSERT INTO Faculty (FacultyName) VALUES ('Faculty of Computing and Informatics'), ('Faculty of Business');
+GO
+
+INSERT INTO Programme (ProgrammeCode, ProgrammeName, Level, TotalCreditHours, FacultyID, PricePerCourse)
+VALUES ('BSECS', 'Bachelor of Software Engineering in Computer Science', 'Degree', 135, 1, 500.00);
+GO
+
 INSERT INTO HeadofProgramme (HopName, HopEmail, Password, ContactNo, UserRole)
 VALUES ('Dr. Sarah Tan', 'sarah.tan@hop.unitrack', 'Admin@123', '0123456789', 'Admin');
+GO
 
--- Lecturers
 INSERT INTO Lecturer (LecturerName, LecturerEmail, Password, ContactNo, Department, UserRole)
 VALUES 
-('Prof. Ahmad Faiz', 'ahmad.faiz@lecturer.unitrack', 'Lecturer@123', '0198765432', 'Computer Science', 'Lecturer'),
-('Dr. Wong Mei Ling', 'meiling.wong@lecturer.unitrack', 'Lecturer@456', '0123456780', 'Software Engineering', 'Lecturer'),
-('Mr. Rajesh Kumar', 'rajesh.kumar@lecturer.unitrack', 'Lecturer@789', '0176543210', 'Information Systems', 'Lecturer');
+    ('Prof. Ahmad Faiz', 'ahmad.faiz@lecturer.unitrack', 'Lecturer@123', '0198765432', 'Computer Science', 'Lecturer'),
+    ('Dr. Wong Mei Ling', 'meiling.wong@lecturer.unitrack', 'Lecturer@456', '0123456780', 'Software Engineering', 'Lecturer'),
+    ('Mr. Rajesh Kumar', 'rajesh.kumar@lecturer.unitrack', 'Lecturer@789', '0176543210', 'Information Systems', 'Lecturer');
+GO
 
--- Courses
 INSERT INTO Course (CourseCode, CourseName, CreditHours, Description, ProgrammeCode)
 VALUES 
-('CS101', 'Programming Fundamentals', 4, 'Introduction to programming using Python', 'BSECS'),
-('CS102', 'Object-Oriented Programming', 4, 'OOP concepts using Java', 'BSECS'),
-('CS201', 'Data Structures & Algorithms', 4, 'Essential data structures and algorithm analysis', 'BSECS'),
-('CS202', 'Database Management Systems', 3, 'SQL, database design, and normalization', 'BSECS'),
-('CS301', 'Software Engineering', 3, 'Software development lifecycle and methodologies', 'BSECS'),
-('CS401', 'Final Year Project', 6, 'Capstone project', 'BSECS');
+    ('CS101', 'Programming Fundamentals', 4, 'Introduction to programming using Python', 'BSECS'),
+    ('CS102', 'Object-Oriented Programming', 4, 'OOP concepts using Java', 'BSECS'),
+    ('CS201', 'Data Structures & Algorithms', 4, 'Essential data structures and algorithm analysis', 'BSECS'),
+    ('CS202', 'Database Management Systems', 3, 'SQL, database design, and normalization', 'BSECS'),
+    ('CS301', 'Software Engineering', 3, 'Software development lifecycle and methodologies', 'BSECS'),
+    ('CS401', 'Final Year Project', 6, 'Capstone project', 'BSECS');
+GO
 
--- CourseOffer (only 2026 offers)
-INSERT INTO CourseOffer (CourseCode, SemesterID, Year, OfferStatus, LecturerID)
+-- Insert CourseOffer – using subqueries for LecturerID based on email
+INSERT INTO CourseOffer (CourseCode, SemesterID, Year, OfferStatus, LecturerID, MaxCapacity)
 VALUES 
--- Jan 2026
-('CS101', 1, 2026, 'Available', 1),
-('CS102', 1, 2026, 'Available', 2),
--- April 2026
-('CS201', 2, 2026, 'Available', 1),
-('CS202', 2, 2026, 'Available', 2),
--- August 2026
-('CS301', 3, 2026, 'Available', 3);
+    ('CS101', 1, 2026, 'Available', (SELECT LecturerID FROM Lecturer WHERE LecturerEmail = 'ahmad.faiz@lecturer.unitrack'), 30),
+    ('CS102', 1, 2026, 'Available', (SELECT LecturerID FROM Lecturer WHERE LecturerEmail = 'meiling.wong@lecturer.unitrack'), 30),
+    ('CS201', 2, 2026, 'Available', (SELECT LecturerID FROM Lecturer WHERE LecturerEmail = 'ahmad.faiz@lecturer.unitrack'), 25),
+    ('CS202', 2, 2026, 'Available', (SELECT LecturerID FROM Lecturer WHERE LecturerEmail = 'meiling.wong@lecturer.unitrack'), 25),
+    ('CS301', 3, 2026, 'Available', (SELECT LecturerID FROM Lecturer WHERE LecturerEmail = 'rajesh.kumar@lecturer.unitrack'), 20);
+GO
 
--- Student (with IC)
+-- Insert Student – we will capture the ID using a variable or later subquery
 INSERT INTO Student (StudentName, StudentEmail, Password, PersonalEmail, ContactNo, IC, SemesterID, ProgrammeCode, IntakeYear)
 VALUES ('Jonsen', 'jonsen@unitrack.edu.my', '12345', 'sxmen07@gmail.com', '0164099038', 'S1234567A', 1, 'BSECS', 2026);
+GO
 
--- Enrolments for Jan 2026 (CS101, CS102)
-DECLARE @CS101_Offer INT = (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS101' AND Year = 2026 AND SemesterID = 1);
-DECLARE @CS102_Offer INT = (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS102' AND Year = 2026 AND SemesterID = 1);
+-- Now use subqueries for StudentID and CourseOfferID in subsequent inserts
 
+-- Enrolment for Jan 2026
 INSERT INTO Enrolment (StudentID, CourseOfferID, EnrolStatus)
-VALUES (1, @CS101_Offer, 'Enrolled'),
-       (1, @CS102_Offer, 'Enrolled');
+VALUES 
+    ((SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'),
+     (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS101' AND Year = 2026 AND SemesterID = 1),
+     'Enrolled'),
+    ((SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'),
+     (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS102' AND Year = 2026 AND SemesterID = 1),
+     'Enrolled');
+GO
 
 -- Assessments for CS101
 INSERT INTO Assessment (AssessmentName, MaxMarks, Weightage, CourseOfferID)
-VALUES 
-('Quiz 1', 20, 10, @CS101_Offer),
-('Quiz 2', 20, 10, @CS101_Offer),
-('Assignment', 100, 20, @CS101_Offer),
-('Midterm Exam', 100, 30, @CS101_Offer),
-('Final Exam', 100, 30, @CS101_Offer);
+SELECT 
+    AssessmentName, MaxMarks, Weightage, 
+    (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS101' AND Year = 2026 AND SemesterID = 1)
+FROM (VALUES 
+    ('Quiz 1', 20, 10),
+    ('Quiz 2', 20, 10),
+    ('Assignment', 100, 20),
+    ('Midterm Exam', 100, 30),
+    ('Final Exam', 100, 30)
+) AS A(AssessmentName, MaxMarks, Weightage);
+GO
 
 -- Assessments for CS102
 INSERT INTO Assessment (AssessmentName, MaxMarks, Weightage, CourseOfferID)
-VALUES 
-('Quiz 1', 15, 10, @CS102_Offer),
-('Quiz 2', 15, 10, @CS102_Offer),
-('Group Project', 100, 30, @CS102_Offer),
-('Midterm', 100, 25, @CS102_Offer),
-('Final Exam', 100, 25, @CS102_Offer);
+SELECT 
+    AssessmentName, MaxMarks, Weightage, 
+    (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS102' AND Year = 2026 AND SemesterID = 1)
+FROM (VALUES 
+    ('Quiz 1', 15, 10),
+    ('Quiz 2', 15, 10),
+    ('Group Project', 100, 30),
+    ('Midterm', 100, 25),
+    ('Final Exam', 100, 25)
+) AS A(AssessmentName, MaxMarks, Weightage);
+GO
 
--- StudentAssessment (marks)
--- CS101 marks
+-- StudentAssessment for CS101
 INSERT INTO StudentAssessment (AssessmentID, StudentID, ObtainedMark)
-SELECT AssessmentID, 1, 
+SELECT 
+    AssessmentID, 
+    (SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'),
     CASE AssessmentName 
         WHEN 'Quiz 1' THEN 18.5
         WHEN 'Quiz 2' THEN 19.0
@@ -364,11 +549,15 @@ SELECT AssessmentID, 1,
         WHEN 'Midterm Exam' THEN 78.0
         WHEN 'Final Exam' THEN 82.0
     END
-FROM Assessment WHERE CourseOfferID = @CS101_Offer;
+FROM Assessment 
+WHERE CourseOfferID = (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS101' AND Year = 2026 AND SemesterID = 1);
+GO
 
--- CS102 marks
+-- StudentAssessment for CS102
 INSERT INTO StudentAssessment (AssessmentID, StudentID, ObtainedMark)
-SELECT AssessmentID, 1,
+SELECT 
+    AssessmentID, 
+    (SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'),
     CASE AssessmentName 
         WHEN 'Quiz 1' THEN 14.0
         WHEN 'Quiz 2' THEN 13.5
@@ -376,361 +565,101 @@ SELECT AssessmentID, 1,
         WHEN 'Midterm' THEN 72.0
         WHEN 'Final Exam' THEN 79.0
     END
-FROM Assessment WHERE CourseOfferID = @CS102_Offer;
+FROM Assessment 
+WHERE CourseOfferID = (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS102' AND Year = 2026 AND SemesterID = 1);
+GO
 
--- Attendance for CS101 (Jan 2026)
+-- Attendance for CS101
 INSERT INTO AttendanceRecord (StudentID, AttendanceDate, AttendanceStatus, CourseOfferID)
 VALUES 
-(1, '2026-01-05', 'Present', @CS101_Offer),
-(1, '2026-01-07', 'Present', @CS101_Offer),
-(1, '2026-01-12', 'Late',   @CS101_Offer),
-(1, '2026-01-14', 'Absent', @CS101_Offer),
-(1, '2026-01-19', 'Present', @CS101_Offer);
+    ((SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'), '2026-01-05', 'Present', (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS101' AND Year = 2026 AND SemesterID = 1)),
+    ((SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'), '2026-01-07', 'Present', (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS101' AND Year = 2026 AND SemesterID = 1)),
+    ((SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'), '2026-01-12', 'Late',    (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS101' AND Year = 2026 AND SemesterID = 1)),
+    ((SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'), '2026-01-14', 'Absent',  (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS101' AND Year = 2026 AND SemesterID = 1)),
+    ((SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'), '2026-01-19', 'Present', (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS101' AND Year = 2026 AND SemesterID = 1));
+GO
 
--- Attendance for CS102 (Jan 2026)
+-- Attendance for CS102
 INSERT INTO AttendanceRecord (StudentID, AttendanceDate, AttendanceStatus, CourseOfferID)
 VALUES 
-(1, '2026-01-06', 'Present', @CS102_Offer),
-(1, '2026-01-08', 'Present', @CS102_Offer),
-(1, '2026-01-13', 'Late',   @CS102_Offer),
-(1, '2026-01-15', 'Present', @CS102_Offer),
-(1, '2026-01-20', 'Present', @CS102_Offer);
+    ((SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'), '2026-01-06', 'Present', (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS102' AND Year = 2026 AND SemesterID = 1)),
+    ((SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'), '2026-01-08', 'Present', (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS102' AND Year = 2026 AND SemesterID = 1)),
+    ((SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'), '2026-01-13', 'Late',    (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS102' AND Year = 2026 AND SemesterID = 1)),
+    ((SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'), '2026-01-15', 'Present', (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS102' AND Year = 2026 AND SemesterID = 1)),
+    ((SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'), '2026-01-20', 'Present', (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS102' AND Year = 2026 AND SemesterID = 1));
+GO
 
 -- Announcements
-INSERT INTO Announcement (Title, Description, TargetType, TargetValue, CreatedDate)
+INSERT INTO Announcement (Title, Description, TargetType, TargetValue, CreatedDate, AttachmentPath)
 VALUES 
-('Welcome to New Semester', 'Jan 2026 semester starts on 1st Jan. Please check your timetable.', 'All', NULL, GETDATE()),
-('CS101 Quiz 1 Reminder', 'Quiz 1 will be held on 15th Jan during lecture.', 'CourseCode', 'CS101', GETDATE()),
-('CS201 Midterm Preparation', 'Midterm exam on 20th March. Review lectures 1-5.', 'CourseCode', 'CS201', GETDATE()),
-('BSECS Programme Meeting', 'All BSECS students attend a meeting on 10th Jan at 2pm.', 'ProgrammeCode', 'BSECS', GETDATE());
+    ('Welcome to New Semester', 'Jan 2026 semester starts on 1st Jan. Please check your timetable.', 'All', NULL, GETDATE(), NULL),
+    ('CS101 Quiz 1 Reminder', 'Quiz 1 will be held on 15th Jan during lecture.', 'CourseCode', 'CS101', GETDATE(), NULL),
+    ('CS201 Midterm Preparation', 'Midterm exam on 20th March. Review lectures 1-5.', 'CourseCode', 'CS201', GETDATE(), NULL),
+    ('BSECS Programme Meeting', 'All BSECS students attend a meeting on 10th Jan at 2pm.', 'ProgrammeCode', 'BSECS', GETDATE(), NULL);
+GO
 
--- Academic Calendar
-INSERT INTO AcademicCalendar (EventName, EventDescription, EventDate, TargetRole)
+-- AcademicCalendar (enhanced)
+INSERT INTO AcademicCalendar (EventName, EventDescription, EventDate, SemesterID, HexColor, TargetRole)
 VALUES 
-('Semester Begins', 'Start of Jan 2026 semester', '2026-01-01', 'All'),
-('Add/Drop Period Ends', 'Last day to add or drop courses', '2026-01-14', 'Student'),
-('Midterm Exams Week', 'Midterm examinations for all courses', '2026-02-20', 'All'),
-('Final Exams Week', 'Final examinations for Jan semester', '2026-03-20', 'All'),
-('Semester Break', 'Holiday between semesters', '2026-04-01', 'All'),
-('Lecturer Workshop', 'Workshop on new teaching methods', '2026-02-10', 'Lecturer');
+    ('Semester Orientation', 'Welcoming incoming cohorts', '2026-04-06', 2, '#3B82F6', 'All'),
+    ('Labour Day Holiday', 'National Statutory Holiday', '2026-05-01', 2, '#EAB308', 'All'),
+    ('Mid-Semester Examination', 'Core assessment run', '2026-05-18', 2, '#EF4444', 'All');
+GO
 
--- ============================================
--- Enrol Student 1 in CS201 & CS202 (April 2026)
--- ============================================
-
-DECLARE @StudentID INT = 1;
-DECLARE @SemesterID INT = 2;   -- April
-DECLARE @Year INT = 2026;
-
--- Get CourseOfferIDs for CS201 and CS202 in April 2026
-DECLARE @CS201_OfferID INT = (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS201' AND SemesterID = @SemesterID AND Year = @Year);
-DECLARE @CS202_OfferID INT = (SELECT CourseOfferID FROM CourseOffer WHERE CourseCode = 'CS202' AND SemesterID = @SemesterID AND Year = @Year);
-
--- Insert enrolments if they don't already exist
-IF @CS201_OfferID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM Enrolment WHERE StudentID = @StudentID AND CourseOfferID = @CS201_OfferID)
-BEGIN
-    INSERT INTO Enrolment (StudentID, CourseOfferID, EnrolStatus, EnrolmentDate)
-    VALUES (@StudentID, @CS201_OfferID, 'Enrolled', GETDATE());
-    PRINT 'Enrolled Student 1 in CS201 (April 2026)';
-END
-ELSE
-    PRINT 'CS201 enrolment already exists or CourseOffer not found.';
-
-IF @CS202_OfferID IS NOT NULL AND NOT EXISTS (SELECT 1 FROM Enrolment WHERE StudentID = @StudentID AND CourseOfferID = @CS202_OfferID)
-BEGIN
-    INSERT INTO Enrolment (StudentID, CourseOfferID, EnrolStatus, EnrolmentDate)
-    VALUES (@StudentID, @CS202_OfferID, 'Enrolled', GETDATE());
-    PRINT 'Enrolled Student 1 in CS202 (April 2026)';
-END
-ELSE
-    PRINT 'CS202 enrolment already exists or CourseOffer not found.';
-
--- ============================================
--- Add assessments and marks for CS201
--- ============================================
-IF @CS201_OfferID IS NOT NULL
-BEGIN
-    -- Insert assessments for CS201 if not already present
-    IF NOT EXISTS (SELECT 1 FROM Assessment WHERE CourseOfferID = @CS201_OfferID)
-    BEGIN
-        INSERT INTO Assessment (AssessmentName, MaxMarks, Weightage, CourseOfferID)
-        VALUES 
-            ('Quiz 1', 20, 10, @CS201_OfferID),
-            ('Quiz 2', 20, 10, @CS201_OfferID),
-            ('Assignment', 100, 20, @CS201_OfferID),
-            ('Midterm Exam', 100, 30, @CS201_OfferID),
-            ('Final Exam', 100, 30, @CS201_OfferID);
-        PRINT 'Added assessments for CS201 (April 2026)';
-    END
-
-    -- Insert sample marks for Student 1
-    DECLARE @AssessID INT;
-    DECLARE @AssessName NVARCHAR(50);
-    DECLARE cur CURSOR FOR 
-        SELECT AssessmentID, AssessmentName FROM Assessment WHERE CourseOfferID = @CS201_OfferID;
-    OPEN cur;
-    FETCH NEXT FROM cur INTO @AssessID, @AssessName;
-    WHILE @@FETCH_STATUS = 0
-    BEGIN
-        IF NOT EXISTS (SELECT 1 FROM StudentAssessment WHERE AssessmentID = @AssessID AND StudentID = @StudentID)
-        BEGIN
-            INSERT INTO StudentAssessment (AssessmentID, StudentID, ObtainedMark)
-            VALUES (@AssessID, @StudentID,
-                CASE @AssessName
-                    WHEN 'Quiz 1' THEN 17.5
-                    WHEN 'Quiz 2' THEN 18.0
-                    WHEN 'Assignment' THEN 82.0
-                    WHEN 'Midterm Exam' THEN 74.0
-                    WHEN 'Final Exam' THEN 80.0
-                    ELSE 0
-                END);
-        END
-        FETCH NEXT FROM cur INTO @AssessID, @AssessName;
-    END
-    CLOSE cur;
-    DEALLOCATE cur;
-    PRINT 'Added student marks for CS201';
-END
-
--- ============================================
--- Add assessments and marks for CS202
--- ============================================
-IF @CS202_OfferID IS NOT NULL
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM Assessment WHERE CourseOfferID = @CS202_OfferID)
-    BEGIN
-        INSERT INTO Assessment (AssessmentName, MaxMarks, Weightage, CourseOfferID)
-        VALUES 
-            ('Quiz 1', 15, 10, @CS202_OfferID),
-            ('Quiz 2', 15, 10, @CS202_OfferID),
-            ('Group Project', 100, 30, @CS202_OfferID),
-            ('Midterm', 100, 25, @CS202_OfferID),
-            ('Final Exam', 100, 25, @CS202_OfferID);
-        PRINT 'Added assessments for CS202 (April 2026)';
-    END
-
-    DECLARE @AssessID2 INT;
-    DECLARE @AssessName2 NVARCHAR(50);
-    DECLARE cur2 CURSOR FOR 
-        SELECT AssessmentID, AssessmentName FROM Assessment WHERE CourseOfferID = @CS202_OfferID;
-    OPEN cur2;
-    FETCH NEXT FROM cur2 INTO @AssessID2, @AssessName2;
-    WHILE @@FETCH_STATUS = 0
-    BEGIN
-        IF NOT EXISTS (SELECT 1 FROM StudentAssessment WHERE AssessmentID = @AssessID2 AND StudentID = @StudentID)
-        BEGIN
-            INSERT INTO StudentAssessment (AssessmentID, StudentID, ObtainedMark)
-            VALUES (@AssessID2, @StudentID,
-                CASE @AssessName2
-                    WHEN 'Quiz 1' THEN 13.0
-                    WHEN 'Quiz 2' THEN 14.5
-                    WHEN 'Group Project' THEN 86.0
-                    WHEN 'Midterm' THEN 70.0
-                    WHEN 'Final Exam' THEN 77.0
-                    ELSE 0
-                END);
-        END
-        FETCH NEXT FROM cur2 INTO @AssessID2, @AssessName2;
-    END
-    CLOSE cur2;
-    DEALLOCATE cur2;
-    PRINT 'Added student marks for CS202';
-END
-
--- ============================================
--- Add attendance records for April 2026
--- ============================================
--- For CS201
-IF @CS201_OfferID IS NOT NULL
-BEGIN
-    DELETE FROM AttendanceRecord WHERE CourseOfferID = @CS201_OfferID AND StudentID = @StudentID;
-    INSERT INTO AttendanceRecord (StudentID, AttendanceDate, AttendanceStatus, CourseOfferID)
-    VALUES 
-        (1, '2026-04-06', 'Present', @CS201_OfferID),
-        (1, '2026-04-08', 'Present', @CS201_OfferID),
-        (1, '2026-04-13', 'Late',    @CS201_OfferID),
-        (1, '2026-04-15', 'Absent',  @CS201_OfferID),
-        (1, '2026-04-20', 'Present', @CS201_OfferID);
-    PRINT 'Added attendance for CS201';
-END
-
--- For CS202
-IF @CS202_OfferID IS NOT NULL
-BEGIN
-    DELETE FROM AttendanceRecord WHERE CourseOfferID = @CS202_OfferID AND StudentID = @StudentID;
-    INSERT INTO AttendanceRecord (StudentID, AttendanceDate, AttendanceStatus, CourseOfferID)
-    VALUES 
-        (1, '2026-04-07', 'Present', @CS202_OfferID),
-        (1, '2026-04-09', 'Present', @CS202_OfferID),
-        (1, '2026-04-14', 'Present', @CS202_OfferID),
-        (1, '2026-04-16', 'Late',    @CS202_OfferID),
-        (1, '2026-04-21', 'Absent',  @CS202_OfferID);
-    PRINT 'Added attendance for CS202';
-END
-
-PRINT 'All operations completed.';
-
--- ============================================
--- Table: StudentCourseStatus
--- Tracks student progression through each course
--- ============================================
-CREATE TABLE StudentCourseStatus (
-    StatusID INT IDENTITY(1,1) PRIMARY KEY,
-    StudentID INT NOT NULL,
-    CourseOfferID INT NOT NULL,
-    Status NVARCHAR(20) NOT NULL CHECK (Status IN ('Enrolled', 'In Progress', 'Completed', 'Failed', 'Dropped')),
-    ProgressPercentage DECIMAL(5,2) NULL DEFAULT 0,
-    FinalMark DECIMAL(5,2) NULL,
-    FinalGrade NVARCHAR(5) NULL,
-    GradePoint DECIMAL(3,2) NULL,
-    StartedDate DATETIME NULL DEFAULT GETDATE(),
-    CompletedDate DATETIME NULL,
-    IsCurrent BIT NOT NULL DEFAULT 1,
-    CONSTRAINT FK_SCS_Student FOREIGN KEY (StudentID) REFERENCES Student(StudentID),
-    CONSTRAINT FK_SCS_CourseOffer FOREIGN KEY (CourseOfferID) REFERENCES CourseOffer(CourseOfferID),
-    CONSTRAINT UQ_SCS UNIQUE (StudentID, CourseOfferID)
+-- More enrolments for April 2026
+INSERT INTO Enrolment (StudentID, CourseOfferID, EnrolStatus, EnrolmentDate)
+SELECT 
+    (SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my'),
+    CourseOfferID, 
+    'Enrolled', 
+    GETDATE()
+FROM CourseOffer 
+WHERE CourseCode IN ('CS201', 'CS202') 
+AND SemesterID = 2 AND Year = 2026
+AND NOT EXISTS (
+    SELECT 1 FROM Enrolment 
+    WHERE StudentID = (SELECT StudentID FROM Student WHERE StudentEmail = 'jonsen@unitrack.edu.my')
+    AND CourseOfferID = CourseOffer.CourseOfferID
 );
 GO
 
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Programme') AND name = 'PricePerCourse')
-BEGIN
-    -- Add the numeric rate column allowing nulls initially for safe transition
-    ALTER TABLE Programme ADD PricePerCourse DECIMAL(10, 2) NULL;
-END
+-- Optional: AdminMessage sample
+INSERT INTO AdminMessage (SenderEmail, Subject, MessageText)
+VALUES ('student@example.com', 'Login Issue', 'I cannot log in to the system.');
 GO
 
-UPDATE Programme SET PricePerCourse = 500.00 WHERE PricePerCourse IS NULL;
+-- Optional: AdminAnnouncement sample
+INSERT INTO AdminAnnouncement (Title, ContentText, TargetAdmin, TargetLecturer, TargetStudent, SenderAdminID)
+VALUES ('System Maintenance', 'The system will be down on Sunday for upgrades.', 1, 1, 1, 1);
 GO
 
-ALTER TABLE Programme ALTER COLUMN PricePerCourse DECIMAL(10, 2) NOT NULL;
+PRINT 'Database rebuild complete. All tables and sample data ready.';
 GO
 
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('InvoiceReceipt') AND type = 'U')
-BEGIN
-    CREATE TABLE InvoiceReceipt (
-        InvoiceID INT IDENTITY(1,1) PRIMARY KEY,
-        StudentID INT NOT NULL,
-        SemesterID INT NOT NULL,
-        TotalAmount DECIMAL(10, 2) NOT NULL,
-        IssueDate DATETIME NOT NULL DEFAULT GETDATE()
-    );
-END
-GO
-
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('InvoiceReceipt') AND name = 'PaymentStatus')
-BEGIN
-    ALTER TABLE InvoiceReceipt ADD PaymentStatus VARCHAR(20) NOT NULL DEFAULT 'PENDING';
-END
-GO
-
---Add course type in course material--
- ALTER TABLE CourseMaterial
-ADD MaterialCategory NVARCHAR(50);
-
---Add table for Admin to audit attendance--
-IF OBJECT_ID('Vw_AdminAttendanceRegistry', 'V') IS NOT NULL
-    DROP VIEW Vw_AdminAttendanceRegistry;
-GO
-
-CREATE VIEW Vw_AdminAttendanceRegistry AS
-SELECT 
-    f.FacultyName AS SchoolName,
-    p.ProgrammeName,
-    c.CourseCode,
-    c.CourseName,
-    l.LecturerName,
-    s.StudentID AS StudentRoleID,
-    s.StudentName,
-    ar.AttendanceStatus,
-    f.FacultyID,
-    p.ProgrammeCode,
-    l.LecturerID,
-    ar.AttendanceDate,
-    s.ProfilePhotoPath AS ProfilePictureUrl   -- <-- Added this column
-FROM AttendanceRecord ar
-INNER JOIN CourseOffer co ON ar.CourseOfferID = co.CourseOfferID
-INNER JOIN Course c ON co.CourseCode = c.CourseCode
-INNER JOIN Programme p ON c.ProgrammeCode = p.ProgrammeCode
-INNER JOIN Faculty f ON p.FacultyID = f.FacultyID
-INNER JOIN Lecturer l ON co.LecturerID = l.LecturerID
-INNER JOIN Student s ON ar.StudentID = s.StudentID;
-GO
-
--- Quick test: verify the view returns data
-SELECT * FROM Vw_AdminAttendanceRegistry;
-GO
-
--- Final verification
-PRINT 'Database successfully created with IC column in Student table.';
-SELECT * FROM Student;
-SELECT * FROM CourseOffer;
-SELECT * FROM Enrolment;
-
--- List all user tables and fetch all rows
-SELECT '=== HeadofProgramme ===' AS TableName;
+-- ============================================
+-- 6. FINAL VERIFICATION (list all tables)
+-- ============================================
 SELECT * FROM HeadofProgramme;
-
-SELECT '=== Lecturer ===' AS TableName;
 SELECT * FROM Lecturer;
-
-SELECT '=== Programme ===' AS TableName;
+SELECT * FROM Faculty;
 SELECT * FROM Programme;
-
-SELECT '=== Semester ===' AS TableName;
 SELECT * FROM Semester;
-
-SELECT '=== Student ===' AS TableName;
 SELECT * FROM Student;
-
-SELECT '=== Course ===' AS TableName;
 SELECT * FROM Course;
-
-SELECT '=== CourseOffer ===' AS TableName;
 SELECT * FROM CourseOffer;
-
-SELECT '=== CourseMaterial ===' AS TableName;
 SELECT * FROM CourseMaterial;
-
-SELECT '=== Enrolment ===' AS TableName;
 SELECT * FROM Enrolment;
-
-SELECT '=== Assessment ===' AS TableName;
 SELECT * FROM Assessment;
-
-SELECT '=== StudentAssessment ===' AS TableName;
 SELECT * FROM StudentAssessment;
-
-SELECT '=== GradeScale ===' AS TableName;
 SELECT * FROM GradeScale;
-
-SELECT '=== AttendanceRecord ===' AS TableName;
 SELECT * FROM AttendanceRecord;
-
-SELECT '=== Announcement ===' AS TableName;
 SELECT * FROM Announcement;
-
-SELECT '=== AcademicCalendar ===' AS TableName;
+SELECT * FROM EmailLog;
 SELECT * FROM AcademicCalendar;
-
-SELECT '=== NotificationReadStatus ===' AS TableName;
 SELECT * FROM NotificationReadStatus;
-
-SELECT '=== DashboardPreferences ===' AS TableName;
 SELECT * FROM DashboardPreferences;
-
--- Check which CourseOffer records exist for CS201 and CS202
-SELECT co.CourseOfferID, co.CourseCode, co.Year, co.SemesterID, s.Semester
-FROM CourseOffer co
-INNER JOIN Semester s ON co.SemesterID = s.SemesterID
-WHERE co.CourseCode IN ('CS201', 'CS202');
-
--- Check which CourseOffer the student is actually enrolled in
-SELECT e.CourseOfferID, co.CourseCode, co.Year, s.Semester
-FROM Enrolment e
-INNER JOIN CourseOffer co ON e.CourseOfferID = co.CourseOfferID
-INNER JOIN Semester s ON co.SemesterID = s.SemesterID
-WHERE e.StudentID = 1;
-
-SELECT CourseOfferID, CourseCode, SemesterID, Year FROM CourseOffer WHERE CourseCode IN ('CS101', 'CS102', 'CS201', 'CS202');
-
-UPDATE Semester SET EnrolEndDate = '7-31' WHERE Semester = 'April'
+SELECT * FROM StudentCourseStatus;
+SELECT * FROM InvoiceReceipt;
+SELECT * FROM AdminMessage;
+SELECT * FROM AdminAnnouncement;
+GO
