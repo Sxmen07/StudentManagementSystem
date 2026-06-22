@@ -28,10 +28,23 @@
 
         <div class="flex-1 overflow-y-auto bg-[#FBFBFA] h-full flex flex-col">
             
-            <div class="bg-white border-b border-[#EBEBE9] px-12 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0">
-                <div>
-                    <h2 class="text-xl font-bold text-[#111625] tracking-tight">Curriculum & Structural Dashboard</h2>
-                    <p class="text-[#7C7B77] text-xs mt-0.5">Configure operational terms, academic management faculties, and complete graduation programs.</p>
+            <div class="relative bg-[#FFFDF0] border-b border-[#EBEBE9] px-12 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0 overflow-hidden">
+                <div class="absolute inset-0 pointer-events-none select-none opacity-20">
+                    <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="-10" cy="50%" r="55" fill="none" stroke="#FBBF24" stroke-width="4" />
+                        <circle cx="92%" cy="30%" r="65" fill="none" stroke="#F97316" stroke-width="8" />
+                        <circle cx="96%" cy="65%" r="45" fill="none" stroke="#FBBF24" stroke-width="3" stroke-dasharray="4 4" />
+                    </svg>
+                </div>
+
+                <div class="relative z-10 flex items-center gap-4">
+                    <div class="bg-[#F97316]/10 text-[#F97316] p-3 rounded-2xl border border-[#F97316]/20 shadow-sm flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-school text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-[#111625] tracking-tight">Curriculum & Structural Dashboard</h2>
+                        <p class="text-[#7C7B77] text-xs mt-0.5">Configure operational terms, academic management faculties, program structures, and financial rates.</p>
+                    </div>
                 </div>
             </div>
 
@@ -73,13 +86,22 @@
                             <asp:Button ID="btnSaveSemester" runat="server" Text="Save Term" OnClick="btnSaveSemester_Click" CssClass="bg-zinc-950 text-white font-bold text-xs px-4 py-1.5 rounded-xl hover:bg-zinc-800 shadow-sm" />
                         </div>
                         
-                        <div class="rounded-xl border border-[#EBEBE9] overflow-hidden max-h-[200px] overflow-y-auto custom-scrollbar">
+                        <div class="rounded-xl border border-[#EBEBE9] overflow-hidden max-h-[220px] overflow-y-auto custom-scrollbar">
                             <asp:GridView ID="gvSemesters" runat="server" AutoGenerateColumns="False" DataKeyNames="SemesterID" OnRowCommand="gvSemesters_RowCommand" CssClass="w-full text-left text-xs border-collapse" GridLines="None">
                                 <HeaderStyle CssClass="bg-[#F7F7F5] text-[#7C7B77] font-bold uppercase tracking-wider border-b border-[#EBEBE9] text-[10px]" />
                                 <RowStyle CssClass="border-b border-[#F1F1EF] hover:bg-[#FBFBFA] text-[#2F2F2F]" />
                                 <Columns>
                                     <asp:BoundField DataField="Semester" HeaderText="Term" HeaderStyle-CssClass="p-3" ItemStyle-CssClass="p-3 font-semibold text-[#1A1A1A]" />
-                                    <asp:BoundField DataField="AcademicYear" HeaderText="Year" HeaderStyle-CssClass="p-3" ItemStyle-CssClass="p-3 font-medium text-zinc-500" />
+                                    
+                                    <asp:TemplateField HeaderStyle-CssClass="p-3" ItemStyle-CssClass="p-3 font-medium text-zinc-500">
+                                        <HeaderTemplate>
+                                            <asp:LinkButton ID="btnSortYear" runat="server" CommandName="SortYear" Text="Year ⇅" CssClass="text-[#7C7B77] font-bold uppercase tracking-wider text-[10px] hover:text-zinc-950 transition-colors" />
+                                        </HeaderTemplate>
+                                        <ItemTemplate>
+                                            <%# Eval("AcademicYear") %>
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+
                                     <asp:BoundField DataField="StartMonthDay" HeaderText="Start" HeaderStyle-CssClass="p-3" ItemStyle-CssClass="p-3 text-[#5F5E5B]" />
                                     <asp:BoundField DataField="EndMonthDay" HeaderText="End" HeaderStyle-CssClass="p-3" ItemStyle-CssClass="p-3 text-[#5F5E5B]" />
                                     <asp:TemplateField HeaderText="Actions" HeaderStyle-CssClass="p-3 text-right text-[10px]" ItemStyle-CssClass="p-3 text-right w-20">
@@ -140,7 +162,7 @@
                     <div class="border-b border-[#EBEBE9] pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
                             <h3 class="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider flex items-center gap-2">
-                                <span>🎓</span> Academic Qualification Programmes Core
+                                <span>🎓</span> Academic Qualification Programmes & Pricing Core
                             </h3>
                         </div>
                         
@@ -155,7 +177,7 @@
                                     <asp:ListItem Value="Degree">Degree</asp:ListItem>
                                 </asp:DropDownList>
                             </div>
-                            
+                 
                             <div class="flex items-center gap-2 bg-[#F7F7F5] border border-[#EBEBE9] px-3 py-1.5 rounded-xl shadow-sm">
                                 <span class="text-[10px] font-bold text-[#7C7B77] uppercase tracking-wider">Faculty:</span>
                                 <asp:DropDownList ID="ddlFilterSchool" runat="server" AutoPostBack="True" OnSelectedIndexChanged="Filters_SelectedIndexChanged" CssClass="bg-transparent text-xs font-semibold outline-none cursor-pointer text-[#2F2F2F]"></asp:DropDownList>
@@ -177,9 +199,10 @@
                     
                     <asp:Label ID="lblProgStatus" runat="server" CssClass="block text-[11px] font-medium p-2.5 rounded-xl bg-zinc-50 border border-zinc-100" Visible="false"></asp:Label>
                     <asp:HiddenField ID="hfIsUpdateProg" runat="server" Value="false" />
-                    
+                    <asp:HiddenField ID="hfOriginalProgCode" runat="server" />
+           
                     <div class="bg-[#F7F7F5] rounded-xl border border-[#EBEBE9] p-5 space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                             <div>
                                 <label class="block text-[10px] font-bold text-[#7C7B77] uppercase tracking-wider mb-1">Prog Code</label>
                                 <asp:TextBox ID="txtProgCode" runat="server" CssClass="w-full bg-white p-2.5 text-xs rounded-xl border border-[#EBEBE9] focus:border-zinc-950 outline-none font-bold uppercase" placeholder="BSECS"></asp:TextBox>
@@ -200,6 +223,10 @@
                             <div>
                                 <label class="block text-[10px] font-bold text-[#7C7B77] uppercase tracking-wider mb-1">Total Credits</label>
                                 <asp:TextBox ID="txtCreditHours" runat="server" TextMode="Number" CssClass="w-full bg-white p-2.5 text-xs rounded-xl border border-[#EBEBE9] focus:border-zinc-950 outline-none" placeholder="135"></asp:TextBox>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-[#7C7B77] uppercase tracking-wider mb-1">Price / Subject (RM)</label>
+                                <asp:TextBox ID="txtPricePerCourse" runat="server" CssClass="w-full bg-white p-2.5 text-xs rounded-xl border border-[#EBEBE9] focus:border-zinc-950 outline-none font-medium" placeholder="1000.00"></asp:TextBox>
                             </div>
                         </div>
 
@@ -227,16 +254,17 @@
                             <HeaderStyle CssClass="bg-[#F7F7F5] text-[#7C7B77] font-bold uppercase tracking-wider border-b border-[#EBEBE9] text-[10px]" />
                             <RowStyle CssClass="border-b border-[#F1F1EF] hover:bg-[#FBFBFA]/60 text-[#2F2F2F]" />
                             <Columns>
-                                <asp:BoundField DataField="ProgrammeCode" HeaderText="Code" HeaderStyle-CssClass="p-4" ItemStyle-CssClass="p-4 font-bold text-zinc-900 w-24" />
+                                <asp:BoundField DataField="ProgrammeCode" HeaderText="Code" HeaderStyle-CssClass="p-4" ItemStyle-CssClass="p-4 font-bold text-zinc-900 w-20" />
                                 <asp:BoundField DataField="ProgrammeName" HeaderText="Programme Qualification Title" HeaderStyle-CssClass="p-4" ItemStyle-CssClass="p-4 font-semibold text-zinc-800" />
-                                <asp:BoundField DataField="Level" HeaderText="Tier Level" HeaderStyle-CssClass="p-4" ItemStyle-CssClass="p-4 text-[#5F5E5B] w-28" />
-                                <asp:BoundField DataField="FacultyName" HeaderText="Assigned Hosting Faculty" HeaderStyle-CssClass="p-4" ItemStyle-CssClass="p-4 font-medium text-zinc-500 w-48" />
-                                <asp:BoundField DataField="TotalCreditHours" HeaderText="Credits" HeaderStyle-CssClass="p-4 text-center" ItemStyle-CssClass="p-4 text-center font-bold text-zinc-400 w-20" />
+                                <asp:BoundField DataField="Level" HeaderText="Tier Level" HeaderStyle-CssClass="p-4" ItemStyle-CssClass="p-4 text-[#5F5E5B] w-24" />
+                                <asp:BoundField DataField="FacultyName" HeaderText="Assigned Faculty" HeaderStyle-CssClass="p-4" ItemStyle-CssClass="p-4 font-medium text-zinc-500 w-44" />
+                                <asp:BoundField DataField="TotalCreditHours" HeaderText="Credits" HeaderStyle-CssClass="p-4 text-center" ItemStyle-CssClass="p-4 text-center font-bold text-zinc-400 w-16" />
+                                <asp:BoundField DataField="PricePerCourse" HeaderText="Price / Subject" DataFormatString="RM {0:N2}" HeaderStyle-CssClass="p-4 text-right" ItemStyle-CssClass="p-4 text-right font-bold text-zinc-700 w-28" />
                                 <asp:TemplateField HeaderText="Action Controls" HeaderStyle-CssClass="p-4 text-right text-[10px] pr-6" ItemStyle-CssClass="p-4 text-right pr-6 w-32">
                                     <ItemTemplate>
                                         <div class="inline-flex gap-1 justify-end w-full">
                                             <asp:Button ID="btnEditProg" runat="server" CommandName="EditProg" CommandArgument='<%# Eval("ProgrammeCode") %>' Text="Edit" CssClass="bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 text-zinc-700 px-2 py-1 rounded-lg font-semibold" />
-                                            <asp:Button ID="btnDeleteProg" runat="server" CommandName="DeleteProg" CommandArgument='<%# Eval("ProgrammeCode") %>' Text="Delete" OnClientClick="return confirm('Drop selection?');" CssClass="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-1 rounded-lg font-semibold" />
+                                            <asp:Button ID="btnDeleteProg" runat="server" CommandName="DeleteProg" CommandArgument='<%# Eval("ProgrammeCode") %>' Text="Delete" OnClientClick="return confirm('Drop selection programme?');" CssClass="bg-red-50 hover:bg-red-100 text-red-600 px-2 py-1 rounded-lg font-semibold" />
                                         </div>
                                     </ItemTemplate>
                                 </asp:TemplateField>

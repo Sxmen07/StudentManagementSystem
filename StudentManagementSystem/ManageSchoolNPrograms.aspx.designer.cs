@@ -231,6 +231,15 @@ namespace StudentManagementSystem
         protected global::System.Web.UI.WebControls.HiddenField hfIsUpdateProg;
 
         /// <summary>
+        /// hfOriginalProgCode control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfOriginalProgCode;
+
+        /// <summary>
         /// txtProgCode control.
         /// </summary>
         /// <remarks>
@@ -265,6 +274,15 @@ namespace StudentManagementSystem
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtCreditHours;
+
+        /// <summary>
+        /// txtPricePerCourse control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtPricePerCourse;
 
         /// <summary>
         /// ddlSchools control.

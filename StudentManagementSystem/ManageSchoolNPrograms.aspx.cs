@@ -23,6 +23,7 @@ namespace StudentManagementSystem
 
             if (!IsPostBack)
             {
+                ViewState["SemesterSortDirection"] = "DESC";
                 PopulateFilterFacultyDropdown();
                 RefreshAllDashboardModules();
             }
@@ -88,9 +89,10 @@ namespace StudentManagementSystem
 
         private void BindSemestersGrid()
         {
+            string direction = ViewState["SemesterSortDirection"].ToString();
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                string query = "SELECT SemesterID, Semester, AcademicYear, StartMonthDay, EndMonthDay FROM Semester ORDER BY AcademicYear DESC, SemesterID ASC";
+                string query = $"SELECT TOP 4 SemesterID, Semester, AcademicYear, StartMonthDay, EndMonthDay FROM Semester ORDER BY AcademicYear {direction}, SemesterID DESC";
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     using (SqlDataAdapter da = new SqlDataAdapter(cmd))
@@ -152,6 +154,14 @@ namespace StudentManagementSystem
 
         protected void gvSemesters_RowCommand(object sender, GridViewCommandEventArgs e)
         {
+            if (e.CommandName == "SortYear")
+            {
+                string currentDir = ViewState["SemesterSortDirection"].ToString();
+                ViewState["SemesterSortDirection"] = (currentDir == "DESC") ? "ASC" : "DESC";
+                BindSemestersGrid();
+                return;
+            }
+
             if (e.CommandArgument == null || string.IsNullOrEmpty(e.CommandArgument.ToString())) return;
             int id = Convert.ToInt32(e.CommandArgument);
 
@@ -177,6 +187,7 @@ namespace StudentManagementSystem
                                     txtEndDay.Text = dr["EndMonthDay"].ToString();
                                     btnSaveSemester.Text = "Update";
                                     btnCancelSemester.Visible = true;
+                                    lblSemesterStatus.Visible = false;
                                 }
                             }
                         }
@@ -214,7 +225,7 @@ namespace StudentManagementSystem
             txtAcademicYear.Text = string.Empty;
             txtStartDay.Text = string.Empty;
             txtEndDay.Text = string.Empty;
-            btnSaveSemester.Text = "Save";
+            btnSaveSemester.Text = "Save Term";
             btnCancelSemester.Visible = false;
         }
 
@@ -298,6 +309,7 @@ namespace StudentManagementSystem
                                     txtSchoolName.Text = dr["FacultyName"].ToString();
                                     btnSaveSchool.Text = "Update";
                                     btnCancelSchool.Visible = true;
+                                    lblSchoolStatus.Visible = false;
                                 }
                             }
                         }
@@ -344,7 +356,7 @@ namespace StudentManagementSystem
 
             using (SqlConnection conn = new SqlConnection(connString))
             {
-                string query = "SELECT p.ProgrammeCode, p.ProgrammeName, p.Level, p.TotalCreditHours, f.FacultyName " +
+                string query = "SELECT p.ProgrammeCode, p.ProgrammeName, p.Level, p.TotalCreditHours, ISNULL(p.PricePerCourse, 0) AS PricePerCourse, f.FacultyName " +
                                "FROM Programme p LEFT JOIN Faculty f ON p.FacultyID = f.FacultyID WHERE 1=1 ";
 
                 if (filterLevel != "All") query += "AND p.Level = @Level ";
@@ -377,12 +389,6 @@ namespace StudentManagementSystem
             catch (Exception ex) { ShowProgStatus("Grid load failure: " + ex.Message, false); }
         }
 
-        protected void gvProgrammes_PageIndexChanging(object sender, GridViewPageEventArgs e)
-        {
-            gvProgrammes.PageIndex = e.NewPageIndex;
-            BindProgrammesGrid();
-        }
-
         protected void Filters_SelectedIndexChanged(object sender, EventArgs e)
         {
             gvProgrammes.PageIndex = 0;
@@ -395,6 +401,7 @@ namespace StudentManagementSystem
             string name = txtProgrammeName.Text.Trim();
             string level = ddlLevel.SelectedValue;
             string creditStr = txtCreditHours.Text.Trim();
+            string priceStr = txtPricePerCourse.Text.Trim();
             string facultyId = ddlSchools.SelectedValue;
             string desc = txtDescription.Text.Trim();
 
@@ -405,22 +412,25 @@ namespace StudentManagementSystem
             }
 
             int.TryParse(creditStr, out int credits);
+            decimal.TryParse(priceStr, out decimal pricePerCourse);
             bool isUpdate = (hfIsUpdateProg.Value == "true");
 
             using (SqlConnection conn = new SqlConnection(connString))
             {
                 string query = isUpdate
-                    ? "UPDATE Programme SET ProgrammeName = @Name, Level = @Level, TotalCreditHours = @Credits, FacultyID = @FacultyID, Description = @Desc WHERE ProgrammeCode = @Code"
-                    : "INSERT INTO Programme (ProgrammeCode, ProgrammeName, Level, TotalCreditHours, FacultyID, Description) VALUES (@Code, @Name, @Level, @Credits, @FacultyID, @Desc)";
+                    ? "UPDATE Programme SET ProgrammeCode = @NewCode, ProgrammeName = @Name, Level = @Level, TotalCreditHours = @Credits, FacultyID = @FacultyID, Description = @Desc, PricePerCourse = @Price WHERE ProgrammeCode = @OrigCode"
+                    : "INSERT INTO Programme (ProgrammeCode, ProgrammeName, Level, TotalCreditHours, FacultyID, Description, PricePerCourse) VALUES (@NewCode, @Name, @Level, @Credits, @FacultyID, @Desc, @Price)";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@Code", code);
+                    cmd.Parameters.AddWithValue("@NewCode", code);
                     cmd.Parameters.AddWithValue("@Name", name);
                     cmd.Parameters.AddWithValue("@Level", level);
                     cmd.Parameters.AddWithValue("@Credits", credits);
+                    cmd.Parameters.AddWithValue("@Price", pricePerCourse);
                     cmd.Parameters.AddWithValue("@FacultyID", Convert.ToInt32(facultyId));
                     cmd.Parameters.AddWithValue("@Desc", string.IsNullOrEmpty(desc) ? (object)DBNull.Value : desc);
+                    if (isUpdate) cmd.Parameters.AddWithValue("@OrigCode", hfOriginalProgCode.Value);
 
                     try
                     {
@@ -444,7 +454,7 @@ namespace StudentManagementSystem
             {
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
-                    string query = "SELECT ProgrammeCode, ProgrammeName, Level, TotalCreditHours, FacultyID, Description FROM Programme WHERE ProgrammeCode = @Code";
+                    string query = "SELECT ProgrammeCode, ProgrammeName, Level, TotalCreditHours, FacultyID, Description, ISNULL(PricePerCourse,0) AS PricePerCourse FROM Programme WHERE ProgrammeCode = @Code";
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
                         cmd.Parameters.AddWithValue("@Code", targetCode);
@@ -456,15 +466,17 @@ namespace StudentManagementSystem
                                 if (dr.Read())
                                 {
                                     txtProgCode.Text = dr["ProgrammeCode"].ToString();
+                                    hfOriginalProgCode.Value = dr["ProgrammeCode"].ToString();
                                     txtProgrammeName.Text = dr["ProgrammeName"].ToString();
                                     ddlLevel.SelectedValue = dr["Level"].ToString();
                                     txtCreditHours.Text = dr["TotalCreditHours"].ToString();
+                                    txtPricePerCourse.Text = Convert.ToDecimal(dr["PricePerCourse"]).ToString("F2");
                                     txtDescription.Text = dr["Description"].ToString();
 
                                     string savedFaculty = dr["FacultyID"].ToString();
                                     if (ddlSchools.Items.FindByValue(savedFaculty) != null) ddlSchools.SelectedValue = savedFaculty;
 
-                                    txtProgCode.Enabled = false;
+                                    txtProgCode.Enabled = true;
                                     hfIsUpdateProg.Value = "true";
                                     btnSaveProg.Text = "Update";
                                     btnCancelProg.Visible = true;
@@ -501,9 +513,11 @@ namespace StudentManagementSystem
         private void ClearProgrammeForm()
         {
             txtProgCode.Text = string.Empty;
+            hfOriginalProgCode.Value = string.Empty;
             txtProgrammeName.Text = string.Empty;
             ddlLevel.SelectedIndex = 0;
             txtCreditHours.Text = string.Empty;
+            txtPricePerCourse.Text = string.Empty;
             ddlSchools.SelectedIndex = 0;
             txtDescription.Text = string.Empty;
             txtProgCode.Enabled = true;
@@ -512,16 +526,30 @@ namespace StudentManagementSystem
             btnCancelProg.Visible = false;
         }
 
+        private string GetDocumentMainTitle()
+        {
+            return ddlFilterSchool.SelectedValue == "All" ? "Lists of Charges for All Faculties" : $"Lists of Charges for {ddlFilterSchool.SelectedItem.Text}";
+        }
+
+        private string GetDocumentSubHeader()
+        {
+            return ddlFilterSchool.SelectedValue == "All" ? "All Faculties" : $"Faculty: {ddlFilterSchool.SelectedItem.Text}";
+        }
+
         protected void btnExportCSV_Click(object sender, EventArgs e)
         {
             DataTable dt = GetFilteredProgrammes();
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("No,Qualifications,Name");
+            sb.AppendLine(GetDocumentMainTitle());
+            sb.AppendLine(GetDocumentSubHeader());
+            sb.AppendLine($"Exported Date: {DateTime.Now:yyyy-MM-dd}");
+            sb.AppendLine();
+            sb.AppendLine("No,Qualifications,Name,Price/Subject");
 
             int counter = 1;
             foreach (DataRow row in dt.Rows)
             {
-                sb.AppendLine($"{counter},{EscapeCsvField(row["Level"].ToString())},{EscapeCsvField(row["ProgrammeName"].ToString())}");
+                sb.AppendLine($"{counter},{EscapeCsvField(row["Level"].ToString())},{EscapeCsvField(row["ProgrammeName"].ToString())},RM {Convert.ToDecimal(row["PricePerCourse"]):F2}");
                 counter++;
             }
 
@@ -554,8 +582,11 @@ namespace StudentManagementSystem
             StringWriter sw = new StringWriter();
             HtmlTextWriter hw = new HtmlTextWriter(sw);
 
+            hw.Write($"<h2>{HttpUtility.HtmlEncode(GetDocumentMainTitle())}</h2>");
+            hw.Write($"<h4>{HttpUtility.HtmlEncode(GetDocumentSubHeader())}</h4>");
+            hw.Write($"<p>Exported Date: {DateTime.Now:yyyy-MM-dd}</p><br/>");
             hw.Write("<table border='1' style='font-family:Arial; font-size:12px;'>");
-            hw.Write("<tr style='background-color:#F7F7F5; font-weight:bold;'><th>No</th><th>Qualifications</th><th>Name</th></tr>");
+            hw.Write("<tr style='background-color:#F7F7F5; font-weight:bold;'><th>No</th><th>Qualifications</th><th>Name</th><th>Price/Subject</th></tr>");
 
             int counter = 1;
             foreach (DataRow row in dt.Rows)
@@ -564,6 +595,7 @@ namespace StudentManagementSystem
                 hw.Write($"<td style='text-align:center;'>{counter}</td>");
                 hw.Write($"<td>{HttpUtility.HtmlEncode(row["Level"])}</td>");
                 hw.Write($"<td>{HttpUtility.HtmlEncode(row["ProgrammeName"])}</td>");
+                hw.Write($"<td style='text-align:right;'>RM {Convert.ToDecimal(row["PricePerCourse"]):N2}</td>");
                 hw.Write("</tr>");
                 counter++;
             }
@@ -574,7 +606,6 @@ namespace StudentManagementSystem
             Response.End();
         }
 
-        // FIXED: Stream layout compiled entirely in memory. Bypasses file system routing to fully resolve the 404 crash tracker error.
         protected void btnExportPDF_Click(object sender, EventArgs e)
         {
             DataTable dt = GetFilteredProgrammes();
@@ -586,12 +617,17 @@ namespace StudentManagementSystem
             sb.Append("th, td { border: 1px solid #EBEBE9; padding: 12px 16px; font-size: 13px; text-align: left; }");
             sb.Append("th { background-color: #F7F7F5; color: #7C7B77; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }");
             sb.Append("h2 { margin: 0; font-size: 22px; color: #111625; font-weight: 700; letter-spacing: -0.02em; }");
-            sb.Append("p { font-size: 13px; color: #7C7B77; margin-top: 4px; }");
+            sb.Append("h4 { margin: 6px 0 0 0; font-size: 14px; color: #4B5563; font-weight: 600; }");
+            sb.Append("p { font-size: 12px; color: #7C7B77; margin-top: 4px; }");
             sb.Append("tr:nth-child(even) { background-color: #FBFBFA; }");
             sb.Append("</style></head><body>");
-            sb.Append("<h2>Academic Qualification Programmes Summary</h2>");
+
+            // FIXED: Removed literal text label strings to create a pure structural hierarchy print outline
+            sb.Append($"<h2>{HttpUtility.HtmlEncode(GetDocumentMainTitle())}</h2>");
+            sb.Append($"<h4>{HttpUtility.HtmlEncode(GetDocumentSubHeader())}</h4>");
             sb.Append($"<p>Filtered Report Registers • Generated on {DateTime.Now:yyyy-MM-dd • hh:mm tt}</p>");
-            sb.Append("<table><tr><th style='width: 10%; text-align: center;'>No</th><th style='width: 30%;'>Qualifications</th><th>Name</th></tr>");
+
+            sb.Append("<table><tr><th style='width: 10%; text-align: center;'>No</th><th style='width: 25%;'>Qualifications</th><th>Name</th><th style='width: 20%; text-align: right;'>Price/Subject</th></tr>");
 
             int counter = 1;
             foreach (DataRow row in dt.Rows)
@@ -600,13 +636,13 @@ namespace StudentManagementSystem
                 sb.Append($"<td style='text-align: center; font-weight: 700; color: #A1A1AA;'>{counter}</td>");
                 sb.Append($"<td style='font-weight: 600; color: #4B5563;'>{HttpUtility.HtmlEncode(row["Level"])}</td>");
                 sb.Append($"<td style='font-weight: 500; color: #111827;'>{HttpUtility.HtmlEncode(row["ProgrammeName"])}</td>");
+                sb.Append($"<td style='text-align: right; font-weight: 700; color: #111827;'>RM {Convert.ToDecimal(row["PricePerCourse"]):N2}</td>");
                 sb.Append("</tr>");
                 counter++;
             }
             sb.Append("</table>");
             sb.Append("<script type='text/javascript'>window.onload = function() { window.print(); }</script></body></html>");
 
-            // Flush response stream natively as HTML to trigger instant print display panels
             Response.Clear();
             Response.ContentType = "text/html";
             Response.Write(sb.ToString());
@@ -617,5 +653,11 @@ namespace StudentManagementSystem
         private void ShowSemStatus(string msg, bool ok) { lblSemesterStatus.Text = msg; lblSemesterStatus.ForeColor = ok ? System.Drawing.Color.MediumSeaGreen : System.Drawing.Color.OrangeRed; lblSemesterStatus.Visible = true; }
         private void ShowSchoolStatus(string msg, bool ok) { lblSchoolStatus.Text = msg; lblSchoolStatus.ForeColor = ok ? System.Drawing.Color.MediumSeaGreen : System.Drawing.Color.OrangeRed; lblSchoolStatus.Visible = true; }
         private void ShowProgStatus(string msg, bool ok) { lblProgStatus.Text = msg; lblProgStatus.ForeColor = ok ? System.Drawing.Color.MediumSeaGreen : System.Drawing.Color.OrangeRed; lblProgStatus.Visible = true; }
+
+        protected void gvProgrammes_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            gvProgrammes.PageIndex = e.NewPageIndex;
+            BindProgrammesGrid();
+        }
     }
 }
