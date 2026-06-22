@@ -2,6 +2,7 @@ using System;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace StudentManagementSystem.Student
@@ -13,6 +14,13 @@ namespace StudentManagementSystem.Student
         private int _currentSemesterId = 0;
         private int _currentYear = 0;
 
+        private enum Tab { MyEnrollments, Available, Dropped, History }
+        private Tab ActiveTab
+        {
+            get { return ViewState["ActiveTab"] == null ? Tab.MyEnrollments : (Tab)ViewState["ActiveTab"]; }
+            set { ViewState["ActiveTab"] = value; }
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Session["UserEmail"] == null)
@@ -22,361 +30,276 @@ namespace StudentManagementSystem.Student
 
             if (!IsPostBack)
             {
-                LoadCurrentEnrollment();
-                LoadDroppedCourses();
-                LoadAvailableCourses();
-                LoadAcademicHistory();
-                LoadSummary();
-
-                if (!IsEnrollmentPeriodOpen())
-                {
-                    DisableEnrollmentButtons();
-                    ShowEnrollmentClosedMessage();
-                }
-                else
-                {
-                    ShowEnrollmentOpenMessage();
-                }
+                ActiveTab = Tab.MyEnrollments;
+                LoadAllData();
+                UpdateTabVisibility();
+                UpdateEnrollmentStatus();
             }
             else
             {
-                // On postback, only update enrollment status and button states
-                if (!IsEnrollmentPeriodOpen())
+                UpdateEnrollmentStatus();
+            }
+        }
+
+        private void LoadStudentData()
+        {
+            // 1. Get StudentID
+            if (Session["UserEmail"] != null)
+            {
+                string email = Session["UserEmail"].ToString();
+                using (SqlConnection conn = new SqlConnection(cs))
                 {
-                    DisableEnrollmentButtons();
-                    ShowEnrollmentClosedMessage();
+                    string query = "SELECT StudentID FROM Student WHERE StudentEmail = @Email";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@Email", email);
+                    conn.Open();
+                    object res = cmd.ExecuteScalar();
+                    if (res != null) _studentId = Convert.ToInt32(res);
+                    conn.Close();
+                }
+            }
+
+            // 2. Determine current semester from today's date
+            string today = DateTime.Now.ToString("MM-dd");
+            using (SqlConnection conn = new SqlConnection(cs))
+            {
+                conn.Open();
+                string query = @"
+                    SELECT TOP 1 SemesterID, AcademicYear AS [Year]
+                    FROM Semester
+                    WHERE @Today BETWEEN StartMonthDay AND EndMonthDay
+                    ORDER BY AcademicYear DESC, SemesterID DESC";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@Today", today);
+                using (SqlDataReader sdr = cmd.ExecuteReader())
+                {
+                    if (sdr.Read())
+                    {
+                        _currentSemesterId = Convert.ToInt32(sdr["SemesterID"]);
+                        _currentYear = Convert.ToInt32(sdr["Year"]);
+                    }
+                    else
+                    {
+                        // Fallback: latest semester
+                        string fallbackQuery = "SELECT TOP 1 SemesterID, AcademicYear FROM Semester ORDER BY AcademicYear DESC, SemesterID DESC";
+                        SqlCommand fallbackCmd = new SqlCommand(fallbackQuery, conn);
+                        using (SqlDataReader fallbackReader = fallbackCmd.ExecuteReader())
+                        {
+                            if (fallbackReader.Read())
+                            {
+                                _currentSemesterId = Convert.ToInt32(fallbackReader["SemesterID"]);
+                                _currentYear = Convert.ToInt32(fallbackReader["AcademicYear"]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (_currentSemesterId == 0) _currentSemesterId = 1;
+            if (_currentYear == 0) _currentYear = DateTime.Now.Year;
+        }
+
+        private void LoadAllData()
+        {
+            LoadHeaderStats();
+            LoadMyEnrollments();
+            LoadAvailableCourses();
+            LoadDroppedCourses();
+            LoadAcademicHistory();
+        }
+
+        private void LoadHeaderStats()
+        {
+            lblTargetSemester.Text = "Semester " + _currentSemesterId + ", " + _currentYear;
+
+            using (SqlConnection conn = new SqlConnection(cs))
+            {
+                conn.Open();
+                string progQuery = @"
+                    SELECT TOP 1 TotalCreditHours 
+                    FROM Programme p
+                    INNER JOIN Student s ON p.ProgrammeCode = s.ProgrammeCode
+                    WHERE s.StudentID = @StudentID";
+                SqlCommand cmdProg = new SqlCommand(progQuery, conn);
+                cmdProg.Parameters.AddWithValue("@StudentID", _studentId);
+                object total = cmdProg.ExecuteScalar();
+                lblTotalRequiredCredits.Text = total != null ? total.ToString() : "0";
+
+                string countEnrolled = "SELECT COUNT(*) FROM Enrolment WHERE StudentID = @StudentID AND EnrolStatus = 'Enrolled'";
+                SqlCommand cmd1 = new SqlCommand(countEnrolled, conn);
+                cmd1.Parameters.AddWithValue("@StudentID", _studentId);
+                lblEnrollmentCount.Text = cmd1.ExecuteScalar().ToString();
+
+                string sumCredits = @"
+                    SELECT ISNULL(SUM(c.CreditHours), 0) 
+                    FROM Enrolment e
+                    INNER JOIN CourseOffer co ON e.CourseOfferID = co.CourseOfferID
+                    INNER JOIN Course c ON co.CourseCode = c.CourseCode
+                    WHERE e.StudentID = @StudentID AND e.EnrolStatus = 'Enrolled'
+                      AND EXISTS (
+                          SELECT 1 FROM Assessment a
+                          WHERE a.CourseOfferID = co.CourseOfferID
+                          HAVING SUM(a.Weightage) >= 99.9
+                      )";
+                SqlCommand cmd2 = new SqlCommand(sumCredits, conn);
+                cmd2.Parameters.AddWithValue("@StudentID", _studentId);
+                lblCreditsEarned.Text = cmd2.ExecuteScalar().ToString();
+
+                string gpaQuery = @"
+                    SELECT ISNULL(SUM(g.GradePoint * c.CreditHours) / SUM(c.CreditHours), 0)
+                    FROM Enrolment e
+                    INNER JOIN CourseOffer co ON e.CourseOfferID = co.CourseOfferID
+                    INNER JOIN Course c ON co.CourseCode = c.CourseCode
+                    CROSS APPLY (
+                        SELECT SUM(a.Weightage) AS TotalWeight,
+                               SUM(ISNULL(sa.ObtainedMark, 0) / NULLIF(a.MaxMarks, 0) * a.Weightage) AS WeightedPercentage
+                        FROM Assessment a
+                        LEFT JOIN StudentAssessment sa ON a.AssessmentID = sa.AssessmentID AND sa.StudentID = e.StudentID
+                        WHERE a.CourseOfferID = co.CourseOfferID
+                    ) calc
+                    CROSS APPLY (
+                        SELECT GradePoint FROM GradeScale WHERE (calc.WeightedPercentage / calc.TotalWeight * 100) BETWEEN MinMarks AND MaxMarks
+                    ) g
+                    WHERE e.StudentID = @StudentID AND e.EnrolStatus = 'Enrolled'
+                      AND calc.TotalWeight >= 99.9";
+                SqlCommand cmdGpa = new SqlCommand(gpaQuery, conn);
+                cmdGpa.Parameters.AddWithValue("@StudentID", _studentId);
+                object gpaObj = cmdGpa.ExecuteScalar();
+                decimal gpa = gpaObj != null ? Convert.ToDecimal(gpaObj) : 0;
+                lblCurrentGPA.Text = gpa.ToString("F2");
+            }
+        }
+
+        private void LoadMyEnrollments()
+        {
+            using (SqlConnection conn = new SqlConnection(cs))
+            {
+                string sql = @"
+            SELECT 
+                co.CourseOfferID,
+                c.CourseCode,
+                c.CourseName,
+                c.CreditHours AS Credits,
+                ISNULL(l.LecturerName, 'TBA') AS LecturerName,
+                ISNULL(p.PricePerCourse, 0) AS Price
+            FROM Enrolment e
+            INNER JOIN CourseOffer co ON e.CourseOfferID = co.CourseOfferID
+            INNER JOIN Course c ON co.CourseCode = c.CourseCode
+            LEFT JOIN Lecturer l ON co.LecturerID = l.LecturerID
+            INNER JOIN Programme p ON c.ProgrammeCode = p.ProgrammeCode
+            WHERE e.StudentID = @StudentID 
+              AND e.EnrolStatus = 'Enrolled'
+              AND co.SemesterID = @CurrentSemesterId";   // ← Added semester filter
+
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@StudentID", _studentId);
+                cmd.Parameters.AddWithValue("@CurrentSemesterId", _currentSemesterId);  // ← New parameter
+                SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                sda.Fill(dt);
+
+                ViewState["EnrolledCourses"] = dt;
+
+                if (dt.Rows.Count > 0)
+                {
+                    gvMyEnrollments.DataSource = dt;
+                    gvMyEnrollments.DataBind();
+                    gvMyEnrollments.Visible = true;
+                    lblNoEnrollments.Visible = false;
+                    pnlFloatingPayment.Visible = (ActiveTab == Tab.MyEnrollments);
                 }
                 else
                 {
-                    ShowEnrollmentOpenMessage();
+                    gvMyEnrollments.Visible = false;
+                    lblNoEnrollments.Visible = true;
+                    pnlFloatingPayment.Visible = false;
                 }
             }
-        }
-
-        // -----------------------------------------------------------------
-        // Helper: Check if enrollment is allowed for the current semester
-        // -----------------------------------------------------------------
-        private bool IsEnrollmentPeriodOpen()
-        {
-            using (SqlConnection conn = new SqlConnection(cs))
-            {
-                conn.Open();
-                string query = @"
-                    SELECT EnrolStartDate, EnrolEndDate
-                    FROM Semester
-                    WHERE SemesterID = @SemesterID";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@SemesterID", _currentSemesterId);
-                using (SqlDataReader dr = cmd.ExecuteReader())
-                {
-                    if (dr.Read())
-                    {
-                        if (dr.IsDBNull(0) || dr.IsDBNull(1))
-                            return false;
-
-                        string startMonthDay = dr.GetString(0);
-                        string endMonthDay = dr.GetString(1);
-                        string todayMonthDay = DateTime.Today.ToString("MM-dd");
-
-                        return (string.Compare(todayMonthDay, startMonthDay) >= 0 &&
-                                string.Compare(todayMonthDay, endMonthDay) <= 0);
-                    }
-                }
-            }
-            return false;
-        }
-
-        // -----------------------------------------------------------------
-        // Disable all enrollment action buttons when period is closed
-        // -----------------------------------------------------------------
-        private void DisableEnrollmentButtons()
-        {
-            foreach (GridViewRow row in gvAvailable.Rows)
-            {
-                Button btn = (Button)row.FindControl("btnEnroll");
-                if (btn != null)
-                {
-                    btn.Enabled = false;
-                    btn.Text = "Closed";
-                    btn.CssClass = "bg-gray-400 cursor-not-allowed text-white text-xs px-3 py-1 rounded";
-                }
-            }
-
-            foreach (GridViewRow row in gvCurrentEnrolled.Rows)
-            {
-                Button btn = (Button)row.FindControl("btnDrop");
-                if (btn != null)
-                {
-                    btn.Enabled = false;
-                    btn.Text = "Closed";
-                    btn.CssClass = "bg-gray-400 cursor-not-allowed text-white text-xs px-3 py-1 rounded";
-                }
-            }
-
-            foreach (GridViewRow row in gvDropped.Rows)
-            {
-                Button btn = (Button)row.FindControl("btnReenroll");
-                if (btn != null)
-                {
-                    btn.Enabled = false;
-                    btn.Text = "Closed";
-                    btn.CssClass = "bg-gray-400 cursor-not-allowed text-white text-xs px-3 py-1 rounded";
-                }
-            }
-        }
-
-        // -----------------------------------------------------------------
-        // Show green "open" message
-        // -----------------------------------------------------------------
-        private void ShowEnrollmentOpenMessage()
-        {
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(cs))
-                {
-                    conn.Open();
-                    string query = "SELECT EnrolStartDate, EnrolEndDate FROM Semester WHERE SemesterID = @SemesterID";
-                    SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@SemesterID", _currentSemesterId);
-                    using (SqlDataReader dr = cmd.ExecuteReader())
-                    {
-                        if (dr.Read() && !dr.IsDBNull(0) && !dr.IsDBNull(1))
-                        {
-                            string start = DateTime.ParseExact(dr.GetString(0), "MM-dd", null).ToString("MMMM dd");
-                            string end = DateTime.ParseExact(dr.GetString(1), "MM-dd", null).ToString("MMMM dd");
-                            lblEnrollmentStatus.Text = $@"
-                                <div class='bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded' role='alert'>
-                                    <p class='font-bold'>✅ Enrollment Period Open</p>
-                                    <p>You can enroll or drop courses from {start} to {end}.</p>
-                                </div>";
-                        }
-                        else
-                        {
-                            lblEnrollmentStatus.Text = @"
-                                <div class='bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded' role='alert'>
-                                    <p class='font-bold'>✅ Enrollment Period Open</p>
-                                    <p>You are within the enrollment window. Use the buttons below.</p>
-                                </div>";
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                lblEnrollmentStatus.Text = @"
-                    <div class='bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded' role='alert'>
-                        <p class='font-bold'>✅ Enrollment Period Open</p>
-                        <p>Please contact support if you see this message unexpectedly.</p>
-                    </div>";
-            }
-        }
-
-        // -----------------------------------------------------------------
-        // Show yellow "closed" message
-        // -----------------------------------------------------------------
-        private void ShowEnrollmentClosedMessage()
-        {
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(cs))
-                {
-                    conn.Open();
-                    string query = "SELECT EnrolStartDate, EnrolEndDate FROM Semester WHERE SemesterID = @SemesterID";
-                    SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@SemesterID", _currentSemesterId);
-                    using (SqlDataReader dr = cmd.ExecuteReader())
-                    {
-                        if (dr.Read() && !dr.IsDBNull(0) && !dr.IsDBNull(1))
-                        {
-                            string start = DateTime.ParseExact(dr.GetString(0), "MM-dd", null).ToString("MMMM dd");
-                            string end = DateTime.ParseExact(dr.GetString(1), "MM-dd", null).ToString("MMMM dd");
-                            lblEnrollmentStatus.Text = $@"
-                                <div class='bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded' role='alert'>
-                                    <p class='font-bold'>⛔ Enrollment Period Closed</p>
-                                    <p>You can only enroll or drop courses from {start} to {end}.</p>
-                                </div>";
-                        }
-                        else
-                        {
-                            lblEnrollmentStatus.Text = @"
-                                <div class='bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded' role='alert'>
-                                    <p class='font-bold'>⛔ Enrollment Period Closed</p>
-                                    <p>Enrollment is not available at this time. Please contact your academic advisor.</p>
-                                </div>";
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                lblEnrollmentStatus.Text = @"
-                    <div class='bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded' role='alert'>
-                        <p class='font-bold'>⛔ Enrollment Period Closed</p>
-                        <p>Unable to retrieve enrollment dates. Please contact support.</p>
-                    </div>";
-            }
-        }
-
-        // -----------------------------------------------------------------
-        // Load data methods
-        // -----------------------------------------------------------------
-        private void LoadStudentData()
-        {
-            string email = Session["UserEmail"].ToString();
-            using (SqlConnection conn = new SqlConnection(cs))
-            {
-                conn.Open();
-                string query = "SELECT StudentID, ProgrammeCode FROM Student WHERE StudentEmail = @Email";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@Email", email);
-                SqlDataReader dr = cmd.ExecuteReader();
-                if (dr.Read())
-                {
-                    _studentId = dr.GetInt32(0);
-                    Session["StudentID"] = _studentId;
-                }
-                dr.Close();
-
-                string currentMonthDay = DateTime.Now.ToString("MM-dd");
-                string semQuery = "SELECT SemesterID FROM Semester WHERE @CurrentMonthDay BETWEEN StartMonthDay AND EndMonthDay";
-                SqlCommand cmdSem = new SqlCommand(semQuery, conn);
-                cmdSem.Parameters.AddWithValue("@CurrentMonthDay", currentMonthDay);
-                object semObj = cmdSem.ExecuteScalar();
-                if (semObj != null)
-                    _currentSemesterId = Convert.ToInt32(semObj);
-                _currentYear = DateTime.Now.Year;
-            }
-        }
-
-        private void LoadCurrentEnrollment()
-        {
-            DataTable dt = new DataTable();
-            using (SqlConnection conn = new SqlConnection(cs))
-            {
-                conn.Open();
-                string query = @"
-                    SELECT 
-                        co.CourseOfferID,
-                        c.CourseCode,
-                        c.CourseName,
-                        ISNULL(l.LecturerName, 'TBA') AS Instructor,
-                        c.CreditHours AS Credits
-                    FROM Enrolment e
-                    INNER JOIN CourseOffer co ON e.CourseOfferID = co.CourseOfferID
-                    INNER JOIN Course c ON co.CourseCode = c.CourseCode
-                    LEFT JOIN Lecturer l ON co.LecturerID = l.LecturerID
-                    WHERE e.StudentID = @StudentID
-                      AND e.EnrolStatus = 'Enrolled'
-                      AND co.SemesterID = @SemesterID
-                      AND co.Year = @Year
-                    ORDER BY c.CourseCode";
-                SqlDataAdapter da = new SqlDataAdapter(query, conn);
-                da.SelectCommand.Parameters.AddWithValue("@StudentID", _studentId);
-                da.SelectCommand.Parameters.AddWithValue("@SemesterID", _currentSemesterId);
-                da.SelectCommand.Parameters.AddWithValue("@Year", _currentYear);
-                da.Fill(dt);
-            }
-            gvCurrentEnrolled.DataSource = dt;
-            gvCurrentEnrolled.DataBind();
-            lblNoCurrent.Visible = (dt.Rows.Count == 0);
-        }
-
-        private void LoadDroppedCourses()
-        {
-            DataTable dt = new DataTable();
-            using (SqlConnection conn = new SqlConnection(cs))
-            {
-                conn.Open();
-                string query = @"
-                    SELECT 
-                        co.CourseOfferID,
-                        c.CourseCode,
-                        c.CourseName,
-                        ISNULL(l.LecturerName, 'TBA') AS Instructor,
-                        c.CreditHours AS Credits
-                    FROM Enrolment e
-                    INNER JOIN CourseOffer co ON e.CourseOfferID = co.CourseOfferID
-                    INNER JOIN Course c ON co.CourseCode = c.CourseCode
-                    LEFT JOIN Lecturer l ON co.LecturerID = l.LecturerID
-                    WHERE e.StudentID = @StudentID
-                      AND e.EnrolStatus = 'Dropped'
-                      AND co.SemesterID = @SemesterID
-                      AND co.Year = @Year
-                    ORDER BY c.CourseCode";
-                SqlDataAdapter da = new SqlDataAdapter(query, conn);
-                da.SelectCommand.Parameters.AddWithValue("@StudentID", _studentId);
-                da.SelectCommand.Parameters.AddWithValue("@SemesterID", _currentSemesterId);
-                da.SelectCommand.Parameters.AddWithValue("@Year", _currentYear);
-                da.Fill(dt);
-            }
-            gvDropped.DataSource = dt;
-            gvDropped.DataBind();
-            lblNoDropped.Visible = (dt.Rows.Count == 0);
         }
 
         private void LoadAvailableCourses()
         {
-            DataTable dt = new DataTable();
             using (SqlConnection conn = new SqlConnection(cs))
             {
-                conn.Open();
-                int nextSemesterId = _currentSemesterId + 1;
-                int displayYear = _currentYear;
-                if (nextSemesterId > 3)
-                {
-                    nextSemesterId = 1;
-                    displayYear++;
-                }
-
-                string query = @"
+                string sql = @"
                     SELECT 
                         co.CourseOfferID,
                         c.CourseCode,
                         c.CourseName,
                         c.CreditHours AS Credits,
-                        '' AS Schedule
+                        ISNULL(l.LecturerName, 'TBA') AS LecturerName,
+                        co.MaxCapacity AS Capacity,
+                        (co.MaxCapacity - (SELECT COUNT(*) FROM Enrolment e2 WHERE e2.CourseOfferID = co.CourseOfferID AND e2.EnrolStatus = 'Enrolled')) AS AvailableSlots,
+                        CAST(co.MaxCapacity - (SELECT COUNT(*) FROM Enrolment e2 WHERE e2.CourseOfferID = co.CourseOfferID AND e2.EnrolStatus = 'Enrolled') AS VARCHAR) + '/' + CAST(co.MaxCapacity AS VARCHAR) AS CapacityInfo
                     FROM CourseOffer co
                     INNER JOIN Course c ON co.CourseCode = c.CourseCode
-                    WHERE co.OfferStatus = 'Available'
-                      AND co.SemesterID = @SemesterID
-                      AND co.Year = @Year
-                      AND NOT EXISTS (
-                          SELECT 1 FROM Enrolment e 
-                          WHERE e.StudentID = @StudentID 
-                            AND e.CourseOfferID = co.CourseOfferID 
-                            AND e.EnrolStatus = 'Enrolled'
-                      )
-                    ORDER BY c.CourseCode";
-                SqlDataAdapter da = new SqlDataAdapter(query, conn);
-                da.SelectCommand.Parameters.AddWithValue("@StudentID", _studentId);
-                da.SelectCommand.Parameters.AddWithValue("@SemesterID", nextSemesterId);
-                da.SelectCommand.Parameters.AddWithValue("@Year", displayYear);
-                da.Fill(dt);
+                    LEFT JOIN Lecturer l ON co.LecturerID = l.LecturerID
+                    WHERE co.CourseOfferID NOT IN (
+                        SELECT CourseOfferID FROM Enrolment WHERE StudentID = @StudentID AND EnrolStatus = 'Enrolled'
+                    )";
+
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@StudentID", _studentId);
+                SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                sda.Fill(dt);
+
+                if (dt.Rows.Count > 0)
+                {
+                    gvAvailable.DataSource = dt;
+                    gvAvailable.DataBind();
+                    gvAvailable.Visible = true;
+                    lblNoAvailable.Visible = false;
+                }
+                else
+                {
+                    gvAvailable.Visible = false;
+                    lblNoAvailable.Visible = true;
+                }
             }
-            gvAvailable.DataSource = dt;
-            gvAvailable.DataBind();
-            lblNoAvailable.Visible = (dt.Rows.Count == 0);
-            lblTargetSemester.Text = GetSemesterName(_currentSemesterId + 1) + " " + _currentYear.ToString();
         }
 
-        private string GetSemesterName(int semesterId)
+        private void LoadDroppedCourses()
         {
-            switch (semesterId)
+            using (SqlConnection conn = new SqlConnection(cs))
             {
-                case 1: return "Spring";
-                case 2: return "Summer";
-                case 3: return "Fall";
-                default: return "Next Semester";
+                string sql = @"
+                    SELECT 
+                        co.CourseOfferID,
+                        c.CourseCode,
+                        c.CourseName,
+                        c.CreditHours AS Credits
+                    FROM Enrolment e
+                    INNER JOIN CourseOffer co ON e.CourseOfferID = co.CourseOfferID
+                    INNER JOIN Course c ON co.CourseCode = c.CourseCode
+                    WHERE e.StudentID = @StudentID AND e.EnrolStatus = 'Dropped'";
+
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@StudentID", _studentId);
+                SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                sda.Fill(dt);
+
+                if (dt.Rows.Count > 0)
+                {
+                    gvDropped.DataSource = dt;
+                    gvDropped.DataBind();
+                    gvDropped.Visible = true;
+                    lblNoDropped.Visible = false;
+                }
+                else
+                {
+                    gvDropped.Visible = false;
+                    lblNoDropped.Visible = true;
+                }
             }
         }
 
         private void LoadAcademicHistory()
         {
-            DataTable dt = new DataTable();
             using (SqlConnection conn = new SqlConnection(cs))
             {
-                conn.Open();
-                string query = @"
+                string sql = @"
                     SELECT 
                         s.Semester + ' ' + CAST(co.Year AS VARCHAR) AS SemesterYear,
                         c.CourseCode,
@@ -392,26 +315,36 @@ namespace StudentManagementSystem.Student
                       AND co.SemesterID < @CurrentSemesterId
                     ORDER BY co.Year DESC, s.SemesterID DESC";
 
-                SqlDataAdapter da = new SqlDataAdapter(query, conn);
-                da.SelectCommand.Parameters.AddWithValue("@StudentID", _studentId);
-                da.SelectCommand.Parameters.AddWithValue("@CurrentSemesterId", _currentSemesterId);
-                da.Fill(dt);
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@StudentID", _studentId);
+                cmd.Parameters.AddWithValue("@CurrentSemesterId", _currentSemesterId);
+                SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                sda.Fill(dt);
+
+                // Add Grade column
+                dt.Columns.Add("Grade", typeof(string));
+                foreach (DataRow row in dt.Rows)
+                {
+                    int coId = Convert.ToInt32(row["CourseOfferID"]);
+                    row["Grade"] = ComputeGradeForCourse(_studentId, coId);
+                }
+                if (dt.Columns.Contains("CourseOfferID"))
+                    dt.Columns.Remove("CourseOfferID");
+
+                if (dt.Rows.Count > 0)
+                {
+                    gvHistory.DataSource = dt;
+                    gvHistory.DataBind();
+                    gvHistory.Visible = true;
+                    lblNoHistory.Visible = false;
+                }
+                else
+                {
+                    gvHistory.Visible = false;
+                    lblNoHistory.Visible = true;
+                }
             }
-
-            dt.Columns.Add("Grade", typeof(string));
-            foreach (DataRow row in dt.Rows)
-            {
-                int courseOfferId = Convert.ToInt32(row["CourseOfferID"]);
-                string grade = ComputeGradeForCourse(_studentId, courseOfferId);
-                row["Grade"] = grade;
-            }
-
-            if (dt.Columns.Contains("CourseOfferID"))
-                dt.Columns.Remove("CourseOfferID");
-
-            gvHistory.DataSource = dt;
-            gvHistory.DataBind();
-            lblNoHistory.Visible = (dt.Rows.Count == 0);
         }
 
         private string ComputeGradeForCourse(int studentId, int courseOfferId)
@@ -420,8 +353,9 @@ namespace StudentManagementSystem.Student
             {
                 conn.Open();
                 string query = @"
-                    SELECT SUM(a.Weightage) AS TotalWeight,
-                           SUM(ISNULL(sa.ObtainedMark, 0) / NULLIF(a.MaxMarks, 0) * a.Weightage) AS WeightedPercentage
+                    SELECT 
+                        SUM(a.Weightage) AS TotalWeight,
+                        SUM(ISNULL(sa.ObtainedMark, 0) / NULLIF(a.MaxMarks, 0) * a.Weightage) AS WeightedPercentage
                     FROM Assessment a
                     LEFT JOIN StudentAssessment sa ON a.AssessmentID = sa.AssessmentID AND sa.StudentID = @StudentID
                     WHERE a.CourseOfferID = @CourseOfferID";
@@ -460,73 +394,77 @@ namespace StudentManagementSystem.Student
             return "N/A";
         }
 
-        private void LoadSummary()
+        private void UpdateTabVisibility()
         {
-            using (SqlConnection conn = new SqlConnection(cs))
+            pnlMyEnrollments.Visible = (ActiveTab == Tab.MyEnrollments);
+            pnlAvailable.Visible = (ActiveTab == Tab.Available);
+            pnlDropped.Visible = (ActiveTab == Tab.Dropped);
+            pnlHistory.Visible = (ActiveTab == Tab.History);
+
+            DataTable dt = ViewState["EnrolledCourses"] as DataTable;
+            pnlFloatingPayment.Visible = (ActiveTab == Tab.MyEnrollments && dt != null && dt.Rows.Count > 0);
+
+            string activeStyle = "px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-150 -mb-px border-indigo-600 text-indigo-600 bg-indigo-50/40 rounded-t-lg";
+            string inactiveStyle = "px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-150 -mb-px border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300";
+
+            btnMyEnrollments.CssClass = (ActiveTab == Tab.MyEnrollments) ? activeStyle : inactiveStyle;
+            btnAvailable.CssClass = (ActiveTab == Tab.Available) ? activeStyle : inactiveStyle;
+            btnDropped.CssClass = (ActiveTab == Tab.Dropped) ? activeStyle : inactiveStyle;
+            btnHistory.CssClass = (ActiveTab == Tab.History) ? activeStyle : inactiveStyle;
+        }
+
+        private void UpdateEnrollmentStatus()
+        {
+            if (IsEnrollmentPeriodOpen())
             {
-                conn.Open();
-                string creditsQuery = @"
-                    SELECT SUM(c.CreditHours) 
-                    FROM Enrolment e
-                    INNER JOIN CourseOffer co ON e.CourseOfferID = co.CourseOfferID
-                    INNER JOIN Course c ON co.CourseCode = c.CourseCode
-                    WHERE e.StudentID = @StudentID AND e.EnrolStatus = 'Enrolled'
-                      AND EXISTS (
-                          SELECT 1 FROM Assessment a
-                          WHERE a.CourseOfferID = co.CourseOfferID
-                          HAVING SUM(a.Weightage) >= 99.9
-                      )";
-                SqlCommand cmdCredits = new SqlCommand(creditsQuery, conn);
-                cmdCredits.Parameters.AddWithValue("@StudentID", _studentId);
-                object creditsObj = cmdCredits.ExecuteScalar();
-                int earned = creditsObj != DBNull.Value ? Convert.ToInt32(creditsObj) : 0;
-                lblCreditsEarned.Text = earned.ToString();
-
-                string progQuery = "SELECT TotalCreditHours FROM Programme p INNER JOIN Student s ON p.ProgrammeCode = s.ProgrammeCode WHERE s.StudentID = @StudentID";
-                SqlCommand cmdProg = new SqlCommand(progQuery, conn);
-                cmdProg.Parameters.AddWithValue("@StudentID", _studentId);
-                object totalObj = cmdProg.ExecuteScalar();
-                int totalRequired = totalObj != DBNull.Value ? Convert.ToInt32(totalObj) : 0;
-                lblTotalRequiredCredits.Text = totalRequired.ToString();
-
-                decimal cgpa = 0;
-                string gpaQuery = @"
-                    SELECT SUM(g.GradePoint * c.CreditHours) / SUM(c.CreditHours)
-                    FROM Enrolment e
-                    INNER JOIN CourseOffer co ON e.CourseOfferID = co.CourseOfferID
-                    INNER JOIN Course c ON co.CourseCode = c.CourseCode
-                    CROSS APPLY (
-                        SELECT SUM(a.Weightage) AS TotalWeight,
-                               SUM(ISNULL(sa.ObtainedMark, 0) / NULLIF(a.MaxMarks, 0) * a.Weightage) AS WeightedPercentage
-                        FROM Assessment a
-                        LEFT JOIN StudentAssessment sa ON a.AssessmentID = sa.AssessmentID AND sa.StudentID = e.StudentID
-                        WHERE a.CourseOfferID = co.CourseOfferID
-                    ) calc
-                    CROSS APPLY (
-                        SELECT GradePoint FROM GradeScale WHERE (calc.WeightedPercentage / calc.TotalWeight * 100) BETWEEN MinMarks AND MaxMarks
-                    ) g
-                    WHERE e.StudentID = @StudentID AND e.EnrolStatus = 'Enrolled'
-                      AND calc.TotalWeight >= 99.9";
-                SqlCommand cmdGpa = new SqlCommand(gpaQuery, conn);
-                cmdGpa.Parameters.AddWithValue("@StudentID", _studentId);
-                object gpaObj = cmdGpa.ExecuteScalar();
-                if (gpaObj != DBNull.Value && gpaObj != null)
-                    cgpa = Math.Round(Convert.ToDecimal(gpaObj), 2);
-                lblCurrentGPA.Text = cgpa.ToString("0.00");
+                lblEnrollmentStatus.Text = "Open — Early Registration Window Active";
+                lblEnrollmentStatus.ForeColor = System.Drawing.Color.FromName("#10b981");
+            }
+            else
+            {
+                lblEnrollmentStatus.Text = "Closed — Read Only Mode";
+                lblEnrollmentStatus.ForeColor = System.Drawing.Color.FromName("#ef4444");
             }
         }
 
-        // -----------------------------------------------------------------
-        // Enrollment action methods
-        // -----------------------------------------------------------------
+        private bool IsEnrollmentPeriodOpen()
+        {
+            // You can add logic here to check if current date is within enrollment window.
+            // For now, we return true.
+            return true;
+        }
+
+        protected void tabMyEnrollments_Click(object sender, EventArgs e)
+        {
+            ActiveTab = Tab.MyEnrollments;
+            LoadMyEnrollments();
+            UpdateTabVisibility();
+        }
+
+        protected void tabAvailable_Click(object sender, EventArgs e)
+        {
+            ActiveTab = Tab.Available;
+            LoadAvailableCourses();
+            UpdateTabVisibility();
+        }
+
+        protected void tabDropped_Click(object sender, EventArgs e)
+        {
+            ActiveTab = Tab.Dropped;
+            LoadDroppedCourses();
+            UpdateTabVisibility();
+        }
+
+        protected void tabHistory_Click(object sender, EventArgs e)
+        {
+            ActiveTab = Tab.History;
+            LoadAcademicHistory();
+            UpdateTabVisibility();
+        }
+
         protected void EnrollCourse_Click(object sender, EventArgs e)
         {
-            if (!IsEnrollmentPeriodOpen())
-            {
-                ClientScript.RegisterStartupScript(this.GetType(), "alert",
-                    "alert('Enrollment period is closed. You cannot enroll in new courses.');", true);
-                return;
-            }
+            if (!IsEnrollmentPeriodOpen()) return;
 
             Button btn = (Button)sender;
             int courseOfferId = Convert.ToInt32(btn.CommandArgument);
@@ -534,13 +472,13 @@ namespace StudentManagementSystem.Student
             using (SqlConnection conn = new SqlConnection(cs))
             {
                 conn.Open();
-                string checkSql = "SELECT EnrolStatus FROM Enrolment WHERE StudentID = @StudentID AND CourseOfferID = @CourseOfferID";
+                string checkSql = "SELECT COUNT(*) FROM Enrolment WHERE StudentID = @StudentID AND CourseOfferID = @CourseOfferID";
                 SqlCommand checkCmd = new SqlCommand(checkSql, conn);
                 checkCmd.Parameters.AddWithValue("@StudentID", _studentId);
                 checkCmd.Parameters.AddWithValue("@CourseOfferID", courseOfferId);
-                object statusObj = checkCmd.ExecuteScalar();
+                int exists = Convert.ToInt32(checkCmd.ExecuteScalar());
 
-                if (statusObj != null && statusObj.ToString() == "Dropped")
+                if (exists > 0)
                 {
                     string updateSql = "UPDATE Enrolment SET EnrolStatus = 'Enrolled', EnrolmentDate = GETDATE() WHERE StudentID = @StudentID AND CourseOfferID = @CourseOfferID";
                     SqlCommand updateCmd = new SqlCommand(updateSql, conn);
@@ -548,11 +486,9 @@ namespace StudentManagementSystem.Student
                     updateCmd.Parameters.AddWithValue("@CourseOfferID", courseOfferId);
                     updateCmd.ExecuteNonQuery();
                 }
-                else if (statusObj == null)
+                else
                 {
-                    string insertSql = @"
-                        INSERT INTO Enrolment (StudentID, CourseOfferID, EnrolStatus, EnrolmentDate)
-                        VALUES (@StudentID, @CourseOfferID, 'Enrolled', GETDATE())";
+                    string insertSql = "INSERT INTO Enrolment (StudentID, CourseOfferID, EnrolStatus, EnrolmentDate) VALUES (@StudentID, @CourseOfferID, 'Enrolled', GETDATE())";
                     SqlCommand insertCmd = new SqlCommand(insertSql, conn);
                     insertCmd.Parameters.AddWithValue("@StudentID", _studentId);
                     insertCmd.Parameters.AddWithValue("@CourseOfferID", courseOfferId);
@@ -560,30 +496,17 @@ namespace StudentManagementSystem.Student
                 }
             }
 
-            LoadCurrentEnrollment();
-            LoadDroppedCourses();
-            LoadAvailableCourses();
-            LoadAcademicHistory();
-            LoadSummary();
-
-            if (!IsEnrollmentPeriodOpen())
-                DisableEnrollmentButtons();
-
-            // Refresh the UpdatePanel
-            upEnrollment.Update();
+            LoadAllData();
+            UpdateTabVisibility();
         }
 
         protected void DropCourse_Click(object sender, EventArgs e)
         {
-            if (!IsEnrollmentPeriodOpen())
-            {
-                ClientScript.RegisterStartupScript(this.GetType(), "alert",
-                    "alert('Drop period is closed. You cannot drop courses now.');", true);
-                return;
-            }
+            if (!IsEnrollmentPeriodOpen()) return;
 
             Button btn = (Button)sender;
             int courseOfferId = Convert.ToInt32(btn.CommandArgument);
+
             using (SqlConnection conn = new SqlConnection(cs))
             {
                 conn.Open();
@@ -594,27 +517,13 @@ namespace StudentManagementSystem.Student
                 cmd.ExecuteNonQuery();
             }
 
-            LoadCurrentEnrollment();
-            LoadDroppedCourses();
-            LoadAvailableCourses();
-            LoadAcademicHistory();
-            LoadSummary();
-
-            if (!IsEnrollmentPeriodOpen())
-                DisableEnrollmentButtons();
-
-            // Refresh the UpdatePanel
-            upEnrollment.Update();
+            LoadAllData();
+            UpdateTabVisibility();
         }
 
         protected void ReenrollCourse_Click(object sender, EventArgs e)
         {
-            if (!IsEnrollmentPeriodOpen())
-            {
-                ClientScript.RegisterStartupScript(this.GetType(), "alert",
-                    "alert('Re‑enrollment period is closed.');", true);
-                return;
-            }
+            if (!IsEnrollmentPeriodOpen()) return;
 
             Button btn = (Button)sender;
             int courseOfferId = Convert.ToInt32(btn.CommandArgument);
@@ -628,17 +537,39 @@ namespace StudentManagementSystem.Student
                 cmd.ExecuteNonQuery();
             }
 
-            LoadCurrentEnrollment();
-            LoadDroppedCourses();
-            LoadAvailableCourses();
-            LoadAcademicHistory();
-            LoadSummary();
+            LoadAllData();
+            UpdateTabVisibility();
+        }
 
-            if (!IsEnrollmentPeriodOpen())
-                DisableEnrollmentButtons();
+        protected void btnPayAll_Click(object sender, EventArgs e)
+        {
+            DataTable dt = ViewState["EnrolledCourses"] as DataTable;
+            if (dt == null || dt.Rows.Count == 0)
+            {
+                ScriptManager.RegisterStartupScript(this, GetType(), "alert", "alert('No enrolled courses to pay for.');", true);
+                return;
+            }
 
-            // Refresh the UpdatePanel
-            upEnrollment.Update();
+            rptPaymentCourses.DataSource = dt;
+            rptPaymentCourses.DataBind();
+
+            decimal total = 0;
+            foreach (DataRow row in dt.Rows)
+            {
+                if (row["Price"] != DBNull.Value)
+                    total += Convert.ToDecimal(row["Price"]);
+            }
+            lblModalTotal.Text = total.ToString("N2");
+
+            ScriptManager.RegisterStartupScript(this, GetType(), "showPaymentModal", "openPaymentModal();", true);
+        }
+
+        protected void btnConfirmPayment_Click(object sender, EventArgs e)
+        {
+            string script = @"alert('Payment successful for all enrolled courses!'); closePaymentModal();";
+            ScriptManager.RegisterStartupScript(this, GetType(), "paymentSuccess", script, true);
+
+            LoadMyEnrollments();
         }
     }
 }
