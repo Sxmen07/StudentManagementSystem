@@ -2,6 +2,7 @@ using System;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
@@ -14,7 +15,7 @@ namespace StudentManagementSystem.Student
         private int _currentSemesterId = 0;
         private int _currentYear = 0;
 
-        private enum Tab { MyEnrollments, Available, Dropped, History }
+        private enum Tab { MyEnrollments, Available, Dropped, History, PaymentHistory }
         private Tab ActiveTab
         {
             get { return ViewState["ActiveTab"] == null ? Tab.MyEnrollments : (Tab)ViewState["ActiveTab"]; }
@@ -106,6 +107,7 @@ namespace StudentManagementSystem.Student
             LoadAvailableCourses();
             LoadDroppedCourses();
             LoadAcademicHistory();
+            LoadPaymentHistory();
         }
 
         private void LoadHeaderStats()
@@ -175,25 +177,25 @@ namespace StudentManagementSystem.Student
             using (SqlConnection conn = new SqlConnection(cs))
             {
                 string sql = @"
-            SELECT 
-                co.CourseOfferID,
-                c.CourseCode,
-                c.CourseName,
-                c.CreditHours AS Credits,
-                ISNULL(l.LecturerName, 'TBA') AS LecturerName,
-                ISNULL(p.PricePerCourse, 0) AS Price
-            FROM Enrolment e
-            INNER JOIN CourseOffer co ON e.CourseOfferID = co.CourseOfferID
-            INNER JOIN Course c ON co.CourseCode = c.CourseCode
-            LEFT JOIN Lecturer l ON co.LecturerID = l.LecturerID
-            INNER JOIN Programme p ON c.ProgrammeCode = p.ProgrammeCode
-            WHERE e.StudentID = @StudentID 
-              AND e.EnrolStatus = 'Enrolled'
-              AND co.SemesterID = @CurrentSemesterId";   // ← Added semester filter
+                    SELECT 
+                        co.CourseOfferID,
+                        c.CourseCode,
+                        c.CourseName,
+                        c.CreditHours AS Credits,
+                        ISNULL(l.LecturerName, 'TBA') AS LecturerName,
+                        ISNULL(p.PricePerCourse, 0) AS Price
+                    FROM Enrolment e
+                    INNER JOIN CourseOffer co ON e.CourseOfferID = co.CourseOfferID
+                    INNER JOIN Course c ON co.CourseCode = c.CourseCode
+                    LEFT JOIN Lecturer l ON co.LecturerID = l.LecturerID
+                    INNER JOIN Programme p ON c.ProgrammeCode = p.ProgrammeCode
+                    WHERE e.StudentID = @StudentID 
+                      AND e.EnrolStatus = 'Enrolled'
+                      AND co.SemesterID = @CurrentSemesterId";
 
                 SqlCommand cmd = new SqlCommand(sql, conn);
                 cmd.Parameters.AddWithValue("@StudentID", _studentId);
-                cmd.Parameters.AddWithValue("@CurrentSemesterId", _currentSemesterId);  // ← New parameter
+                cmd.Parameters.AddWithValue("@CurrentSemesterId", _currentSemesterId);
                 SqlDataAdapter sda = new SqlDataAdapter(cmd);
                 DataTable dt = new DataTable();
                 sda.Fill(dt);
@@ -394,13 +396,87 @@ namespace StudentManagementSystem.Student
             return "N/A";
         }
 
+        // =============================================================
+        // PAYMENT HISTORY (view‑only)
+        // =============================================================
+        private void LoadPaymentHistory()
+        {
+            using (SqlConnection conn = new SqlConnection(cs))
+            {
+                string sql = @"
+                    SELECT 
+                        pr.ReferenceID,
+                        s.Semester + ' ' + CAST(pr.SemesterID AS VARCHAR) AS SemesterDisplay,
+                        pr.Amount,
+                        pr.PaymentDate,
+                        pr.UploadDate,
+                        pr.PaymentProof,
+                        pr.StudentStatus,
+                        pr.VerifiedStatus,
+                        pr.Comments
+                    FROM PaymentRecord pr
+                    INNER JOIN Semester s ON pr.SemesterID = s.SemesterID
+                    WHERE pr.StudentID = @StudentID
+                    ORDER BY pr.UploadDate DESC";
+
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@StudentID", _studentId);
+                SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                sda.Fill(dt);
+
+                if (dt.Rows.Count > 0)
+                {
+                    gvPaymentHistory.DataSource = dt;
+                    gvPaymentHistory.DataBind();
+                    gvPaymentHistory.Visible = true;
+                    lblNoPayments.Visible = false;
+                }
+                else
+                {
+                    gvPaymentHistory.Visible = false;
+                    lblNoPayments.Visible = true;
+                }
+            }
+        }
+
+        // =============================================================
+        // BADGE HELPERS FOR PAYMENT GRID
+        // =============================================================
+        protected string GetStudentStatusBadge(string status)
+        {
+            switch (status)
+            {
+                case "Success": return "px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800";
+                case "Failed": return "px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800";
+                case "Pending": return "px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800";
+                default: return "px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600";
+            }
+        }
+
+        protected string GetVerifiedStatusBadge(string status)
+        {
+            switch (status)
+            {
+                case "Verified": return "px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800";
+                case "Rejected": return "px-2 py-1 text-xs font-semibold rounded-full bg-rose-100 text-rose-800";
+                case "Pending": return "px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800";
+                default: return "px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600";
+            }
+        }
+
+        // =============================================================
+        // TAB VISIBILITY & NAVIGATION
+        // =============================================================
         private void UpdateTabVisibility()
         {
             pnlMyEnrollments.Visible = (ActiveTab == Tab.MyEnrollments);
             pnlAvailable.Visible = (ActiveTab == Tab.Available);
             pnlDropped.Visible = (ActiveTab == Tab.Dropped);
             pnlHistory.Visible = (ActiveTab == Tab.History);
+            pnlPaymentHistory.Visible = (ActiveTab == Tab.PaymentHistory);
 
+            // Show floating payment button only on MyEnrollments
             DataTable dt = ViewState["EnrolledCourses"] as DataTable;
             pnlFloatingPayment.Visible = (ActiveTab == Tab.MyEnrollments && dt != null && dt.Rows.Count > 0);
 
@@ -411,6 +487,7 @@ namespace StudentManagementSystem.Student
             btnAvailable.CssClass = (ActiveTab == Tab.Available) ? activeStyle : inactiveStyle;
             btnDropped.CssClass = (ActiveTab == Tab.Dropped) ? activeStyle : inactiveStyle;
             btnHistory.CssClass = (ActiveTab == Tab.History) ? activeStyle : inactiveStyle;
+            btnPaymentHistory.CssClass = (ActiveTab == Tab.PaymentHistory) ? activeStyle : inactiveStyle;
         }
 
         private void UpdateEnrollmentStatus()
@@ -434,6 +511,9 @@ namespace StudentManagementSystem.Student
             return true;
         }
 
+        // =============================================================
+        // TAB CLICK EVENTS
+        // =============================================================
         protected void tabMyEnrollments_Click(object sender, EventArgs e)
         {
             ActiveTab = Tab.MyEnrollments;
@@ -462,6 +542,16 @@ namespace StudentManagementSystem.Student
             UpdateTabVisibility();
         }
 
+        protected void tabPaymentHistory_Click(object sender, EventArgs e)
+        {
+            ActiveTab = Tab.PaymentHistory;
+            LoadPaymentHistory();
+            UpdateTabVisibility();
+        }
+
+        // =============================================================
+        // ENROLLMENT ACTIONS (Enroll, Drop, Re‑enroll)
+        // =============================================================
         protected void EnrollCourse_Click(object sender, EventArgs e)
         {
             if (!IsEnrollmentPeriodOpen()) return;
@@ -541,6 +631,9 @@ namespace StudentManagementSystem.Student
             UpdateTabVisibility();
         }
 
+        // =============================================================
+        // PAYMENT ACTIONS (Invoice Modal + Upload)
+        // =============================================================
         protected void btnPayAll_Click(object sender, EventArgs e)
         {
             DataTable dt = ViewState["EnrolledCourses"] as DataTable;
@@ -561,15 +654,112 @@ namespace StudentManagementSystem.Student
             }
             lblModalTotal.Text = total.ToString("N2");
 
+            // Clear previous upload fields
+            txtPayAmount.Text = "";
+            txtPayDate.Text = DateTime.Now.ToString("yyyy-MM-dd");
+            lblModalStatus.Text = "";
+            lblModalStatus.ForeColor = System.Drawing.Color.Black;
+
             ScriptManager.RegisterStartupScript(this, GetType(), "showPaymentModal", "openPaymentModal();", true);
         }
 
         protected void btnConfirmPayment_Click(object sender, EventArgs e)
         {
-            string script = @"alert('Payment successful for all enrolled courses!'); closePaymentModal();";
-            ScriptManager.RegisterStartupScript(this, GetType(), "paymentSuccess", script, true);
+            // Validate amount
+            if (!decimal.TryParse(txtPayAmount.Text, out decimal amount) || amount <= 0)
+            {
+                lblModalStatus.Text = "Please enter a valid amount.";
+                lblModalStatus.ForeColor = System.Drawing.Color.Red;
+                return;
+            }
 
-            LoadMyEnrollments();
+            // Validate file
+            if (!fuPaymentProof.HasFile)
+            {
+                lblModalStatus.Text = "Please upload a payment receipt.";
+                lblModalStatus.ForeColor = System.Drawing.Color.Red;
+                return;
+            }
+
+            // Validate file type and size
+            string extension = Path.GetExtension(fuPaymentProof.FileName).ToLower();
+            string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".pdf" };
+            if (!Array.Exists(allowedExtensions, ext => ext == extension))
+            {
+                lblModalStatus.Text = "Only JPG, PNG, and PDF files are allowed.";
+                lblModalStatus.ForeColor = System.Drawing.Color.Red;
+                return;
+            }
+
+            if (fuPaymentProof.PostedFile.ContentLength > 5 * 1024 * 1024) // 5MB
+            {
+                lblModalStatus.Text = "File size must be under 5MB.";
+                lblModalStatus.ForeColor = System.Drawing.Color.Red;
+                return;
+            }
+
+            // Save file
+            string folder = Server.MapPath("~/Uploads/Payments/");
+            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+            string fileName = "payment_" + DateTime.Now.Ticks + extension;
+            string savePath = Path.Combine(folder, fileName);
+            fuPaymentProof.SaveAs(savePath);
+            string fileUrl = "~/Uploads/Payments/" + fileName;
+
+            // Generate reference ID
+            string refId = GenerateReferenceID();
+
+            // Insert into PaymentRecord
+            using (SqlConnection conn = new SqlConnection(cs))
+            {
+                string sql = @"
+                    INSERT INTO PaymentRecord 
+                        (StudentID, SemesterID, ReferenceID, Amount, PaymentDate, UploadDate, PaymentProof, StudentStatus, VerifiedStatus)
+                    VALUES 
+                        (@StudentID, @SemesterID, @RefID, @Amount, @PaymentDate, GETDATE(), @Proof, 'Pending', 'Pending')";
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@StudentID", _studentId);
+                cmd.Parameters.AddWithValue("@SemesterID", _currentSemesterId);
+                cmd.Parameters.AddWithValue("@RefID", refId);
+                cmd.Parameters.AddWithValue("@Amount", amount);
+                cmd.Parameters.AddWithValue("@PaymentDate", DateTime.TryParse(txtPayDate.Text, out DateTime payDate) ? (object)payDate : DBNull.Value);
+                cmd.Parameters.AddWithValue("@Proof", fileUrl);
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+
+            // Clear modal and close
+            lblModalStatus.Text = "Payment submitted! Reference: " + refId;
+            lblModalStatus.ForeColor = System.Drawing.Color.Green;
+
+            // Refresh payment history
+            LoadPaymentHistory();
+
+            // Close modal after a short delay (client-side)
+            string script = @"
+                setTimeout(function() {
+                    closePaymentModal();
+                }, 2000);
+                alert('Payment submitted successfully. Reference ID: " + refId + @"');
+            ";
+            ScriptManager.RegisterStartupScript(this, GetType(), "paymentSubmitted", script, true);
+        }
+
+        private string GenerateReferenceID()
+        {
+            string prefix = "PAY";
+            string date = DateTime.Now.ToString("yyyyMM");
+            using (SqlConnection conn = new SqlConnection(cs))
+            {
+                conn.Open();
+                string query = "SELECT COUNT(*) FROM PaymentRecord WHERE ReferenceID LIKE @Pattern";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@Pattern", prefix + "-" + date + "%");
+                int count = Convert.ToInt32(cmd.ExecuteScalar()) + 1;
+                return $"{prefix}-{date}-{count:D4}";
+            }
         }
     }
 }
