@@ -1,0 +1,198 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|c:\\users\\sxmen07\\desktop\\c#\\studentmanagementsystem\\studentmanagementsystem\\student\\studentcourseenrol\\studentcourseenrol.aspx.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|solutionrelative:studentmanagementsystem\\student\\studentcourseenrol\\studentcourseenrol.aspx.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\studentmanagementsystem\\student\\studentcourseenrol\\studentcourseenrol.aspx.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|solutionrelative:studentmanagementsystem\\student\\studentcourseenrol\\studentcourseenrol.aspx.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\studentmanagementsystem\\student\\studentcourseenrol\\studentcourseenrol.aspx||{57312C73-6202-49E9-B1E1-40EA1A6DC1F6}",
+      "RelativeMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|solutionrelative:studentmanagementsystem\\student\\studentcourseenrol\\studentcourseenrol.aspx||{57312C73-6202-49E9-B1E1-40EA1A6DC1F6}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\studentmanagementsystem\\student\\studentnavigationbar\\studentmaster.master||{B30AFBFF-D992-43B7-B62D-2642580A2883}",
+      "RelativeMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|solutionrelative:studentmanagementsystem\\student\\studentnavigationbar\\studentmaster.master||{B30AFBFF-D992-43B7-B62D-2642580A2883}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\studentmanagementsystem\\managecalendar.aspx.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|solutionrelative:studentmanagementsystem\\managecalendar.aspx.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\studentmanagementsystem\\managecalendar.aspx||{57312C73-6202-49E9-B1E1-40EA1A6DC1F6}",
+      "RelativeMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|solutionrelative:studentmanagementsystem\\managecalendar.aspx||{57312C73-6202-49E9-B1E1-40EA1A6DC1F6}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\studentmanagementsystem\\financialverification.aspx||{57312C73-6202-49E9-B1E1-40EA1A6DC1F6}",
+      "RelativeMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|solutionrelative:studentmanagementsystem\\financialverification.aspx||{57312C73-6202-49E9-B1E1-40EA1A6DC1F6}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\studentmanagementsystem\\financialverification.aspx.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|solutionrelative:studentmanagementsystem\\financialverification.aspx.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\studentmanagementsystem\\styles\\input.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|solutionrelative:studentmanagementsystem\\styles\\input.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\studentmanagementsystem\\student\\studentnavigationbar\\studentmaster.master.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|solutionrelative:studentmanagementsystem\\student\\studentnavigationbar\\studentmaster.master.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\studentmanagementsystem\\styles\\output.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{878EFC95-E226-4811-8F5E-5BF4C7924B91}|StudentManagementSystem\\StudentManagementSystem.csproj|solutionrelative:studentmanagementsystem\\styles\\output.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 188,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "input.css",
+              "DocumentMoniker": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Styles\\input.css",
+              "RelativeDocumentMoniker": "StudentManagementSystem\\Styles\\input.css",
+              "ToolTip": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Styles\\input.css",
+              "RelativeToolTip": "StudentManagementSystem\\Styles\\input.css",
+              "ViewState": "AgIAAEEBAAAAAAAAAADwv1UBAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-06-20T14:13:58.147Z",
+              "IsPinned": true
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "StudentCourseEnrol.aspx.designer.cs",
+              "DocumentMoniker": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Student\\StudentCourseEnrol\\StudentCourseEnrol.aspx.designer.cs",
+              "RelativeDocumentMoniker": "StudentManagementSystem\\Student\\StudentCourseEnrol\\StudentCourseEnrol.aspx.designer.cs",
+              "ToolTip": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Student\\StudentCourseEnrol\\StudentCourseEnrol.aspx.designer.cs",
+              "RelativeToolTip": "StudentManagementSystem\\Student\\StudentCourseEnrol\\StudentCourseEnrol.aspx.designer.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAF4BAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-23T05:22:01.542Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ManageCalendar.aspx",
+              "DocumentMoniker": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\ManageCalendar.aspx",
+              "RelativeDocumentMoniker": "StudentManagementSystem\\ManageCalendar.aspx",
+              "ToolTip": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\ManageCalendar.aspx",
+              "RelativeToolTip": "StudentManagementSystem\\ManageCalendar.aspx",
+              "LogicalView": "7651a703-06e5-11d1-8ebd-00a0c90f26ea",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000195|",
+              "WhenOpened": "2026-06-23T04:45:18.764Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ManageCalendar.aspx.cs",
+              "DocumentMoniker": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\ManageCalendar.aspx.cs",
+              "RelativeDocumentMoniker": "StudentManagementSystem\\ManageCalendar.aspx.cs",
+              "ToolTip": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\ManageCalendar.aspx.cs",
+              "RelativeToolTip": "StudentManagementSystem\\ManageCalendar.aspx.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-23T04:45:18.014Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "FinancialVerification.aspx.cs",
+              "DocumentMoniker": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\FinancialVerification.aspx.cs",
+              "RelativeDocumentMoniker": "StudentManagementSystem\\FinancialVerification.aspx.cs",
+              "ToolTip": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\FinancialVerification.aspx.cs",
+              "RelativeToolTip": "StudentManagementSystem\\FinancialVerification.aspx.cs",
+              "ViewState": "AgIAAHAAAAAAAAAAAAAQwJMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-22T18:52:59.101Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "FinancialVerification.aspx",
+              "DocumentMoniker": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\FinancialVerification.aspx",
+              "RelativeDocumentMoniker": "StudentManagementSystem\\FinancialVerification.aspx",
+              "ToolTip": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\FinancialVerification.aspx",
+              "RelativeToolTip": "StudentManagementSystem\\FinancialVerification.aspx",
+              "LogicalView": "7651a703-06e5-11d1-8ebd-00a0c90f26ea",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000195|",
+              "WhenOpened": "2026-06-22T18:52:36.47Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "StudentMaster.master.cs",
+              "DocumentMoniker": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Student\\StudentNavigationBar\\StudentMaster.master.cs",
+              "RelativeDocumentMoniker": "StudentManagementSystem\\Student\\StudentNavigationBar\\StudentMaster.master.cs",
+              "ToolTip": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Student\\StudentNavigationBar\\StudentMaster.master.cs",
+              "RelativeToolTip": "StudentManagementSystem\\Student\\StudentNavigationBar\\StudentMaster.master.cs",
+              "ViewState": "AgIAADIAAAAAAAAAAAAswGUAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-22T14:34:09.569Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "StudentMaster.master",
+              "DocumentMoniker": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Student\\StudentNavigationBar\\StudentMaster.master",
+              "RelativeDocumentMoniker": "StudentManagementSystem\\Student\\StudentNavigationBar\\StudentMaster.master",
+              "ToolTip": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Student\\StudentNavigationBar\\StudentMaster.master",
+              "RelativeToolTip": "StudentManagementSystem\\Student\\StudentNavigationBar\\StudentMaster.master",
+              "LogicalView": "7651a703-06e5-11d1-8ebd-00a0c90f26ea",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000195|",
+              "WhenOpened": "2026-06-22T04:26:16.413Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "StudentCourseEnrol.aspx.cs",
+              "DocumentMoniker": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Student\\StudentCourseEnrol\\StudentCourseEnrol.aspx.cs",
+              "RelativeDocumentMoniker": "StudentManagementSystem\\Student\\StudentCourseEnrol\\StudentCourseEnrol.aspx.cs",
+              "ToolTip": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Student\\StudentCourseEnrol\\StudentCourseEnrol.aspx.cs",
+              "RelativeToolTip": "StudentManagementSystem\\Student\\StudentCourseEnrol\\StudentCourseEnrol.aspx.cs",
+              "ViewState": "AgIAACYDAAAAAAAAAAAUwEEDAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-21T16:25:22.908Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "StudentCourseEnrol.aspx",
+              "DocumentMoniker": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Student\\StudentCourseEnrol\\StudentCourseEnrol.aspx",
+              "RelativeDocumentMoniker": "StudentManagementSystem\\Student\\StudentCourseEnrol\\StudentCourseEnrol.aspx",
+              "ToolTip": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Student\\StudentCourseEnrol\\StudentCourseEnrol.aspx",
+              "RelativeToolTip": "StudentManagementSystem\\Student\\StudentCourseEnrol\\StudentCourseEnrol.aspx",
+              "LogicalView": "7651a703-06e5-11d1-8ebd-00a0c90f26ea",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000195|",
+              "WhenOpened": "2026-06-21T16:17:09.991Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "output.css",
+              "DocumentMoniker": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Styles\\output.css",
+              "RelativeDocumentMoniker": "StudentManagementSystem\\Styles\\output.css",
+              "ToolTip": "C:\\Users\\Sxmen07\\Desktop\\C#\\StudentManagementSystem\\StudentManagementSystem\\Styles\\output.css",
+              "RelativeToolTip": "StudentManagementSystem\\Styles\\output.css",
+              "ViewState": "AgIAAOoIAAAAAAAAAAAtwAAJAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-06-20T14:52:55.917Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
