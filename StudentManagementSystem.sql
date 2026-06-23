@@ -451,7 +451,7 @@ VALUES
     ('August', '08-01', '12-31', '08-01', '08-14', 2026);
 GO
 
-UPDATE Semester SET EnrolEndDate = '4-31' WHERE Semester = 'April'
+UPDATE Semester SET EnrolEndDate = '04-14' WHERE Semester = 'April'
 
 INSERT INTO Faculty (FacultyName) VALUES ('Faculty of Computing and Informatics'), ('Faculty of Business');
 GO
@@ -662,4 +662,5 @@ SELECT * FROM StudentCourseStatus;
 SELECT * FROM InvoiceReceipt;
 SELECT * FROM AdminMessage;
 SELECT * FROM AdminAnnouncement;
+SELECT * FROM PaymentRecord;
 GO
